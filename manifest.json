@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tether: Watch Together",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Sync playback with someone far away, across the streaming services you already have, plus a shared notes space.",
   "icons": {
     "16": "icons/icon16.png",
@@ -23,38 +23,44 @@
   },
   "permissions": ["storage"],
   "host_permissions": [
+    "https://netflix.com/*",
     "https://*.netflix.com/*",
+    "https://hulu.com/*",
     "https://*.hulu.com/*",
+    "https://disneyplus.com/*",
     "https://*.disneyplus.com/*",
+    "https://crunchyroll.com/*",
     "https://*.crunchyroll.com/*",
+    "https://max.com/*",
     "https://*.max.com/*",
+    "https://hbomax.com/*",
     "https://*.hbomax.com/*",
     "https://*.firebaseio.com/*",
     "https://*.firebasedatabase.app/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://*.netflix.com/*"],
+      "matches": ["https://netflix.com/*", "https://*.netflix.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/netflix.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.hulu.com/*"],
+      "matches": ["https://hulu.com/*", "https://*.hulu.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hulu.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.disneyplus.com/*"],
+      "matches": ["https://disneyplus.com/*", "https://*.disneyplus.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/disneyplus.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.crunchyroll.com/*"],
+      "matches": ["https://crunchyroll.com/*", "https://*.crunchyroll.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/crunchyroll.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.max.com/*", "https://*.hbomax.com/*"],
+      "matches": ["https://max.com/*", "https://*.max.com/*", "https://hbomax.com/*", "https://*.hbomax.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hbomax.js"],
       "run_at": "document_idle"
     }
