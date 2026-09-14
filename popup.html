@@ -141,7 +141,7 @@
 
   <div class="panel active" id="panel-room">
     <div class="card" id="setupCard" style="display:none">
-      <label>Firebase Database URL</label>
+      <label for="dbUrlInput">Firebase Database URL</label>
       <div class="row">
         <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
       </div>
@@ -158,7 +158,7 @@
     </div>
 
     <div class="card">
-      <label>Join someone else's room</label>
+      <label for="joinCodeInput">Join someone else's room</label>
       <div class="row">
         <input type="text" id="joinCodeInput" placeholder="Their code">
         <button class="btn" id="joinRoom">Join</button>
@@ -170,7 +170,7 @@
 
   <div class="panel" id="panel-notes">
     <div class="card">
-      <label>Shared notes</label>
+      <label for="notesArea">Shared notes</label>
       <textarea id="notesArea" placeholder="Anything you want to remember together: what to watch next, plans, whatever."></textarea>
       <div class="save-flash" id="notesStatus">Saved</div>
     </div>
