@@ -30,15 +30,19 @@
   const DRIFT_TOLERANCE_S = 0.5;
   const CLOCK_RECALIBRATE_MS = 60000;
   const PRESENCE_HEARTBEAT_MS = 5000;
+  const STALE_CHECK_MS = 20000;
+  const STALE_AFTER_MS = 45000; // no server activity at all in this long is treated as a dead connection
 
   let config = null;       // { roomId, dbUrl }
   let video = null;
   let es = null;            // EventSource
   let applyingRemote = false;
   let lastRemote = null;    // { time, ts, playing }, used for drift correction
+  let lastEventAt = 0;      // Date.now() of the last thing heard from the server, any kind
   let driftTimer = null;
   let clockTimer = null;
   let presenceTimer = null;
+  let staleCheckTimer = null;
   let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
 
@@ -142,20 +146,36 @@
     if (es) es.close();
     if (clockTimer) clearInterval(clockTimer);
     if (presenceTimer) clearInterval(presenceTimer);
+    if (staleCheckTimer) clearInterval(staleCheckTimer);
     if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
     calibrateClock();
     clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
     writePresence();
     presenceTimer = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
+    lastEventAt = Date.now();
     es = new EventSource(roomUrl('sync'));
     es.addEventListener('put', (e) => {
+      lastEventAt = Date.now();
       try { applyRemote(JSON.parse(e.data).data); } catch (err) { /* ignore malformed frames */ }
     });
     es.addEventListener('patch', (e) => {
+      lastEventAt = Date.now();
       try { applyRemote(JSON.parse(e.data).data); } catch (err) { /* ignore malformed frames */ }
     });
-    es.onopen = () => onStatus('connected');
+    // Firebase's RTDB streaming API sends these periodically on an otherwise
+    // quiet room specifically so a still-good connection doesn't look dead;
+    // count them the same as a real update for staleness purposes.
+    es.addEventListener('keep-alive', () => { lastEventAt = Date.now(); });
+    es.onopen = () => { lastEventAt = Date.now(); onStatus('connected'); };
     es.onerror = () => { onStatus('disconnected'); };
+    // Belt and suspenders: an SSE connection can go quietly dead (a NAT or
+    // proxy dropping it) without ever firing the EventSource's own onerror,
+    // which would otherwise leave this stuck reporting "connected" while
+    // nothing actually gets through. If nothing at all has been heard,
+    // including Firebase's own keep-alives, force a fresh connection.
+    staleCheckTimer = setInterval(() => {
+      if (Date.now() - lastEventAt > STALE_AFTER_MS) connect();
+    }, STALE_CHECK_MS);
   }
 
   let videoListeners = null;
@@ -195,20 +215,25 @@
      *  change, for instance). */
     init(statusCallback) {
       onStatus = statusCallback || onStatus;
+      // The storage-change listener is only registered once CLIENT_ID exists,
+      // not just fired-and-forgotten alongside resolveClientId: a room change
+      // arriving in that small window would otherwise call connect() while
+      // CLIENT_ID is still null, and a sync pushed with `from: null` right as
+      // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
         chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
           config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
           connect();
         });
-      });
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area !== 'sync') return;
-        if (changes.roomId || changes.dbUrl) {
-          chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
-            config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
-            connect();
-          });
-        }
+        chrome.storage.onChanged.addListener((changes, area) => {
+          if (area !== 'sync') return;
+          if (changes.roomId || changes.dbUrl) {
+            chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
+              config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+              connect();
+            });
+          }
+        });
       });
     },
     setVideo(el) {

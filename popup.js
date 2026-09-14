@@ -188,19 +188,32 @@ function loadNotes() {
 }
 
 let notesSaveTimer = null;
+function saveNotesNow() {
+  notesSaveTimer = null;
+  // keepalive lets this survive the popup actually closing mid-request: a
+  // popup's whole JS context (and any fetch it started) is normally torn
+  // down the instant it loses focus, so without this, typing a note and
+  // immediately clicking away could silently drop that last edit.
+  fetch(roomUrl('notes'), {
+    method: 'PUT',
+    body: JSON.stringify({ text: notesArea.value, updatedAt: Date.now() }),
+    keepalive: true,
+  }).then(() => {
+    notesStatus.classList.add('show');
+    setTimeout(() => notesStatus.classList.remove('show'), 1200);
+  }).catch(() => {});
+}
 function saveNotesDebounced() {
   clearTimeout(notesSaveTimer);
-  notesSaveTimer = setTimeout(() => {
-    fetch(roomUrl('notes'), {
-      method: 'PUT',
-      body: JSON.stringify({ text: notesArea.value, updatedAt: Date.now() }),
-    }).then(() => {
-      notesStatus.classList.add('show');
-      setTimeout(() => notesStatus.classList.remove('show'), 1200);
-    }).catch(() => {});
-  }, 500);
+  notesSaveTimer = setTimeout(saveNotesNow, 500);
 }
 notesArea.addEventListener('input', saveNotesDebounced);
+// Flush a pending debounce immediately rather than losing it: 'pagehide'
+// (not 'beforeunload', which popups don't reliably fire) covers both the
+// popup closing and the user switching to another extension tab/panel.
+window.addEventListener('pagehide', () => {
+  if (notesSaveTimer) { clearTimeout(notesSaveTimer); saveNotesNow(); }
+});
 
 // ---------------------------------------------------------------------
 // chat

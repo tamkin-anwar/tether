@@ -24,12 +24,20 @@
     }
   }
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  /* This file is both the real browser-action popup (sized to its content,
+     so .shell's fixed width is what the popup itself renders at) and, on
+     first install, opened as an ordinary tab for onboarding (see
+     background.js). Centering here rather than hardcoding the 340px width
+     directly on body means it doesn't render as a tiny box pinned to the
+     corner of an otherwise blank page in that second case. */
+  html, body { min-height: 100%; }
   body {
-    width: 340px; margin: 0;
+    margin: 0; display: flex; justify-content: center;
     font-family: var(--font);
     background: var(--paper); color: var(--ink);
     -webkit-user-select: none; user-select: none;
   }
+  .shell { width: 340px; }
   input, textarea { -webkit-user-select: text; user-select: text; }
 
   header {
@@ -118,6 +126,7 @@
 </style>
 </head>
 <body>
+  <div class="shell">
   <header>
     <div class="logo">🤝</div>
     <h1>Tether</h1>
@@ -177,6 +186,7 @@
     </div>
   </div>
 
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>
