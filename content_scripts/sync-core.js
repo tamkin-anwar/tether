@@ -44,6 +44,7 @@
   let nickname = '';
   let video = null;
   let es = null;            // EventSource
+  let reactionsEs = null;   // separate EventSource: reactions are rare enough that folding them into the sync stream's put/patch parsing wasn't worth the added complexity there
   let applyingRemote = false;
   let lastRemote = null;    // { time, ts, playing }, used for drift correction
   let lastEventAt = 0;      // Date.now() of the last thing heard from the server, any kind
@@ -53,6 +54,7 @@
   let staleCheckTimer = null;
   let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
+  let onReaction = () => {}; // callback(emoji), only for a reaction that arrived from the other person
 
   function log(...args) { console.log('[Tether]', ...args); }
 
@@ -164,8 +166,17 @@
     fetch(roomUrl('nowWatching'), { method: 'PUT', body: JSON.stringify({ url: location.href, ts: Date.now() }) }).catch(() => {});
   }
 
+  function sendReaction(emoji) {
+    if (!config) return;
+    fetch(roomUrl('reactions'), {
+      method: 'PUT',
+      body: JSON.stringify({ emoji, from: CLIENT_ID, ts: { '.sv': 'timestamp' } }),
+    }).catch(() => {});
+  }
+
   function connect() {
     if (es) es.close();
+    if (reactionsEs) reactionsEs.close();
     if (clockTimer) clearInterval(clockTimer);
     if (presenceTimer) clearInterval(presenceTimer);
     if (staleCheckTimer) clearInterval(staleCheckTimer);
@@ -202,6 +213,16 @@
     staleCheckTimer = setInterval(() => {
       if (Date.now() - lastEventAt > STALE_AFTER_MS) connect();
     }, STALE_CHECK_MS);
+
+    reactionsEs = new EventSource(roomUrl('reactions'));
+    const handleReaction = (e) => {
+      try {
+        const data = JSON.parse(e.data).data;
+        if (data && data.from !== CLIENT_ID && data.emoji) onReaction(data.emoji);
+      } catch (err) { /* ignore malformed frames */ }
+    };
+    reactionsEs.addEventListener('put', handleReaction);
+    reactionsEs.addEventListener('patch', handleReaction);
   }
 
   let videoListeners = null;
@@ -244,13 +265,13 @@
   // Public API used by site adapters (window.TetherSync.*)
   // ---------------------------------------------------------------------
   window.TetherSync = {
-    /** Call once, with a function that returns the current <video> element
-     *  (or null if not found yet) and a status callback. Site adapters are
-     *  responsible for finding the right element and re-calling setVideo
-     *  when the player is torn down/rebuilt (Netflix does this on episode
-     *  change, for instance). */
-    init(statusCallback) {
+    /** Call once, with a status callback and a reaction callback (see
+     *  site-common.js). Site adapters are responsible for finding the video
+     *  element and re-calling setVideo when the player is torn down/rebuilt
+     *  (Netflix does this on episode change, for instance). */
+    init(statusCallback, reactionCallback) {
       onStatus = statusCallback || onStatus;
+      onReaction = reactionCallback || onReaction;
       // The storage-change listener is only registered once CLIENT_ID exists,
       // not just fired-and-forgotten alongside resolveClientId: a room change
       // arriving in that small window would otherwise call connect() while
@@ -279,5 +300,6 @@
       detachVideo();
       if (el) attachVideo(el);
     },
+    sendReaction,
   };
 })();

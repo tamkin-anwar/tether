@@ -48,12 +48,107 @@
     }, 3500);
   }
 
+  // ---------------------------------------------------------------------
+  // Reactions: a floating emoji burst either of you can send, seen on both
+  // tabs. Deliberately on the page itself, not tucked in the popup, since
+  // Teleparty's own reactions work the same way, an overlay on the video
+  // you're both actually looking at, not somewhere you'd have to look away
+  // from it to reach.
+  // ---------------------------------------------------------------------
+  const REACTIONS = ['❤️', '😂', '😮', '👏', '😢'];
+  let reactionStyleInjected = false;
+
+  function injectReactionStyle() {
+    if (reactionStyleInjected) return;
+    reactionStyleInjected = true;
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes tether-float-up {
+        0% { transform: translateY(0) scale(0.6); opacity: 0; }
+        15% { transform: translateY(-10px) scale(1); opacity: 1; }
+        100% { transform: translateY(-160px) scale(1.15); opacity: 0; }
+      }
+    `;
+    document.documentElement.appendChild(style);
+  }
+
+  // Shows the floating burst. Called both for a reaction that arrived from
+  // the other person, and immediately, locally, the instant you send one
+  // yourself, rather than waiting on a network round trip to see your own.
+  function showReaction(emoji) {
+    injectReactionStyle();
+    const el = document.createElement('div');
+    const jitter = (Math.random() - 0.5) * 40; // slight horizontal spread so simultaneous reactions don't perfectly overlap
+    el.textContent = emoji;
+    el.style.cssText = `
+      position: fixed; bottom: 106px; right: ${40 - jitter}px; z-index: 2147483647;
+      font-size: 34px; pointer-events: none;
+      animation: tether-float-up 1.8s ease-out forwards;
+    `;
+    document.documentElement.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
+  }
+
+  let pickerOpen = false;
+  function buildReactionTrigger() {
+    const wrap = document.createElement('div');
+    // Stacked directly above the status badge, same right edge, rather than
+    // beside it: that badge's width varies with its text ("In sync" vs.
+    // "Reconnecting..."), so a fixed horizontal offset would overlap it for
+    // some states and leave an odd gap for others.
+    wrap.style.cssText = `
+      position: fixed; bottom: 68px; right: 24px; z-index: 2147483646;
+      display: flex; align-items: center; gap: 6px;
+    `;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:4px; opacity:0; transform:translateX(6px); pointer-events:none; transition:opacity 0.2s, transform 0.2s;';
+    REACTIONS.forEach((emoji) => {
+      const btn = document.createElement('button');
+      btn.textContent = emoji;
+      btn.style.cssText = `
+        width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+        background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6);
+        -webkit-backdrop-filter: blur(14px) saturate(1.6); font-size: 15px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;
+      `;
+      btn.addEventListener('click', () => {
+        showReaction(emoji);
+        window.TetherSync.sendReaction(emoji);
+        setPickerOpen(false);
+      });
+      row.appendChild(btn);
+    });
+
+    const toggle = document.createElement('button');
+    toggle.textContent = '🙂';
+    toggle.title = 'Send a reaction';
+    toggle.style.cssText = `
+      width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+      background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6);
+      -webkit-backdrop-filter: blur(14px) saturate(1.6); font-size: 15px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;
+    `;
+
+    function setPickerOpen(open) {
+      pickerOpen = open;
+      row.style.opacity = open ? '1' : '0';
+      row.style.transform = open ? 'translateX(0)' : 'translateX(6px)';
+      row.style.pointerEvents = open ? 'auto' : 'none';
+    }
+    toggle.addEventListener('click', () => setPickerOpen(!pickerOpen));
+
+    wrap.appendChild(row);
+    wrap.appendChild(toggle);
+    document.documentElement.appendChild(wrap);
+  }
+
   window.TetherSite = {
     /** Call once per site adapter with a function that returns the current
      *  <video> element (or null). Handles watching for it being swapped out
-     *  and wiring up the on-page status badge. */
+     *  and wiring up the on-page status badge and reaction picker. */
     start(findVideo) {
-      window.TetherSync.init(showStatus);
+      window.TetherSync.init(showStatus, showReaction);
+      buildReactionTrigger();
 
       let current = null;
       const observer = new MutationObserver(() => {
