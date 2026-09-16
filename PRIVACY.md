@@ -1,6 +1,6 @@
 # Privacy Policy for Tether
 
-Tether is a browser extension that synchronizes video playback between two people watching the same streaming service in separate browser tabs, plus a small shared notes pad and chat for people using it together.
+Tether is a browser extension that synchronizes video playback between two people watching the same streaming service in separate browser tabs, plus a small shared notes pad, chat, and emoji reactions for people using it together.
 
 ## What Tether does and does not do
 
@@ -12,10 +12,13 @@ Using Tether sends the following to a Firebase Realtime Database (a cloud databa
 
 - Playback state: whether the video is playing or paused, and its current timestamp
 - Chat messages you type into the extension's Chat tab
+- Emoji reactions you send
 - Notes you type into the extension's Notes tab
+- The nickname you optionally set under "Your name," shown to whoever you're in a room with, never required to use Tether
+- The URL of the title you're currently watching, so an invite link can take the other person straight to it, not the wider list of everywhere you browse
 - A randomly generated room code, used to keep separate groups of users from seeing each other's data
 
-This data lives under a room code that only you and whoever you share that code with know. Tether does not collect your name, email address, IP address, or any information about which websites you visit beyond detecting that you have a supported streaming site open.
+This data lives under a room code that only you and whoever you share that code with know. Tether does not collect your legal name, email address, IP address, or any information about which websites you visit beyond the specific title you're currently watching together.
 
 ## Data sharing
 
