@@ -75,11 +75,13 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
 
 ## What's here now, and what's next
 
-- Done: play/pause/seek sync on Netflix, Hulu, Disney+, Crunchyroll, Max, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync
-- Done: a shared notes pad and a basic chat, both in the popup
+- Done: play/pause/seek sync on Netflix, Hulu, Disney+, Crunchyroll, Max, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync, and an automatic catch-up to wherever the other person already is the moment your own video loads
+- Done: a real invite link, not just a room code, that drops the other person straight into the exact title once they've pressed play (`content_scripts/join.js`)
+- Done: presence ("someone else is in this room," not just "connected"), with an optional nickname attached to it and to chat
+- Done: a shared notes pad, a basic chat, and emoji reactions, the last two both in the popup and, for reactions, as a floating overlay on the video itself
 - Not yet: Prime Video support (same approach as the others, just needs a small site-specific adapter, like `content_scripts/hulu.js`; Prime's player is more obfuscated and changes more often, so it'll likely need more upkeep than the rest)
 - Not yet: a shared file drop (needs Firebase Storage, a bit more setup than Realtime Database)
-- Not yet: an on-page chat overlay while watching, instead of only in the popup
+- Not yet: an on-page chat overlay while watching, instead of only in the popup (reactions already work this way, chat itself still doesn't)
 
 ## Credits
 
