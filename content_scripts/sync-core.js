@@ -191,6 +191,15 @@
     video.addEventListener('pause', videoListeners.pause);
     video.addEventListener('seeked', videoListeners.seeked);
     driftTimer = setInterval(checkDrift, DRIFT_CHECK_MS);
+    // Firebase's stream delivers the room's current state once, right as the
+    // connection opens (see connect()), which is how a newly-arriving video
+    // would normally catch up to wherever the other person already is. But
+    // that only fires once, at connect time, and this video element usually
+    // isn't done loading yet when it does, so that catch-up gets silently
+    // missed with nothing to retry it. Fetch the current state directly the
+    // moment a video actually exists to attach it to, instead of only ever
+    // reacting to the other person's next play, pause, or seek.
+    if (config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
   }
 
   function detachVideo() {
