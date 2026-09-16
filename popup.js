@@ -12,7 +12,8 @@ const saveDbUrlBtn = document.getElementById('saveDbUrl');
 const dbUrlStatus = document.getElementById('dbUrlStatus');
 const setupCard = document.getElementById('setupCard');
 const roomCodeEl = document.getElementById('roomCode');
-const copyRoomBtn = document.getElementById('copyRoom');
+const copyLinkBtn = document.getElementById('copyLink');
+const copyCodeLink = document.getElementById('copyCodeLink');
 const joinCodeInput = document.getElementById('joinCodeInput');
 const joinRoomBtn = document.getElementById('joinRoom');
 const notesArea = document.getElementById('notesArea');
@@ -163,10 +164,22 @@ function pollPresence() {
   }).catch(() => {});
 }
 
-copyRoomBtn.addEventListener('click', () => {
+// See content_scripts/join.js for what actually happens when this link is
+// opened: it sets the room code and redirects straight to whatever the host
+// is currently watching, once they've pressed play.
+const JOIN_URL_BASE = 'https://tamkin-anwar.github.io/tether/join.html';
+
+copyLinkBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(`${JOIN_URL_BASE}?code=${roomId || ''}`);
+  copyLinkBtn.textContent = 'Copied ✓';
+  setTimeout(() => { copyLinkBtn.textContent = 'Copy invite link'; }, 1200);
+});
+
+copyCodeLink.addEventListener('click', () => {
   navigator.clipboard.writeText(roomId || '');
-  copyRoomBtn.textContent = 'Copied ✓';
-  setTimeout(() => { copyRoomBtn.textContent = 'Copy code'; }, 1200);
+  const original = copyCodeLink.textContent;
+  copyCodeLink.textContent = 'Copied ✓';
+  setTimeout(() => { copyCodeLink.textContent = original; }, 1200);
 });
 
 joinRoomBtn.addEventListener('click', () => {

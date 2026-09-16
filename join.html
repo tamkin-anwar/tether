@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joining — Tether</title>
+<link rel="icon" href="icons/icon48.png">
+<style>
+  :root {
+    --ink: #1c1c1e; --ink-soft: #6e6e73; --paper: #f5f5f7; --card: #ffffff;
+    --accent: #007aff; --hairline: rgba(60,60,67,0.13);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #f5f5f7; --ink-soft: #9a9a9e; --paper: #1c1c1e; --card: #2c2c2e; --hairline: rgba(255,255,255,0.12); }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--font); background: var(--paper); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 40px 20px; text-align: center;
+  }
+  .logo { width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.15); margin-bottom: 20px; }
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%; margin: 0 auto 18px;
+    border: 2.5px solid var(--hairline); border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+  p { color: var(--ink-soft); font-size: 14.5px; max-width: 340px; line-height: 1.5; margin: 0; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; font: 600 15px var(--font);
+    background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 12px;
+    text-decoration: none; margin-top: 20px;
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <img class="logo" src="icons/icon128.png" alt="">
+
+  <div id="waitingState">
+    <div class="spinner"></div>
+    <h1>Connecting to Tether...</h1>
+    <p id="joinStatus">Getting you to the right spot.</p>
+  </div>
+
+  <div id="notInstalledState" hidden>
+    <h1>You'll need Tether first</h1>
+    <p>Install the extension, then click this link again, it'll take you straight to what they're watching.</p>
+    <a class="btn" href="https://chromewebstore.google.com/detail/tether-watch-together/hbdlgagknjnijflkgjdelehjibapehpi">Add to Chrome</a>
+  </div>
+
+  <script>
+    // join.js (the extension's content script for this exact page) sets this
+    // attribute the instant it runs. Plain page JS has no way to ask "is an
+    // extension installed", so absence of the marker after a brief wait is
+    // read as "Tether isn't here yet" instead.
+    setTimeout(function () {
+      if (!document.documentElement.hasAttribute('data-tether-active')) {
+        document.getElementById('waitingState').hidden = true;
+        document.getElementById('notInstalledState').hidden = false;
+      }
+    }, 700);
+  </script>
+</body>
+</html>

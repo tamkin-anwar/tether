@@ -42,7 +42,7 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
 2. Click **Load unpacked**, and select this `Tether` folder.
 3. Click the Tether icon in your toolbar, paste the Database URL from step 4 above into **Firebase Database URL**, and click **Connect**.
 4. Send your girlfriend this same folder (or once we're happy with it, publish it to the Chrome Web Store so she can just install it) and have her do steps 1 to 3 with the *same* Database URL.
-5. One of you opens the popup and copies the **room code**; the other pastes it into **Their code** under Joining someone else's room and clicks **Join**. You're now in the same room.
+5. One of you opens the popup and clicks **Copy invite link**, then sends that over. Clicking it drops the other person straight into the room, and once you've pressed play, straight to the exact title (see `content_scripts/join.js`). Pasting just the room code into **Their code** under "Join someone else's room" still works too, for anyone who'd rather send that instead.
 6. Both open Netflix, Hulu, Disney+, Crunchyroll, or Max, both hit play on the same title. Playback will mirror from here.
 
 ## What's here now, and what's next

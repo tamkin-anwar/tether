@@ -142,6 +142,17 @@
     fetch(roomUrl('presence/' + CLIENT_ID), { method: 'PUT', body: JSON.stringify({ ts: Date.now() }) }).catch(() => {});
   }
 
+  // Lets an invite link (see join.js) send a new person straight to the
+  // right title instead of a bare room code they'd have to act on manually.
+  // Written whenever a video attaches, which also naturally covers an
+  // episode change: Netflix et al. swap in a new <video> element (and this
+  // tab's URL) without a full page reload, and that already re-triggers
+  // attachVideo via the site adapter's own MutationObserver.
+  function writeNowWatching() {
+    if (!config) return;
+    fetch(roomUrl('nowWatching'), { method: 'PUT', body: JSON.stringify({ url: location.href, ts: Date.now() }) }).catch(() => {});
+  }
+
   function connect() {
     if (es) es.close();
     if (clockTimer) clearInterval(clockTimer);
@@ -152,6 +163,10 @@
     clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
     writePresence();
     presenceTimer = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
+    // Covers the case where the video attached before config existed yet
+    // (attachVideo's own call is a no-op then, guarded on config): now that
+    // config is valid, make sure whatever's already playing gets recorded.
+    if (video) writeNowWatching();
     lastEventAt = Date.now();
     es = new EventSource(roomUrl('sync'));
     es.addEventListener('put', (e) => {
@@ -200,6 +215,7 @@
     // moment a video actually exists to attach it to, instead of only ever
     // reacting to the other person's next play, pause, or seek.
     if (config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    writeNowWatching();
   }
 
   function detachVideo() {
