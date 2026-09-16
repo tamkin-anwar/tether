@@ -27,9 +27,15 @@ const changeDbLink = document.getElementById('changeDbLink');
 const peerDot = document.getElementById('peerDot');
 const peerText = document.getElementById('peerText');
 const leaveRoomLink = document.getElementById('leaveRoomLink');
+const nicknameInput = document.getElementById('nicknameInput');
 
 let dbUrl = null;
 let roomId = null;
+// A locally-remembered display name, not an account: no sign-up, nothing
+// server-side tied to it, just chrome.storage the same as the room code.
+// Entirely optional, everything falls back to today's generic wording if
+// it's never set.
+let nickname = '';
 // Persisted (see resolveClientId), not regenerated per popup-open: it has to
 // stay stable both so old chat bubbles don't flip from "me" to "them" the
 // next time the popup is opened, and so presence can tell "my other tab"
@@ -149,18 +155,24 @@ function enterRoom(newRoomId) {
 // someone who's watching right now even if their popup isn't open.
 function writePresence() {
   if (!dbUrl || !roomId || !myClientId) return;
-  fetch(roomUrl('presence/' + myClientId), { method: 'PUT', body: JSON.stringify({ ts: Date.now() }) }).catch(() => {});
+  fetch(roomUrl('presence/' + myClientId), {
+    method: 'PUT',
+    body: JSON.stringify({ ts: Date.now(), name: nickname || null }),
+  }).catch(() => {});
 }
 
 function pollPresence() {
   if (!dbUrl || !roomId) return;
   fetch(roomUrl('presence')).then((r) => r.json()).then((data) => {
     const now = Date.now();
-    const peerOnline = Object.entries(data || {}).some(
+    const peer = Object.entries(data || {}).find(
       ([clientId, entry]) => clientId !== myClientId && entry && now - entry.ts < PRESENCE_STALE_MS
     );
-    peerDot.className = 'dot' + (peerOnline ? ' connected' : '');
-    peerText.textContent = peerOnline ? 'Someone else is in this room' : "Waiting for the other person...";
+    peerDot.className = 'dot' + (peer ? ' connected' : '');
+    const peerName = peer && peer[1].name;
+    peerText.textContent = peer
+      ? (peerName ? `${peerName} is in this room` : 'Someone else is in this room')
+      : "Waiting for the other person...";
   }).catch(() => {});
 }
 
@@ -248,9 +260,21 @@ function renderChat(messages) {
     return;
   }
   chatLog.innerHTML = '';
+  let lastSender = null;
   for (const m of items) {
+    const mine = m.from === myClientId;
+    // Only label a message when the sender changes, same convention as most
+    // chat apps: a name on every single bubble in a back-and-forth gets
+    // noisy fast. Never label your own messages, you know who you are.
+    if (!mine && m.name && m.from !== lastSender) {
+      const label = document.createElement('div');
+      label.className = 'bubble-name';
+      label.textContent = m.name;
+      chatLog.appendChild(label);
+    }
+    lastSender = m.from;
     const div = document.createElement('div');
-    div.className = 'bubble ' + (m.from === myClientId ? 'me' : 'them');
+    div.className = 'bubble ' + (mine ? 'me' : 'them');
     div.textContent = m.text;
     chatLog.appendChild(div);
   }
@@ -268,19 +292,31 @@ function sendChat() {
   chatInput.value = '';
   fetch(roomUrl('chat'), {
     method: 'POST',
-    body: JSON.stringify({ text, from: myClientId, ts: Date.now() }),
+    body: JSON.stringify({ text, from: myClientId, name: nickname || null, ts: Date.now() }),
   }).then(loadChat).catch(() => {});
 }
 sendChatBtn.addEventListener('click', sendChat);
 chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 
 // ---------------------------------------------------------------------
+// nickname
+// ---------------------------------------------------------------------
+let nicknameSaveTimer = null;
+nicknameInput.addEventListener('input', () => {
+  nickname = nicknameInput.value.trim();
+  clearTimeout(nicknameSaveTimer);
+  nicknameSaveTimer = setTimeout(() => chrome.storage.sync.set({ nickname }), 400);
+});
+
+// ---------------------------------------------------------------------
 // boot
 // ---------------------------------------------------------------------
 resolveClientId(() => {
-  chrome.storage.sync.get(['dbUrl', 'roomId'], async (stored) => {
+  chrome.storage.sync.get(['dbUrl', 'roomId', 'nickname'], async (stored) => {
     dbUrl = stored.dbUrl || DEFAULT_DB_URL;
     dbUrlInput.value = dbUrl;
+    nickname = stored.nickname || '';
+    nicknameInput.value = nickname;
     const ok = await testConnection();
     if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
     enterRoom(stored.roomId || randomRoomCode());

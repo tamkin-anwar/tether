@@ -122,6 +122,7 @@
   }
   .bubble.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
   .bubble.them { align-self: flex-start; background: var(--hairline); color: var(--ink); border-bottom-left-radius: 4px; }
+  .bubble-name { align-self: flex-start; font-size: 10.5px; font-weight: 600; color: var(--ink-soft); margin: 2px 2px 0; }
   .empty-state { text-align: center; color: var(--ink-soft); font-size: 12px; padding: 18px 0; }
 </style>
 </head>
@@ -147,6 +148,11 @@
       </div>
       <button class="btn full" id="saveDbUrl" style="margin-top:8px">Connect</button>
       <div class="err-flash" id="dbUrlStatus"></div>
+    </div>
+
+    <div class="card">
+      <label for="nicknameInput">Your name</label>
+      <input type="text" id="nicknameInput" placeholder="So they know it's you" maxlength="24">
     </div>
 
     <div class="card">

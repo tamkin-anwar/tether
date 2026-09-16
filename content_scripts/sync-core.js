@@ -34,6 +34,14 @@
   const STALE_AFTER_MS = 45000; // no server activity at all in this long is treated as a dead connection
 
   let config = null;       // { roomId, dbUrl }
+  // A locally-remembered display name, not an account (see popup.js for the
+  // input this comes from). Both this file and the popup write the same
+  // presence/$CLIENT_ID node, and this one heartbeats far more often (every
+  // 5s, for as long as a streaming tab stays open, versus only while the
+  // popup happens to be open), so if this copy didn't also know the
+  // nickname, its next heartbeat would almost immediately overwrite the
+  // popup's name-inclusive entry with a nameless one.
+  let nickname = '';
   let video = null;
   let es = null;            // EventSource
   let applyingRemote = false;
@@ -139,7 +147,10 @@
   // from "has this client written a timestamp recently" instead.
   function writePresence() {
     if (!config || !CLIENT_ID) return;
-    fetch(roomUrl('presence/' + CLIENT_ID), { method: 'PUT', body: JSON.stringify({ ts: Date.now() }) }).catch(() => {});
+    fetch(roomUrl('presence/' + CLIENT_ID), {
+      method: 'PUT',
+      body: JSON.stringify({ ts: Date.now(), name: nickname || null }),
+    }).catch(() => {});
   }
 
   // Lets an invite link (see join.js) send a new person straight to the
@@ -246,12 +257,14 @@
       // CLIENT_ID is still null, and a sync pushed with `from: null` right as
       // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
-        chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
+        chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
           config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+          nickname = stored.nickname || '';
           connect();
         });
         chrome.storage.onChanged.addListener((changes, area) => {
           if (area !== 'sync') return;
+          if (changes.nickname) nickname = changes.nickname.newValue || '';
           if (changes.roomId || changes.dbUrl) {
             chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
               config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
