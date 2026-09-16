@@ -57,8 +57,15 @@ function resolveClientId(cb) {
 
 function randomRoomCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
+  // 8, not 6: with a real invite link doing the sharing now (see
+  // JOIN_URL_BASE below), almost nobody types this by hand anymore, so the
+  // usual tradeoff against a longer code barely applies. What's actually
+  // changed is the audience: at "anyone in the world" scale rather than just
+  // two people, a code is worth being meaningfully harder to guess or scan
+  // for. 32^8 (~1.1 trillion) versus 32^6 (~1.07 billion) is a real jump for
+  // a cost that's now mostly just a couple more characters in a URL.
   let code = '';
-  for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  for (let i = 0; i < 8; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
   return code;
 }
 

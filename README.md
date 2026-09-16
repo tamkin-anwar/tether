@@ -27,14 +27,42 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
        "rooms": {
          "$roomId": {
            ".read": true,
-           ".write": true
+           ".write": true,
+           "sync": {
+             ".validate": "newData.hasChildren(['type','time','playing','ts','from']) && newData.child('type').isString() && newData.child('time').isNumber() && newData.child('playing').isBoolean() && newData.child('ts').isNumber() && newData.child('from').isString() && newData.child('from').val().length <= 40"
+           },
+           "_clock": {
+             ".validate": "newData.isNumber()"
+           },
+           "presence": {
+             "$clientId": {
+               ".validate": "newData.hasChild('ts') && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
+             }
+           },
+           "nowWatching": {
+             ".validate": "newData.hasChildren(['url','ts']) && newData.child('url').isString() && newData.child('url').val().length <= 2000 && newData.child('ts').isNumber()"
+           },
+           "reactions": {
+             ".validate": "newData.hasChildren(['emoji','from','ts']) && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('from').isString() && newData.child('ts').isNumber()"
+           },
+           "notes": {
+             ".validate": "newData.hasChildren(['text','updatedAt']) && newData.child('text').isString() && newData.child('text').val().length <= 5000 && newData.child('updatedAt').isNumber()"
+           },
+           "chat": {
+             "$messageId": {
+               ".validate": "newData.hasChildren(['text','from','ts']) && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('from').isString() && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
+             }
+           },
+           "$other": {
+             ".validate": false
+           }
          }
        }
      }
    }
    ```
-   This keeps things simple for now. Anyone who knows your room code can read/write it, same trust model as a Google Doc link. It's easy to lock down further later with real accounts if this grows beyond just the two of you.
-6. Click **Publish**.
+   Anyone who knows your room code can still read/write it, same trust model as a Google Doc link, that part hasn't changed. What's new: each field is now shape- and size-checked (a chat message can't be gigabytes long, `playing` has to actually be a boolean, and so on), and anything that isn't one of the known fields (`sync`, `presence`, `nowWatching`, `reactions`, `notes`, `chat`, `_clock`) gets rejected outright via `$other`. That mostly guards against cost/storage abuse and outright garbage, not a determined attacker: Realtime Database rules alone can't rate-limit requests or block someone from scanning many room codes quickly, that needs real backend infra (Cloud Functions, App Check) that doesn't exist here. Worth knowing, not solved by this change: on the audience Tether has today, the room code's 32^8 keyspace and every session's low informational value (playback timing, not anything sensitive) make that an acceptable, disclosed tradeoff, the same one a shareable Google Doc link makes.
+6. Click **Publish**. Test that sync, chat, notes, presence, and reactions still all work right after, since a validate rule that's stricter than it should be would silently reject a legitimate write rather than error loudly, better to catch that immediately than have it show up as "it just doesn't work" days later. The console keeps rule history if anything needs rolling back.
 
 ## Installing the extension
 
