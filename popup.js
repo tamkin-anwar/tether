@@ -25,6 +25,7 @@ const statusText = document.getElementById('statusText');
 const changeDbLink = document.getElementById('changeDbLink');
 const peerDot = document.getElementById('peerDot');
 const peerText = document.getElementById('peerText');
+const leaveRoomLink = document.getElementById('leaveRoomLink');
 
 let dbUrl = null;
 let roomId = null;
@@ -173,6 +174,15 @@ joinRoomBtn.addEventListener('click', () => {
   if (!code) return;
   joinCodeInput.value = '';
   enterRoom(code);
+});
+
+// The room code persists on purpose (see enterRoom/boot), so you and whoever
+// you're watching with don't have to re-share a code every session. This is
+// the escape hatch: only your own side leaves, the other person's room is
+// untouched until they also leave or join elsewhere.
+leaveRoomLink.addEventListener('click', () => {
+  if (!confirm("Leave this room and start a new one? Whoever you're watching with will need your new code.")) return;
+  enterRoom(randomRoomCode());
 });
 
 // ---------------------------------------------------------------------
