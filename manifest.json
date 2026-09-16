@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tether: Watch Together",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Sync playback with someone far away, across the streaming services you already have, plus a shared notes space.",
   "icons": {
     "16": "icons/icon16.png",
@@ -36,6 +36,8 @@
     "https://*.max.com/*",
     "https://hbomax.com/*",
     "https://*.hbomax.com/*",
+    "https://youtube.com/*",
+    "https://*.youtube.com/*",
     "https://*.firebaseio.com/*",
     "https://*.firebasedatabase.app/*",
     "https://tamkin-anwar.github.io/tether/*"
@@ -69,6 +71,11 @@
     {
       "matches": ["https://max.com/*", "https://*.max.com/*", "https://hbomax.com/*", "https://*.hbomax.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hbomax.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://youtube.com/*", "https://*.youtube.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/youtube.js"],
       "run_at": "document_idle"
     }
   ]
