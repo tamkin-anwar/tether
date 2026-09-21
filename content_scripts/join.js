@@ -23,10 +23,21 @@
     const el = document.querySelector('#waitingState h1');
     if (el) el.textContent = text;
   }
+  // The spinner means "actively working on it". Leaving it running in a
+  // state where nothing further is going to happen, a dead link, giving up
+  // after minutes of nobody pressing play, reads as still-in-progress when
+  // it's actually a dead end, exactly the kind of thing that makes someone
+  // sit there waiting on something that already stopped.
+  function stopSpinner() {
+    const el = document.querySelector('#waitingState .spinner');
+    if (el) el.style.display = 'none';
+  }
 
   const code = (new URLSearchParams(location.search).get('code') || '').trim().toUpperCase();
   if (!code) {
-    setStatus("This link is missing a room code.");
+    stopSpinner();
+    setHeadline("This link isn't valid");
+    setStatus("It's missing a room code. Ask whoever sent it for a fresh invite link.");
     return;
   }
 
@@ -60,16 +71,40 @@
           return;
         }
         attempts++;
-        if (attempts === 1) setHeadline("Waiting on them");
+        // Unconditional, not just on the first attempt: a successful
+        // response, even an empty one, means the connection is genuinely
+        // fine, which should override and self-heal any "having trouble
+        // connecting" headline left behind by an earlier transient network
+        // error, without needing separate state to track that explicitly.
+        setHeadline("Waiting on them");
         if (attempts >= GIVE_UP_AFTER) {
-          setStatus("Still nothing yet. Refresh this page once they've pressed play, or just open the service yourselves, you're already in the room.");
+          stopSpinner();
+          setHeadline("Still nothing yet");
+          setStatus("Refresh this page once they've pressed play, or just open the service yourselves, you're already in the room.");
           return;
         }
         setStatus(attempts < REASSURE_AFTER
           ? "Waiting for the other person to start watching..."
           : "Still waiting. You're already in the room, so feel free to open Netflix (or whichever you're both using) yourself whenever you're ready.");
         setTimeout(tryRedirect, 2000);
-      }).catch(() => setTimeout(tryRedirect, 3000));
+      }).catch(() => {
+        // A genuine network failure, not just "no data yet" (blocked by an
+        // ad-blocker, offline, DNS trouble). Without its own counter and
+        // status, this fell through silently forever: attempts never
+        // advanced, so it never reassured or gave up, just kept retrying
+        // behind whatever the original static "Getting you to the right
+        // spot." text said, with no sign anything was actually wrong.
+        attempts++;
+        if (attempts >= GIVE_UP_AFTER) {
+          stopSpinner();
+          setHeadline("Something's not connecting");
+          setStatus("Refresh this page, or just open the service yourselves, you're already in the room.");
+          return;
+        }
+        setHeadline("Having trouble connecting");
+        setStatus("Retrying...");
+        setTimeout(tryRedirect, 3000);
+      });
     }
     tryRedirect();
   });

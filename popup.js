@@ -122,12 +122,20 @@ changeDbLink.addEventListener('click', () => {
 saveDbUrlBtn.addEventListener('click', async () => {
   const url = dbUrlInput.value.trim();
   if (!url) return;
+  const previousDbUrl = dbUrl;
   dbUrl = url;
   const ok = await testConnection();
   if (ok) {
     chrome.storage.sync.set({ dbUrl });
     loadNotes();
     loadChat();
+  } else {
+    // Without this, a failed attempt left dbUrl pointed at the broken URL
+    // for the rest of the popup session, even though nothing bad was ever
+    // saved to storage: the error shows correctly, but every notes/chat/
+    // presence call afterward would silently fail against that dead URL
+    // until the popup was closed and reopened.
+    dbUrl = previousDbUrl;
   }
 });
 
