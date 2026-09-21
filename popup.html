@@ -122,6 +122,7 @@
   }
   .bubble {
     max-width: 78%; padding: 7px 11px; border-radius: 16px; font-size: 13px; line-height: 1.35;
+    overflow-wrap: break-word; word-break: break-word;
   }
   .bubble.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
   .bubble.them { align-self: flex-start; background: var(--hairline); color: var(--ink); border-bottom-left-radius: 4px; }
@@ -155,7 +156,7 @@
 
     <div class="card">
       <label for="nicknameInput">Your name</label>
-      <input type="text" id="nicknameInput" placeholder="Shown to whoever you're watching with" maxlength="24">
+      <input type="text" id="nicknameInput" placeholder="Shown to whoever you watch with" maxlength="24">
     </div>
 
     <div class="card">
