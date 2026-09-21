@@ -42,10 +42,17 @@
     statusBadge.style.opacity = '1';
     statusBadge.style.transform = 'translateY(0)';
     clearTimeout(showStatus._t);
-    showStatus._t = setTimeout(() => {
-      statusBadge.style.opacity = '0';
-      statusBadge.style.transform = 'translateY(6px)';
-    }, 3500);
+    // Every other state is a passing ping ("yep, synced") that's fine to fade
+    // after a few seconds. 'no-room' means nothing is set up at all, still
+    // true indefinitely until someone joins a room, so it stays on screen
+    // instead of quietly vanishing after 3.5s and leaving no indication
+    // anything needs doing.
+    if (status !== 'no-room') {
+      showStatus._t = setTimeout(() => {
+        statusBadge.style.opacity = '0';
+        statusBadge.style.transform = 'translateY(6px)';
+      }, 3500);
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -55,7 +62,13 @@
   // you're both actually looking at, not somewhere you'd have to look away
   // from it to reach.
   // ---------------------------------------------------------------------
-  const REACTIONS = ['❤️', '😂', '😮', '👏', '😢'];
+  const REACTIONS = [
+    { emoji: '❤️', label: 'Love' },
+    { emoji: '😂', label: 'Laughing' },
+    { emoji: '😮', label: 'Surprised' },
+    { emoji: '👏', label: 'Applause' },
+    { emoji: '😢', label: 'Sad' },
+  ];
   let reactionStyleInjected = false;
 
   function injectReactionStyle() {
@@ -102,9 +115,11 @@
     `;
     const row = document.createElement('div');
     row.style.cssText = 'display:flex; gap:4px; opacity:0; transform:translateX(6px); pointer-events:none; transition:opacity 0.2s, transform 0.2s;';
-    REACTIONS.forEach((emoji) => {
+    REACTIONS.forEach(({ emoji, label }) => {
       const btn = document.createElement('button');
       btn.textContent = emoji;
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
       btn.style.cssText = `
         width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
         background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6);

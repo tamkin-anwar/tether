@@ -196,9 +196,8 @@ copyLinkBtn.addEventListener('click', () => {
 
 copyCodeLink.addEventListener('click', () => {
   navigator.clipboard.writeText(roomId || '');
-  const original = copyCodeLink.textContent;
   copyCodeLink.textContent = 'Copied ✓';
-  setTimeout(() => { copyCodeLink.textContent = original; }, 1200);
+  setTimeout(() => { copyCodeLink.textContent = 'Copy code only'; }, 1200);
 });
 
 joinRoomBtn.addEventListener('click', () => {
@@ -223,9 +222,12 @@ leaveRoomLink.addEventListener('click', () => {
 function loadNotes() {
   if (!dbUrl || !roomId) return;
   fetch(roomUrl('notes')).then((r) => r.json()).then((data) => {
-    if (data && typeof data.text === 'string' && document.activeElement !== notesArea) {
-      notesArea.value = data.text;
-    }
+    if (document.activeElement === notesArea) return; // don't clobber what they're mid-typing
+    // A fresh room with no notes yet is a real, distinct state from "still
+    // showing the previous room's text" - without the explicit else branch
+    // here, leaving a room with notes and starting a new one left the old
+    // text sitting in the box, looking exactly like it had carried over.
+    notesArea.value = (data && typeof data.text === 'string') ? data.text : '';
   }).catch(() => {});
 }
 
@@ -309,10 +311,20 @@ chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat()
 // nickname
 // ---------------------------------------------------------------------
 let nicknameSaveTimer = null;
+function saveNicknameNow() {
+  nicknameSaveTimer = null;
+  chrome.storage.sync.set({ nickname });
+}
 nicknameInput.addEventListener('input', () => {
   nickname = nicknameInput.value.trim();
   clearTimeout(nicknameSaveTimer);
-  nicknameSaveTimer = setTimeout(() => chrome.storage.sync.set({ nickname }), 400);
+  nicknameSaveTimer = setTimeout(saveNicknameNow, 400);
+});
+// Same fix as the notes debounce below: a pending timeout is destroyed,
+// never fires, if the popup closes before it does. Typing a name and
+// immediately clicking away would otherwise silently revert to the old one.
+window.addEventListener('pagehide', () => {
+  if (nicknameSaveTimer) { clearTimeout(nicknameSaveTimer); saveNicknameNow(); }
 });
 
 // ---------------------------------------------------------------------
