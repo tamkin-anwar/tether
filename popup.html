@@ -106,6 +106,11 @@
   .full { width: 100%; }
 
   .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .text-link {
+    display: block; text-align: center; font: 600 12px var(--font); color: var(--accent);
+    cursor: pointer; margin-top: 10px;
+  }
+  .text-link.subtle { color: var(--ink-soft); font-weight: 500; }
   .peer-line { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; }
   .save-flash { font-size: 11px; color: var(--green); opacity: 0; transition: opacity 0.3s; height: 14px; margin-top: 6px; }
   .save-flash.show { opacity: 1; }
@@ -150,17 +155,17 @@
 
     <div class="card">
       <label for="nicknameInput">Your name</label>
-      <input type="text" id="nicknameInput" placeholder="So they know it's you" maxlength="24">
+      <input type="text" id="nicknameInput" placeholder="Shown to whoever you're watching with" maxlength="24">
     </div>
 
     <div class="card">
       <label>Your room code</label>
       <div class="room-code" id="roomCode">······</div>
       <button class="btn full" id="copyLink">Copy invite link</button>
-      <div class="hint">One click and they land right where you're watching, once you've pressed play. Or just send them the code above to enter by hand.</div>
-      <div id="copyCodeLink" style="text-align:center; font-size:11px; color:var(--ink-soft); cursor:pointer; margin-top:8px;">Copy just the code</div>
+      <div class="hint">One click takes them straight to what you're watching, once you've pressed play.</div>
+      <div id="copyCodeLink" class="text-link">Copy code only</div>
       <div class="peer-line"><span class="dot" id="peerDot"></span><span id="peerText">Checking for the other person...</span></div>
-      <div id="leaveRoomLink" style="text-align:center; font-size:11px; color:var(--ink-soft); cursor:pointer; margin-top:10px;">Leave this room, start a new one</div>
+      <div id="leaveRoomLink" class="text-link">Leave this room</div>
     </div>
 
     <div class="card">
@@ -171,13 +176,13 @@
       </div>
     </div>
 
-    <div id="changeDbLink" style="text-align:center; font-size:11px; color:var(--ink-soft); cursor:pointer; margin-top:4px;">Use a different database (advanced)</div>
+    <div id="changeDbLink" class="text-link subtle" style="margin-top:4px;">Use a different database (advanced)</div>
   </div>
 
   <div class="panel" id="panel-notes">
     <div class="card">
       <label for="notesArea">Shared notes</label>
-      <textarea id="notesArea" placeholder="Anything you want to remember together: what to watch next, plans, whatever."></textarea>
+      <textarea id="notesArea" placeholder="What to watch next, plans, or anything worth remembering together."></textarea>
       <div class="save-flash" id="notesStatus">Saved</div>
     </div>
   </div>
