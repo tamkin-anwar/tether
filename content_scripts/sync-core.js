@@ -33,6 +33,38 @@
   const STALE_CHECK_MS = 20000;
   const STALE_AFTER_MS = 45000; // no server activity at all in this long is treated as a dead connection
 
+  // Ad-supported tiers (Netflix, Hulu, Disney+, Max, and Crunchyroll all sell
+  // one now) break sync in a specific way: an ad break's own play/pause/seek
+  // has nothing to do with where the two of you actually are in the episode,
+  // and the two of you almost never see the same ads or the same number of
+  // them, so broadcasting or applying position based on one is actively
+  // wrong, not just imprecise. There's no single reliable "is an ad playing"
+  // signal across five different players whose DOM changes on their own
+  // schedule (see the site adapters' own comments on exactly this problem
+  // for findVideo), so this leans on two independent, more durable signals
+  // instead of a guessed class name per site: a suspiciously short video
+  // appearing in the middle of an already long-form one (real ad breaks
+  // are seconds to a couple minutes; a movie or episode isn't), and, on
+  // YouTube specifically, the `ad-showing`/`ad-interrupting` classes
+  // YouTube's own player has added to its container for years, stable
+  // enough that ad-blocking extensions have relied on it for about as long.
+  const AD_LIKE_MAX_DURATION_S = 121;
+  let baselineDuration = null; // longest real (non-ad-like) duration seen this session, the "this is what long-form looks like" reference point
+
+  function looksLikeAd() {
+    if (!video) return false;
+    const ytPlayer = document.getElementById('movie_player');
+    if (ytPlayer && (ytPlayer.classList.contains('ad-showing') || ytPlayer.classList.contains('ad-interrupting'))) return true;
+    const d = video.duration;
+    if (!Number.isFinite(d) || d <= 0) return false;
+    if (d > AD_LIKE_MAX_DURATION_S) { baselineDuration = d; return false; }
+    // A short video on its own isn't suspicious, a trailer or a music video
+    // is completely normal to watch together start to finish. It only reads
+    // as an ad once something noticeably longer was already the thing being
+    // watched, a sudden dip in the middle of that.
+    return baselineDuration !== null && baselineDuration > AD_LIKE_MAX_DURATION_S;
+  }
+
   let config = null;       // { roomId, dbUrl }
   // A locally-remembered display name, not an account (see popup.js for the
   // input this comes from). Both this file and the popup write the same
@@ -96,6 +128,7 @@
 
   function pushSync(type) {
     if (!config || applyingRemote || !video) return;
+    if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
     const payload = { type, time: video.currentTime, playing: !video.paused, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
@@ -126,6 +159,12 @@
   function applyRemote(data) {
     if (!data || data.from === CLIENT_ID || !video) return;
     lastRemote = { time: data.time, ts: data.ts, playing: data.playing };
+    // Keep lastRemote current either way, so the moment this side's own ad
+    // ends there's already a fresh target to catch up to, but don't touch
+    // an ad that's actually playing right now: seeking it to a content
+    // timestamp, or pausing/playing it to match, is meaningless at best and
+    // can visibly glitch or restart the ad at worst.
+    if (looksLikeAd()) return;
     // Only project the position forward if the video was actually playing at
     // the moment this was written. A paused video doesn't advance just
     // because time passed before this arrived, if it did, joining a room
@@ -142,7 +181,23 @@
     }, needsSeek);
   }
 
+  let wasAdLike = false;
   function checkDrift() {
+    const adLike = looksLikeAd();
+    if (adLike !== wasAdLike) {
+      wasAdLike = adLike;
+      if (!adLike && config) {
+        // The ad that was just playing here could have run for anywhere
+        // from a few seconds to a couple minutes, with nothing pushed or
+        // applied the whole time (see pushSync/applyRemote above), so the
+        // shared position could be stale by exactly that much now. Fetch
+        // the current value directly instead of waiting on the other
+        // person's next play, pause, or seek to correct it.
+        fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+      }
+      return;
+    }
+    if (adLike) return;
     if (!lastRemote || !lastRemote.playing || !video || video.paused || applyingRemote) return;
     const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000;
     if (Math.abs(video.currentTime - expected) > DRIFT_TOLERANCE_S) {
