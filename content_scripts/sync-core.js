@@ -126,7 +126,14 @@
   function applyRemote(data) {
     if (!data || data.from === CLIENT_ID || !video) return;
     lastRemote = { time: data.time, ts: data.ts, playing: data.playing };
-    const localTime = data.time + Math.max(0, (serverNow() - data.ts) / 1000); // account for time in transit
+    // Only project the position forward if the video was actually playing at
+    // the moment this was written. A paused video doesn't advance just
+    // because time passed before this arrived, if it did, joining a room
+    // (or reconnecting) minutes into someone else's pause would seek to
+    // "where they'd be if they'd kept playing" instead of where they
+    // actually are: sitting still.
+    const elapsed = data.playing ? Math.max(0, (serverNow() - data.ts) / 1000) : 0;
+    const localTime = data.time + elapsed;
     const needsSeek = Math.abs(video.currentTime - localTime) > 0.35;
     withRemoteGuard(() => {
       if (needsSeek) video.currentTime = localTime;
