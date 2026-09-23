@@ -49,10 +49,22 @@
   // YouTube's own player has added to its container for years, stable
   // enough that ad-blocking extensions have relied on it for about as long.
   const AD_LIKE_MAX_DURATION_S = 121;
-  let baselineDuration = null; // longest real (non-ad-like) duration seen this session, the "this is what long-form looks like" reference point
+  let baselineDuration = null; // longest real (non-ad-like) duration seen on the current page, the "this is what long-form looks like" reference point
+  let baselineUrl = null;      // which page that baseline belongs to
 
   function looksLikeAd() {
     if (!video) return false;
+    // Ads play within the same page (see writeNowWatching below, an ad
+    // break never changes location.href, only an actual switch to
+    // different content does, even in a same-page SPA nav). Without this,
+    // finishing a long movie and then deliberately switching to something
+    // short next, a trailer, a music video, would carry the old baseline
+    // over and mistake that new, genuinely-short video for an ad
+    // interrupting the last one, and never sync it at all.
+    if (location.href !== baselineUrl) {
+      baselineDuration = null;
+      baselineUrl = location.href;
+    }
     const ytPlayer = document.getElementById('movie_player');
     if (ytPlayer && (ytPlayer.classList.contains('ad-showing') || ytPlayer.classList.contains('ad-interrupting'))) return true;
     const d = video.duration;
@@ -61,7 +73,7 @@
     // A short video on its own isn't suspicious, a trailer or a music video
     // is completely normal to watch together start to finish. It only reads
     // as an ad once something noticeably longer was already the thing being
-    // watched, a sudden dip in the middle of that.
+    // watched, on this same page, a sudden dip in the middle of that.
     return baselineDuration !== null && baselineDuration > AD_LIKE_MAX_DURATION_S;
   }
 
