@@ -137,6 +137,7 @@
     const toggle = document.createElement('button');
     toggle.textContent = '🙂';
     toggle.title = 'Send a reaction';
+    toggle.setAttribute('aria-label', 'Send a reaction');
     toggle.style.cssText = `
       width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
       background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6);

@@ -41,7 +41,9 @@ let nickname = '';
 // next time the popup is opened, and so presence can tell "my other tab"
 // apart from an actual second person in the room.
 let myClientId = null;
-let chatPoll = null;
+let chatEs = null;
+let chatData = {};
+let notesEs = null;
 let presenceHeartbeat = null;
 let presencePoll = null;
 const PRESENCE_HEARTBEAT_MS = 5000;
@@ -127,8 +129,8 @@ saveDbUrlBtn.addEventListener('click', async () => {
   const ok = await testConnection();
   if (ok) {
     chrome.storage.sync.set({ dbUrl });
-    loadNotes();
-    loadChat();
+    startNotesStream();
+    startChatStream();
   } else {
     // Without this, a failed attempt left dbUrl pointed at the broken URL
     // for the rest of the popup session, even though nothing bad was ever
@@ -146,10 +148,8 @@ function enterRoom(newRoomId) {
   roomId = newRoomId;
   roomCodeEl.textContent = roomId;
   chrome.storage.sync.set({ roomId });
-  loadNotes();
-  loadChat();
-  clearInterval(chatPoll);
-  chatPoll = setInterval(loadChat, 4000);
+  startNotesStream();
+  startChatStream();
 
   clearInterval(presenceHeartbeat);
   writePresence();
@@ -227,16 +227,28 @@ leaveRoomLink.addEventListener('click', () => {
 // ---------------------------------------------------------------------
 // notes
 // ---------------------------------------------------------------------
-function loadNotes() {
+// A live stream, not a one-off fetch: notes are meant to be shared in real
+// time, and a plain fetch only ever shows what was true the moment the
+// popup happened to open. Without this, the other person editing the note
+// while your popup is already open would never appear until you closed and
+// reopened it, silent data loss disguised as "already up to date."
+function startNotesStream() {
+  if (notesEs) notesEs.close();
   if (!dbUrl || !roomId) return;
-  fetch(roomUrl('notes')).then((r) => r.json()).then((data) => {
+  const applyNotes = (data) => {
     if (document.activeElement === notesArea) return; // don't clobber what they're mid-typing
     // A fresh room with no notes yet is a real, distinct state from "still
     // showing the previous room's text" - without the explicit else branch
     // here, leaving a room with notes and starting a new one left the old
     // text sitting in the box, looking exactly like it had carried over.
     notesArea.value = (data && typeof data.text === 'string') ? data.text : '';
-  }).catch(() => {});
+  };
+  notesEs = new EventSource(roomUrl('notes'));
+  const handle = (e) => {
+    try { applyNotes(JSON.parse(e.data).data); } catch (err) { /* ignore malformed frames */ }
+  };
+  notesEs.addEventListener('put', handle);
+  notesEs.addEventListener('patch', handle);
 }
 
 let notesSaveTimer = null;
@@ -272,6 +284,11 @@ window.addEventListener('pagehide', () => {
 // ---------------------------------------------------------------------
 function renderChat(messages) {
   const items = Object.values(messages || {}).sort((a, b) => a.ts - b.ts).slice(-30);
+  // Only snap to the newest message if that's roughly where they already
+  // were. A live stream can redraw at any moment, mid-conversation; without
+  // this, scrolling up to reread something got yanked back to the bottom
+  // the instant either side sent another message.
+  const nearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 40;
   if (!items.length) {
     chatLog.innerHTML = '<div class="empty-state">No messages yet</div>';
     return;
@@ -295,22 +312,48 @@ function renderChat(messages) {
     div.textContent = m.text;
     chatLog.appendChild(div);
   }
-  chatLog.scrollTop = chatLog.scrollHeight;
+  if (nearBottom) chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function loadChat() {
+// A live stream instead of polling every few seconds: messages should show
+// up the instant they're sent, not on the next poll tick. Firebase's
+// streaming API sends the whole collection once on connect, then just the
+// added/changed child after that (a push() writes one new key, not the
+// whole list), so this keeps its own running copy and patches it in place
+// rather than re-fetching the entire chat log on every message.
+function startChatStream() {
+  if (chatEs) chatEs.close();
+  chatData = {};
   if (!dbUrl || !roomId) return;
-  fetch(roomUrl('chat')).then((r) => r.json()).then(renderChat).catch(() => {});
+  chatEs = new EventSource(roomUrl('chat'));
+  const handle = (e) => {
+    try {
+      const { path, data } = JSON.parse(e.data);
+      if (path === '/') {
+        chatData = data || {};
+      } else {
+        const key = path.slice(1);
+        if (data === null) delete chatData[key];
+        else chatData[key] = data;
+      }
+      renderChat(chatData);
+    } catch (err) { /* ignore malformed frames */ }
+  };
+  chatEs.addEventListener('put', handle);
+  chatEs.addEventListener('patch', handle);
 }
 
 function sendChat() {
   const text = chatInput.value.trim();
   if (!text || !dbUrl || !roomId) return;
   chatInput.value = '';
+  // No need to re-fetch or optimistically render afterward: the stream
+  // above is already listening to this same path and will reflect this
+  // write, from this tab or the other side, the moment Firebase applies it.
   fetch(roomUrl('chat'), {
     method: 'POST',
     body: JSON.stringify({ text, from: myClientId, name: nickname || null, ts: Date.now() }),
-  }).then(loadChat).catch(() => {});
+  }).catch(() => {});
 }
 sendChatBtn.addEventListener('click', sendChat);
 chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
