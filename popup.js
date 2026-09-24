@@ -422,3 +422,26 @@ resolveClientId(() => {
     });
   });
 });
+
+// Mirrors the same listener sync-core.js already has, for the same reason:
+// this popup and a content script tab aren't the only two places these
+// values can change from, another of your own devices can leave the room,
+// switch database, or rename itself at any moment. Without this, a popup
+// left open during exactly that moment kept working off of, and writing
+// back to, whatever was true when it was opened.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') return;
+  if (changes.ownerId) myOwnerId = changes.ownerId.newValue || myOwnerId;
+  if (changes.nickname && changes.nickname.newValue !== nickname) {
+    nickname = changes.nickname.newValue || '';
+    if (document.activeElement !== nicknameInput) nicknameInput.value = nickname; // don't clobber what's mid-typing
+  }
+  if (changes.roomId && changes.roomId.newValue && changes.roomId.newValue !== roomId) {
+    enterRoom(changes.roomId.newValue);
+  }
+  if (changes.dbUrl && changes.dbUrl.newValue && changes.dbUrl.newValue !== dbUrl) {
+    dbUrl = changes.dbUrl.newValue;
+    dbUrlInput.value = dbUrl;
+    testConnection().then((ok) => { if (ok) { startNotesStream(); startChatStream(); } });
+  }
+});
