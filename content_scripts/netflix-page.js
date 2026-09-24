@@ -26,7 +26,11 @@
       if (!videoPlayer) return null;
       const sessionIds = videoPlayer.getAllPlayerSessionIds?.() || [];
       if (!sessionIds.length) return null;
-      return videoPlayer.getVideoPlayerBySessionId?.(sessionIds[sessionIds.length - 1]) || null;
+      // Prefer the actual watch session over just "whichever id is last":
+      // a leftover preview/trailer session id can outlive its own player
+      // and sit at the end of this list.
+      const watchId = sessionIds.find((id) => id.startsWith('watch-')) || sessionIds[sessionIds.length - 1];
+      return videoPlayer.getVideoPlayerBySessionId?.(watchId) || null;
     } catch (e) { return null; }
   }
 

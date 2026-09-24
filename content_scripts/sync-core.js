@@ -62,6 +62,12 @@
 
   function looksLikeAd() {
     if (!video) return false;
+    // A site that can tell us directly (currently just Disney+, via its own
+    // ad-interstitial flag; see disneyplus.js) beats guessing from duration.
+    if (siteControls?.isAdPlaying) {
+      const known = siteControls.isAdPlaying();
+      if (known != null) return known;
+    }
     // Ads play within the same page (see writeNowWatching below, an ad
     // break never changes location.href, only an actual switch to
     // different content does, even in a same-page SPA nav). Without this,
@@ -85,6 +91,26 @@
     return baselineDuration !== null && baselineDuration > AD_LIKE_MAX_DURATION_S;
   }
 
+  // A site that can't be read from through its <video> element at all
+  // (currently just Disney+, see disneyplus.js/disneyplus-page.js: after a
+  // seek there, video.currentTime restarts near zero while the player's own
+  // clock keeps counting true position) provides these; everything else
+  // falls back to the element directly, unchanged.
+  function currentTimeSeconds() {
+    if (siteControls?.getCurrentTime) {
+      const t = siteControls.getCurrentTime();
+      if (t != null) return t;
+    }
+    return video ? video.currentTime : null;
+  }
+  function isPlayingNow() {
+    if (siteControls?.getPlaying) {
+      const p = siteControls.getPlaying();
+      if (p != null) return p;
+    }
+    return video ? !video.paused : null;
+  }
+
   let config = null;       // { roomId, dbUrl }
   // A locally-remembered display name, not an account (see popup.js for the
   // input this comes from). Both this file and the popup write the same
@@ -94,10 +120,12 @@
   // nickname, its next heartbeat would almost immediately overwrite the
   // popup's name-inclusive entry with a nameless one.
   let nickname = '';
-  // Set only by site adapters that need it (currently just Netflix; see
-  // netflix.js): { seek(seconds), play(), pause() }. When present, a remote
-  // catch-up is applied through this instead of touching video directly,
-  // for a player where doing that isn't safe.
+  // Set only by site adapters that need it (currently Netflix and Disney+;
+  // see netflix.js/disneyplus.js): { seek(seconds), play(), pause(), and
+  // optionally getCurrentTime()/getPlaying()/isAdPlaying() for a site where
+  // even reading the <video> element isn't reliable, see currentTimeSeconds/
+  // isPlayingNow/looksLikeAd above }. When present, reads and remote
+  // catch-ups are routed through this instead of touching video directly.
   let siteControls = null;
   let video = null;
   let es = null;            // EventSource
@@ -162,7 +190,14 @@
   function pushSync(type) {
     if (!config || applyingRemote || !video) return;
     if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
-    const payload = { type, time: video.currentTime, playing: !video.paused, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
+    // See currentTimeSeconds/isPlayingNow above: on a site where the
+    // <video> element itself can't be trusted for position, read through
+    // the site's own player instead. Either can come back null if that
+    // player hasn't finished loading yet; nothing to broadcast in that case.
+    const time = currentTimeSeconds();
+    const playing = isPlayingNow();
+    if (time == null || playing == null) return;
+    const payload = { type, time, playing, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
     // by our own action. Whichever side acts less often ends up with a
@@ -174,7 +209,7 @@
     // timestamp is deliberately consistent with what checkDrift compares
     // against on this same device, not less accurate: it's this device's
     // own clock-corrected "now" either way.
-    lastRemote = { time: video.currentTime, ts: serverNow(), playing: !video.paused };
+    lastRemote = { time, ts: serverNow(), playing };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
@@ -218,7 +253,8 @@
     // actually are: sitting still.
     const elapsed = data.playing ? Math.max(0, (serverNow() - data.ts) / 1000) : 0;
     const localTime = data.time + elapsed;
-    const needsSeek = Math.abs(video.currentTime - localTime) > 0.35;
+    const current = currentTimeSeconds();
+    const needsSeek = current == null || Math.abs(current - localTime) > 0.35;
     withRemoteGuard(() => {
       // See siteControls above: on a site where setting video.currentTime
       // directly isn't safe, route the same change through the site's own
@@ -252,9 +288,12 @@
       return;
     }
     if (adLike) return;
-    if (!lastRemote || !lastRemote.playing || !video || video.paused || applyingRemote) return;
+    if (!lastRemote || !lastRemote.playing || !video || applyingRemote) return;
+    if (!isPlayingNow()) return;
+    const current = currentTimeSeconds();
+    if (current == null) return;
     const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000;
-    if (Math.abs(video.currentTime - expected) > DRIFT_TOLERANCE_S) {
+    if (Math.abs(current - expected) > DRIFT_TOLERANCE_S) {
       withRemoteGuard(() => {
         if (siteControls) siteControls.seek(expected);
         else video.currentTime = expected;
