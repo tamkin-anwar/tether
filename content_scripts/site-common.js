@@ -160,10 +160,13 @@
 
   window.TetherSite = {
     /** Call once per site adapter with a function that returns the current
-     *  <video> element (or null). Handles watching for it being swapped out
-     *  and wiring up the on-page status badge and reaction picker. */
-    start(findVideo) {
-      window.TetherSync.init(showStatus, showReaction);
+     *  <video> element (or null), and an optional { seek(s), play(), pause() }
+     *  for sites where setting video.currentTime/play()/pause() directly
+     *  isn't safe (see netflix.js). Handles watching for the video being
+     *  swapped out and wiring up the on-page status badge and reaction
+     *  picker. */
+    start(findVideo, playerControls) {
+      window.TetherSync.init(showStatus, showReaction, playerControls);
       buildReactionTrigger();
 
       let current = null;

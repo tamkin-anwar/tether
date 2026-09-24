@@ -94,6 +94,11 @@
   // nickname, its next heartbeat would almost immediately overwrite the
   // popup's name-inclusive entry with a nameless one.
   let nickname = '';
+  // Set only by site adapters that need it (currently just Netflix; see
+  // netflix.js): { seek(seconds), play(), pause() }. When present, a remote
+  // catch-up is applied through this instead of touching video directly,
+  // for a player where doing that isn't safe.
+  let siteControls = null;
   let video = null;
   let es = null;            // EventSource
   let reactionsEs = null;   // separate EventSource: reactions are rare enough that folding them into the sync stream's put/patch parsing wasn't worth the added complexity there
@@ -203,9 +208,18 @@
     const localTime = data.time + elapsed;
     const needsSeek = Math.abs(video.currentTime - localTime) > 0.35;
     withRemoteGuard(() => {
-      if (needsSeek) video.currentTime = localTime;
-      if (data.playing && video.paused) video.play().catch(() => {});
-      if (!data.playing && !video.paused) video.pause();
+      // See siteControls above: on a site where setting video.currentTime
+      // directly isn't safe, route the same change through the site's own
+      // player instead.
+      if (siteControls) {
+        if (needsSeek) siteControls.seek(localTime);
+        if (data.playing) siteControls.play();
+        if (!data.playing) siteControls.pause();
+      } else {
+        if (needsSeek) video.currentTime = localTime;
+        if (data.playing && video.paused) video.play().catch(() => {});
+        if (!data.playing && !video.paused) video.pause();
+      }
     }, needsSeek);
   }
 
@@ -229,7 +243,10 @@
     if (!lastRemote || !lastRemote.playing || !video || video.paused || applyingRemote) return;
     const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000;
     if (Math.abs(video.currentTime - expected) > DRIFT_TOLERANCE_S) {
-      withRemoteGuard(() => { video.currentTime = expected; }, true);
+      withRemoteGuard(() => {
+        if (siteControls) siteControls.seek(expected);
+        else video.currentTime = expected;
+      }, true);
     }
   }
 
@@ -362,13 +379,15 @@
   // Public API used by site adapters (window.TetherSync.*)
   // ---------------------------------------------------------------------
   window.TetherSync = {
-    /** Call once, with a status callback and a reaction callback (see
-     *  site-common.js). Site adapters are responsible for finding the video
-     *  element and re-calling setVideo when the player is torn down/rebuilt
-     *  (Netflix does this on episode change, for instance). */
-    init(statusCallback, reactionCallback) {
+    /** Call once, with a status callback, a reaction callback, and optional
+     *  player controls (see site-common.js). Site adapters are responsible
+     *  for finding the video element and re-calling setVideo when the
+     *  player is torn down/rebuilt (Netflix does this on episode change,
+     *  for instance). */
+    init(statusCallback, reactionCallback, playerControls) {
       onStatus = statusCallback || onStatus;
       onReaction = reactionCallback || onReaction;
+      siteControls = playerControls || null;
       // The storage-change listener is only registered once CLIENT_ID exists,
       // not just fired-and-forgotten alongside resolveClientId: a room change
       // arriving in that small window would otherwise call connect() while
