@@ -163,6 +163,18 @@
     if (!config || applyingRemote || !video) return;
     if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
     const payload = { type, time: video.currentTime, playing: !video.paused, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
+    // lastRemote is what checkDrift treats as "where playback should be", but
+    // it was only ever updated by data arriving from the other person, never
+    // by our own action. Whichever side acts less often ends up with a
+    // stale lastRemote that still reflects the other person from a while
+    // ago, so the instant THAT side seeks, its own checkDrift runs a
+    // moment later, disagrees with what just happened locally, and quietly
+    // snaps it back, seeking looked like it silently did nothing. Using
+    // serverNow() here rather than waiting on the write's own resolved
+    // timestamp is deliberately consistent with what checkDrift compares
+    // against on this same device, not less accurate: it's this device's
+    // own clock-corrected "now" either way.
+    lastRemote = { time: video.currentTime, ts: serverNow(), playing: !video.paused };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
