@@ -41,6 +41,16 @@ let nickname = '';
 // next time the popup is opened, and so presence can tell "my other tab"
 // apart from an actual second person in the room.
 let myClientId = null;
+// Unlike clientId (chrome.storage.local, one per install), this lives in
+// chrome.storage.sync, so it follows you to every browser Chrome signs into
+// the same account, on purpose, the room code itself is stored there too so
+// you can keep watching from a different device without retyping it. The
+// side effect: your own laptop and desktop, both open at once, silently
+// join the exact same room and each heartbeat under a different clientId,
+// so without something that says "these both belong to the same person,"
+// the presence check has no way to tell your other device apart from an
+// actual second person, and permanently reports one to yourself.
+let myOwnerId = null;
 let chatEs = null;
 let chatData = {};
 let notesEs = null;
@@ -54,6 +64,14 @@ function resolveClientId(cb) {
     if (stored.clientId) { myClientId = stored.clientId; cb(); return; }
     myClientId = 'u_' + Math.random().toString(36).slice(2, 10);
     chrome.storage.local.set({ clientId: myClientId }, cb);
+  });
+}
+
+function resolveOwnerId(cb) {
+  chrome.storage.sync.get(['ownerId'], (stored) => {
+    if (stored.ownerId) { myOwnerId = stored.ownerId; cb(); return; }
+    myOwnerId = 'o_' + Math.random().toString(36).slice(2, 10);
+    chrome.storage.sync.set({ ownerId: myOwnerId }, cb);
   });
 }
 
@@ -172,7 +190,7 @@ function writePresence() {
   if (!dbUrl || !roomId || !myClientId) return;
   fetch(roomUrl('presence/' + myClientId), {
     method: 'PUT',
-    body: JSON.stringify({ ts: Date.now(), name: nickname || null }),
+    body: JSON.stringify({ ts: Date.now(), name: nickname || null, owner: myOwnerId || null }),
   }).catch(() => {});
 }
 
@@ -180,14 +198,24 @@ function pollPresence() {
   if (!dbUrl || !roomId) return;
   fetch(roomUrl('presence')).then((r) => r.json()).then((data) => {
     const now = Date.now();
-    const peer = Object.entries(data || {}).find(
+    const others = Object.entries(data || {}).filter(
       ([clientId, entry]) => clientId !== myClientId && entry && now - entry.ts < PRESENCE_STALE_MS
     );
+    // Same owner, different clientId: your other device, not the person
+    // you're actually watching with (see myOwnerId above). Only missing or
+    // mismatched owner counts as a real peer, missing covers an older
+    // version's presence entry that predates this field.
+    const peer = others.find(([, entry]) => !entry.owner || entry.owner !== myOwnerId);
+    const myOtherDevice = !peer && others.find(([, entry]) => entry.owner === myOwnerId);
     peerDot.className = 'dot' + (peer ? ' connected' : '');
-    const peerName = peer && peer[1].name;
-    peerText.textContent = peer
-      ? (peerName ? `${peerName} is in this room` : 'Someone else is in this room')
-      : "Waiting for the other person...";
+    if (peer) {
+      const peerName = peer[1].name;
+      peerText.textContent = peerName ? `${peerName} is in this room` : 'Someone else is in this room';
+    } else if (myOtherDevice) {
+      peerText.textContent = 'Also open on your other device';
+    } else {
+      peerText.textContent = "Waiting for the other person...";
+    }
   }).catch(() => {});
 }
 
@@ -382,13 +410,15 @@ window.addEventListener('pagehide', () => {
 // boot
 // ---------------------------------------------------------------------
 resolveClientId(() => {
-  chrome.storage.sync.get(['dbUrl', 'roomId', 'nickname'], async (stored) => {
-    dbUrl = stored.dbUrl || DEFAULT_DB_URL;
-    dbUrlInput.value = dbUrl;
-    nickname = stored.nickname || '';
-    nicknameInput.value = nickname;
-    const ok = await testConnection();
-    if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
-    enterRoom(stored.roomId || randomRoomCode());
+  resolveOwnerId(() => {
+    chrome.storage.sync.get(['dbUrl', 'roomId', 'nickname'], async (stored) => {
+      dbUrl = stored.dbUrl || DEFAULT_DB_URL;
+      dbUrlInput.value = dbUrl;
+      nickname = stored.nickname || '';
+      nicknameInput.value = nickname;
+      const ok = await testConnection();
+      if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
+      enterRoom(stored.roomId || randomRoomCode());
+    });
   });
 });

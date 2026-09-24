@@ -25,6 +25,14 @@
   // presence entry written from either place is recognizable as "me", not
   // mistaken for a second person in the room.
   let CLIENT_ID = null;
+  // Unlike CLIENT_ID (chrome.storage.local, one per install), this lives in
+  // chrome.storage.sync, so it's shared by every browser Chrome signs into
+  // the same account, matching the popup's own copy of this (see popup.js).
+  // Written so that a laptop actively watching here and a desktop's popup
+  // checking presence can recognize each other as the same person, not a
+  // second person in the room, purely from clientId they'd look identical
+  // to an actual partner.
+  let OWNER_ID = null;
   const APPLY_REMOTE_GUARD_MS = 400; // suppress re-broadcasting a change we just applied ourselves
   const DRIFT_CHECK_MS = 2000;
   const DRIFT_TOLERANCE_S = 0.5;
@@ -110,6 +118,14 @@
       if (stored.clientId) { CLIENT_ID = stored.clientId; cb(); return; }
       CLIENT_ID = 'u_' + Math.random().toString(36).slice(2, 10);
       chrome.storage.local.set({ clientId: CLIENT_ID }, cb);
+    });
+  }
+
+  function resolveOwnerId(cb) {
+    chrome.storage.sync.get(['ownerId'], (stored) => {
+      if (stored.ownerId) { OWNER_ID = stored.ownerId; cb(); return; }
+      OWNER_ID = 'o_' + Math.random().toString(36).slice(2, 10);
+      chrome.storage.sync.set({ ownerId: OWNER_ID }, cb);
     });
   }
 
@@ -225,7 +241,7 @@
     if (!config || !CLIENT_ID) return;
     fetch(roomUrl('presence/' + CLIENT_ID), {
       method: 'PUT',
-      body: JSON.stringify({ ts: Date.now(), name: nickname || null }),
+      body: JSON.stringify({ ts: Date.now(), name: nickname || null, owner: OWNER_ID || null }),
     }).catch(() => {});
   }
 
@@ -352,20 +368,28 @@
       // CLIENT_ID is still null, and a sync pushed with `from: null` right as
       // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
-        chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
-          config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
-          nickname = stored.nickname || '';
-          connect();
-        });
-        chrome.storage.onChanged.addListener((changes, area) => {
-          if (area !== 'sync') return;
-          if (changes.nickname) nickname = changes.nickname.newValue || '';
-          if (changes.roomId || changes.dbUrl) {
-            chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
-              config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
-              connect();
-            });
-          }
+        resolveOwnerId(() => {
+          chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
+            config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+            nickname = stored.nickname || '';
+            connect();
+          });
+          chrome.storage.onChanged.addListener((changes, area) => {
+            if (area !== 'sync') return;
+            if (changes.nickname) nickname = changes.nickname.newValue || '';
+            // Self-heals the rare case where this device and another one
+            // both generated a fresh ownerId within the same instant, before
+            // either had synced: whichever value Chrome settles on for real
+            // is picked up here instead of staying stuck on a locally-made
+            // one that lost the race.
+            if (changes.ownerId) OWNER_ID = changes.ownerId.newValue || OWNER_ID;
+            if (changes.roomId || changes.dbUrl) {
+              chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
+                config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+                connect();
+              });
+            }
+          });
         });
       });
     },
