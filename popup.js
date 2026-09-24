@@ -56,8 +56,29 @@ let chatData = {};
 let notesEs = null;
 let presenceHeartbeat = null;
 let presencePoll = null;
+let clockTimer = null;
 const PRESENCE_HEARTBEAT_MS = 5000;
 const PRESENCE_STALE_MS = 12000; // a couple missed heartbeats before we call someone gone, not just between beats
+const CLOCK_RECALIBRATE_MS = 60000;
+let serverOffsetMs = 0; // add to Date.now() to estimate the Firebase server's clock
+
+// Same trick sync-core.js uses for playback, needed here for the same
+// reason: presence writes a server timestamp (see writePresence), and
+// comparing that against this device's own raw Date.now() would make
+// presence only as reliable as the two devices' clocks agree, exactly the
+// two devices this app assumes are in different countries.
+async function calibrateClock() {
+  try {
+    const t0 = Date.now();
+    const res = await fetch(roomUrl('_clock'), { method: 'PUT', body: JSON.stringify({ '.sv': 'timestamp' }) });
+    const t1 = Date.now();
+    const serverTime = await res.json();
+    if (typeof serverTime !== 'number') return;
+    const rtt = t1 - t0;
+    serverOffsetMs = (serverTime + rtt / 2) - t1;
+  } catch (e) { /* keep the previous offset if this attempt fails */ }
+}
+function serverNow() { return Date.now() + serverOffsetMs; }
 
 function resolveClientId(cb) {
   chrome.storage.local.get(['clientId'], (stored) => {
@@ -169,6 +190,9 @@ function enterRoom(newRoomId) {
   startNotesStream();
   startChatStream();
 
+  clearInterval(clockTimer);
+  calibrateClock();
+  clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
   clearInterval(presenceHeartbeat);
   writePresence();
   presenceHeartbeat = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
@@ -188,16 +212,20 @@ function enterRoom(newRoomId) {
 // someone who's watching right now even if their popup isn't open.
 function writePresence() {
   if (!dbUrl || !roomId || !myClientId) return;
+  // A server timestamp, not this device's own clock, same reasoning as
+  // sync-core.js's copy of this: comparing two devices' own clocks against
+  // each other is exactly how presence gets it backwards for a long-
+  // distance pair, this app's entire premise.
   fetch(roomUrl('presence/' + myClientId), {
     method: 'PUT',
-    body: JSON.stringify({ ts: Date.now(), name: nickname || null, owner: myOwnerId || null }),
+    body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: myOwnerId || null }),
   }).catch(() => {});
 }
 
 function pollPresence() {
   if (!dbUrl || !roomId) return;
   fetch(roomUrl('presence')).then((r) => r.json()).then((data) => {
-    const now = Date.now();
+    const now = serverNow(); // not Date.now(): entry.ts is a server timestamp, compare it against the same clock
     const others = Object.entries(data || {}).filter(
       ([clientId, entry]) => clientId !== myClientId && entry && now - entry.ts < PRESENCE_STALE_MS
     );
@@ -380,7 +408,13 @@ function sendChat() {
   // write, from this tab or the other side, the moment Firebase applies it.
   fetch(roomUrl('chat'), {
     method: 'POST',
-    body: JSON.stringify({ text, from: myClientId, name: nickname || null, ts: Date.now() }),
+    // A server timestamp, not this device's own clock: renderChat sorts
+    // strictly by ts, and this app's whole premise is two people on
+    // opposite sides of the world, exactly the situation where their
+    // devices' clocks can genuinely disagree by seconds. A local Date.now()
+    // here could show a reply rendered before the message it was replying
+    // to, purely because one device's clock ran a little ahead.
+    body: JSON.stringify({ text, from: myClientId, name: nickname || null, ts: { '.sv': 'timestamp' } }),
   }).catch(() => {});
 }
 sendChatBtn.addEventListener('click', sendChat);

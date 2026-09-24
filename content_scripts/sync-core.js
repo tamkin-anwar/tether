@@ -239,9 +239,16 @@
   // from "has this client written a timestamp recently" instead.
   function writePresence() {
     if (!config || !CLIENT_ID) return;
+    // A server timestamp, not this device's own clock: the popup's presence
+    // check (see popup.js) compares this against its own idea of "now" to
+    // decide if it's stale, and this app's whole premise is two people whose
+    // devices can genuinely disagree on the time by more than a little.
+    // Two client-side clocks fed into one staleness check is exactly how
+    // "someone's been gone for a while" and "someone's still here" get
+    // swapped.
     fetch(roomUrl('presence/' + CLIENT_ID), {
       method: 'PUT',
-      body: JSON.stringify({ ts: Date.now(), name: nickname || null, owner: OWNER_ID || null }),
+      body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: OWNER_ID || null }),
     }).catch(() => {});
   }
 
