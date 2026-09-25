@@ -326,9 +326,25 @@
   // episode change: Netflix et al. swap in a new <video> element (and this
   // tab's URL) without a full page reload, and that already re-triggers
   // attachVideo via the site adapter's own MutationObserver.
+  //
+  // Refreshed on every heartbeat, not just once at attach, with a server
+  // timestamp: rooms persist across days, and a value written once and never
+  // refreshed can't tell "watching this right now" apart from "watched this
+  // yesterday", so an invite link clicked before today's first press of play
+  // redirected to yesterday's show. `live` marks this newer, refreshed
+  // format so join.js only applies a freshness check to writers that
+  // actually keep it fresh, not to an older version that never did.
   function writeNowWatching() {
     if (!config) return;
-    fetch(roomUrl('nowWatching'), { method: 'PUT', body: JSON.stringify({ url: location.href, ts: Date.now() }) }).catch(() => {});
+    fetch(roomUrl('nowWatching'), {
+      method: 'PUT',
+      body: JSON.stringify({ url: location.href, ts: { '.sv': 'timestamp' }, live: true }),
+    }).catch(() => {});
+  }
+
+  function heartbeat() {
+    writePresence();
+    if (video) writeNowWatching();
   }
 
   function sendReaction(emoji) {
@@ -349,7 +365,7 @@
     calibrateClock();
     clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
     writePresence();
-    presenceTimer = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
+    presenceTimer = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
     // Covers the case where the video attached before config existed yet
     // (attachVideo's own call is a no-op then, guarded on config): now that
     // config is valid, make sure whatever's already playing gets recorded.

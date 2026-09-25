@@ -20,6 +20,10 @@
   }
 
   window.TetherSite.start(function findVideo() {
+    // Only the player page, never a browse-page preview (see netflix.js).
+    // Disney+ has used both /video/<id> and the newer /play/<id>, sometimes
+    // behind a locale prefix.
+    if (!/\/(video|play)\//.test(location.pathname)) return null;
     // Same starting approach as Netflix and Hulu. Disney+ has been known to
     // occasionally keep more than one <video> element around (a background
     // trailer, for instance), so if sync ever seems to grab the wrong one

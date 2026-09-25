@@ -4,6 +4,8 @@
 // ---------------------------------------------------------------------------
 
 window.TetherSite.start(function findVideo() {
+  // Only the player page, never a browse-page preview (see netflix.js).
+  if (!location.pathname.includes('/watch/')) return null;
   // Same defensive approach as Disney+: Crunchyroll's player can have more
   // than one <video> element on screen (a free-tier ad, an autoplay-next
   // preview), so prefer the largest on-screen one rather than assuming

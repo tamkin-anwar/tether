@@ -4,6 +4,11 @@
 // ---------------------------------------------------------------------------
 
 window.TetherSite.start(function findVideo() {
+  // Only the actual player page. The browse page autoplays a muted billboard
+  // trailer in a real <video> element, and attaching to it meant browsing
+  // for the next episode broadcast that trailer's 0:02 as the shared
+  // position, yanking whoever was still watching back to the start.
+  if (!location.pathname.includes('/watch/')) return null;
   // Netflix's player renders a single <video> element while watching.
   // No stable id/class is guaranteed across Netflix's own redesigns, so
   // just take the first (and normally only) <video> on the page.

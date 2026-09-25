@@ -4,6 +4,10 @@
 // ---------------------------------------------------------------------------
 
 window.TetherSite.start(function findVideo() {
+  // Only an actual watch page. The home page and search results play inline
+  // previews on hover in real <video> elements (see netflix.js for why
+  // attaching to one of those is actively harmful), and Shorts loop.
+  if (location.pathname !== '/watch') return null;
   // YouTube reuses the same <video> element for both the actual video and
   // any pre-roll/mid-roll ad, so unlike Disney+/Crunchyroll/Max there's no
   // separate ad element to worry about. It does still have other, unrelated

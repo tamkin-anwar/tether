@@ -5,6 +5,9 @@
 // ---------------------------------------------------------------------------
 
 window.TetherSite.start(function findVideo() {
+  // Only the player page (play.max.com/video/watch/...), never the home
+  // page's autoplaying hero trailer (see netflix.js).
+  if (!location.pathname.includes('/watch/')) return null;
   // Same defensive approach as Disney+ and Crunchyroll: prefer the largest
   // on-screen <video> rather than assuming there's only ever one, since a
   // player can keep a hidden or background element around (a quality

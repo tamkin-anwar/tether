@@ -64,9 +64,34 @@
     let attempts = 0;
     const REASSURE_AFTER = 10;   // ~20-25s
     const GIVE_UP_AFTER = 200;   // ~10 minutes
+    // nowWatching is refreshed every 5s while someone's actually on a player
+    // page (see sync-core.js), so anything older than a few missed beats is
+    // left over from an earlier session, not where they are now.
+    const FRESH_MS = 20000;
+    // Same server-clock trick sync-core.js uses: the timestamp being checked
+    // is the server's, so "how old is it" has to be measured on that clock
+    // too, not this device's. null if calibration fails, in which case the
+    // freshness check is skipped rather than blocking the join outright.
+    let serverOffsetMs = null;
+    function calibrate() {
+      const t0 = Date.now();
+      let t1 = 0;
+      return fetch(roomUrl('_clock'), { method: 'PUT', body: JSON.stringify({ '.sv': 'timestamp' }) })
+        .then((r) => { t1 = Date.now(); return r.json(); })
+        .then((serverTime) => {
+          if (typeof serverTime === 'number') serverOffsetMs = (serverTime + (t1 - t0) / 2) - t1;
+        })
+        .catch(() => {});
+    }
+    function isCurrent(data) {
+      // Written by a version that doesn't refresh it: no way to tell, so
+      // trust it, the same as before this check existed.
+      if (!data.live || typeof data.ts !== 'number' || serverOffsetMs === null) return true;
+      return (Date.now() + serverOffsetMs) - data.ts < FRESH_MS;
+    }
     function tryRedirect() {
       fetch(roomUrl('nowWatching')).then((r) => r.json()).then((data) => {
-        if (data && data.url) {
+        if (data && data.url && isCurrent(data)) {
           location.replace(data.url);
           return;
         }
@@ -106,6 +131,6 @@
         setTimeout(tryRedirect, 3000);
       });
     }
-    tryRedirect();
+    calibrate().then(tryRedirect);
   });
 })();
