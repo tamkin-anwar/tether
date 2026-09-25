@@ -170,12 +170,26 @@
       buildReactionTrigger();
 
       let current = null;
+      // Coalesced to once per frame, not once per mutation: this observer
+      // watches the entire page for any DOM change, and a busy streaming
+      // site re-renders constantly (carousels, subtitles, UI chrome) even
+      // when the video itself never changes. findVideo() re-scans every
+      // <video> element on some sites (Disney+, Crunchyroll, Max, YouTube),
+      // so running it on every single mutation batch is real, needless CPU
+      // work for the entire time the tab is open. A ~16ms coalescing delay
+      // is imperceptible for something as infrequent as an actual video swap.
+      let checkScheduled = false;
       const observer = new MutationObserver(() => {
-        const v = findVideo();
-        if (v !== current) {
-          current = v;
-          window.TetherSync.setVideo(v);
-        }
+        if (checkScheduled) return;
+        checkScheduled = true;
+        requestAnimationFrame(() => {
+          checkScheduled = false;
+          const v = findVideo();
+          if (v !== current) {
+            current = v;
+            window.TetherSync.setVideo(v);
+          }
+        });
       });
       observer.observe(document.documentElement, { childList: true, subtree: true });
 
