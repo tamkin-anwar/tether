@@ -33,6 +33,7 @@
     }
     const labels = {
       connected: ['In sync', '#34c759'],
+      idle: ['Ready. Open a title to sync', '#8e8e93'],
       disconnected: ['Reconnecting...', '#ff9f0a'],
       'no-room': ['Open Tether to join a room', '#8e8e93'],
     };

@@ -187,6 +187,25 @@
   }
   function serverNow() { return Date.now() + serverOffsetMs; }
 
+  // Which title/episode a position belongs to. A bare timestamp means
+  // nothing without it: at an episode change, one side's 0:00 on the new
+  // episode was applied to the other side still finishing the old one (and
+  // the old episode's 42:10 to a freshly started new one). Just the id, not
+  // the whole path: Crunchyroll's slug after the id is localized, and
+  // Disney+ can add a locale prefix, so two people in different regions
+  // watching the same thing would otherwise never match.
+  function contentKey() {
+    const v = new URLSearchParams(location.search).get('v');
+    if (location.pathname === '/watch' && v) return 'yt:' + v;
+    const m = location.pathname.match(/\/watch\/([^/]+)/) || location.pathname.match(/\/(?:play|video)\/([^/]+)/);
+    return m ? m[1] : location.pathname;
+  }
+  // Payloads from an older version carry no content key: nothing to compare,
+  // so they're trusted, the same as before this check existed.
+  function sameContent(key) {
+    return !key || key === contentKey();
+  }
+
   function pushSync(type) {
     if (!config || applyingRemote || !video) return;
     if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
@@ -197,7 +216,8 @@
     const time = currentTimeSeconds();
     const playing = isPlayingNow();
     if (time == null || playing == null) return;
-    const payload = { type, time, playing, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
+    const content = contentKey();
+    const payload = { type, time, playing, content, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
     // by our own action. Whichever side acts less often ends up with a
@@ -209,7 +229,7 @@
     // timestamp is deliberately consistent with what checkDrift compares
     // against on this same device, not less accurate: it's this device's
     // own clock-corrected "now" either way.
-    lastRemote = { time, ts: serverNow(), playing };
+    lastRemote = { time, ts: serverNow(), playing, content };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
@@ -238,7 +258,10 @@
 
   function applyRemote(data) {
     if (!data || data.from === CLIENT_ID || !video) return;
-    lastRemote = { time: data.time, ts: data.ts, playing: data.playing };
+    // A different title or episode: not a position this video can use, and
+    // not something checkDrift should keep steering toward either.
+    if (!sameContent(data.content)) return;
+    lastRemote = { time: data.time, ts: data.ts, playing: data.playing, content: data.content };
     // Keep lastRemote current either way, so the moment this side's own ad
     // ends there's already a fresh target to catch up to, but don't touch
     // an ad that's actually playing right now: seeking it to a content
@@ -289,6 +312,9 @@
     }
     if (adLike) return;
     if (!lastRemote || !lastRemote.playing || !video || applyingRemote) return;
+    // lastRemote can outlive the episode it came from (this tab just moved on
+    // to the next one); don't pull the new episode toward the old one's clock.
+    if (!sameContent(lastRemote.content)) return;
     if (!isPlayingNow()) return;
     const current = currentTimeSeconds();
     if (current == null) return;
@@ -384,7 +410,9 @@
     // quiet room specifically so a still-good connection doesn't look dead;
     // count them the same as a real update for staleness purposes.
     es.addEventListener('keep-alive', () => { lastEventAt = Date.now(); });
-    es.onopen = () => { lastEventAt = Date.now(); onStatus('connected'); };
+    // "In sync" is only true with a video attached; on a browse page (see the
+    // adapters' player-page check) there's nothing being synced yet.
+    es.onopen = () => { lastEventAt = Date.now(); onStatus(video ? 'connected' : 'idle'); };
     es.onerror = () => { onStatus('disconnected'); };
     // Belt and suspenders: an SSE connection can go quietly dead (a NAT or
     // proxy dropping it) without ever firing the EventSource's own onerror,
@@ -410,6 +438,9 @@
 
   function attachVideo(el) {
     video = el;
+    // The connection usually opened back on a browse page, which reported
+    // 'idle'; now that there's actually something to sync, say so.
+    if (es && es.readyState === EventSource.OPEN) onStatus('connected');
     videoListeners = {
       play: () => pushSync('play'),
       pause: () => pushSync('pause'),
