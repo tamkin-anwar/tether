@@ -264,8 +264,22 @@ copyCodeLink.addEventListener('click', () => {
   setTimeout(() => { copyCodeLink.textContent = 'Copy code only'; }, 1200);
 });
 
+// Accepts the whole invite link too, not just a bare code: pasting the link
+// someone sent you into this box is an easy, natural mistake, and before
+// this it became the "room code" itself, joining an empty room with no
+// sign anything was wrong. Anything that isn't part of a code (spaces,
+// dashes, a "Code:" prefix) is dropped for the same reason.
+function normalizeCode(input) {
+  const s = (input || '').trim();
+  const fromLink = s.match(/[?&]code=([A-Za-z0-9]+)/);
+  // Safe to strip: generated codes never contain an O (see randomRoomCode),
+  // so no real code can begin with "CODE" or "ROOM".
+  const raw = fromLink ? fromLink[1] : s.replace(/^(room\s*)?code\s*[:#-]?\s*/i, '');
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 joinRoomBtn.addEventListener('click', () => {
-  const code = joinCodeInput.value.trim().toUpperCase();
+  const code = normalizeCode(joinCodeInput.value);
   if (!code) return;
   joinCodeInput.value = '';
   enterRoom(code);
@@ -418,7 +432,10 @@ function sendChat() {
   }).catch(() => {});
 }
 sendChatBtn.addEventListener('click', sendChat);
-chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+// isComposing: typing through an input method (Bengali via Avro, Japanese,
+// Chinese, and so on) uses Enter to confirm the word being composed, not to
+// send; without this check, messages went out half-typed.
+chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) sendChat(); });
 
 // ---------------------------------------------------------------------
 // nickname

@@ -33,7 +33,10 @@
     if (el) el.style.display = 'none';
   }
 
-  const code = (new URLSearchParams(location.search).get('code') || '').trim().toUpperCase();
+  // Same cleanup as the popup's join box: some messaging apps carry a
+  // trailing character into a tapped link, which would otherwise join a
+  // room that doesn't exist.
+  const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!code) {
     stopSpinner();
     setHeadline("This link isn't valid");
