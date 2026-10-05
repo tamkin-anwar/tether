@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Tether: Watch Together",
-  "version": "0.1.33",
-  "description": "Sync playback with someone far away, across the streaming services you already have, plus a shared notes space.",
+  "version": "0.1.34",
+  "description": "Watch Netflix, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
