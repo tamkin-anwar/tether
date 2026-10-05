@@ -39,8 +39,8 @@ Please never post your room code or invite link anywhere public, including GitHu
 
 This policy may be updated as Tether adds features. Check back here for the current version.
 
-Contact: [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues) (issues are public, so leave your room code out)
+Contact: for privacy or data requests, email [contact@anwarcreativestudio.com](mailto:contact@anwarcreativestudio.com), privately. For bug reports, [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues) (issues are public, so leave your room code out).
 
 ---
 
-Tether is built and run by Anwar Creative Studio. If anything here ever stops matching what the extension actually does, tell us directly.
+Tether is built and run by [Anwar Creative Studio](https://anwarcreativestudio.com/). If anything here ever stops matching what the extension actually does, tell us directly.
