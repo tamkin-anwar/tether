@@ -381,7 +381,15 @@
     }).catch(() => {});
   }
 
+  // Read by keep-playing.js (MAIN world, shares this DOM attribute but not
+  // this file's variables): only while a video is attached in a room should
+  // the page be kept believing it's visible when you switch tabs.
+  function updateSyncingFlag() {
+    document.documentElement.toggleAttribute('data-tether-syncing', !!(video && config && config.roomId));
+  }
+
   function connect() {
+    updateSyncingFlag();
     if (es) es.close();
     if (reactionsEs) reactionsEs.close();
     if (clockTimer) clearInterval(clockTimer);
@@ -438,6 +446,7 @@
 
   function attachVideo(el) {
     video = el;
+    updateSyncingFlag();
     // The connection usually opened back on a browse page, which reported
     // 'idle'; now that there's actually something to sync, say so.
     if (es && es.readyState === EventSource.OPEN) onStatus('connected');
@@ -470,6 +479,7 @@
     }
     videoListeners = null;
     video = null;
+    updateSyncingFlag();
     if (driftTimer) clearInterval(driftTimer);
   }
 
