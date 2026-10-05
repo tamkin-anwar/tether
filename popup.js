@@ -395,7 +395,14 @@ function startChatStream() {
   if (chatEs) chatEs.close();
   chatData = {};
   if (!dbUrl || !roomId) return;
-  chatEs = new EventSource(roomUrl('chat'));
+  // Only the newest 50, not the whole history: chat grows forever, and the
+  // stream re-sent every message ever sent in the room each time the popup
+  // opened, though only the last 30 are shown, steadily slower for a
+  // couple who use it nightly. Push keys sort chronologically, so ordering
+  // by key is ordering by time. Verified against the live database: the
+  // initial event carries exactly the newest 50 in the same path "/" shape
+  // handled below, and a new message still arrives as one added child.
+  chatEs = new EventSource(roomUrl('chat') + '?orderBy=%22%24key%22&limitToLast=50');
   const handle = (e) => {
     try {
       const { path, data } = JSON.parse(e.data);
