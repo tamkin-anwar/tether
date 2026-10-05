@@ -438,6 +438,23 @@ function sendChat() {
     body: JSON.stringify({ text, from: myClientId, name: nickname || null, ts: { '.sv': 'timestamp' } }),
   }).catch(() => {});
 }
+// Real, self-serve deletion: chat and notes otherwise persist for as long
+// as the room exists (see PRIVACY.md). Shared data, so it's gone for both
+// people, and the confirmation says so. Both live streams above pick up
+// the deletion, so the other person's open popup clears too.
+const clearHistoryLink = document.getElementById('clearHistoryLink');
+clearHistoryLink.addEventListener('click', () => {
+  if (!dbUrl || !roomId) return;
+  if (!confirm("Delete all chat messages and notes in this room? They'll be gone for both of you, and this can't be undone.")) return;
+  // A pending notes save would otherwise land right after the delete and
+  // quietly bring the old text back.
+  clearTimeout(notesSaveTimer);
+  notesSaveTimer = null;
+  notesArea.value = '';
+  fetch(roomUrl('chat'), { method: 'DELETE' }).catch(() => {});
+  fetch(roomUrl('notes'), { method: 'DELETE' }).catch(() => {});
+});
+
 sendChatBtn.addEventListener('click', sendChat);
 // isComposing: typing through an input method (Bengali via Avro, Japanese,
 // Chinese, and so on) uses Enter to confirm the word being composed, not to

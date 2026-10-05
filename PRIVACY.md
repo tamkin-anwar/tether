@@ -17,8 +17,11 @@ Using Tether sends the following to a Firebase Realtime Database (a cloud databa
 - The nickname you optionally set under "Your name," shown to whoever you're in a room with, never required to use Tether
 - The URL of the title you're currently watching, so an invite link can take the other person straight to it, not the wider list of everywhere you browse
 - A randomly generated room code, used to keep separate groups of users from seeing each other's data
+- Two randomly generated identifiers, one per browser install and one shared across your own signed-in browsers, used only so Tether can tell "the other person is here" apart from "your own other device is here." They aren't linked to your name, email, or Google account
 
-This data lives under a room code that only you and whoever you share that code with know. Tether does not collect your legal name, email address, IP address, or any information about which websites you visit beyond the specific title you're currently watching together.
+This data lives under a room code that only you and whoever you share that code with know. It's sent over an encrypted (HTTPS) connection and stored in Firebase, which encrypts it at rest. Tether does not collect your legal name, email address, IP address, or any information about which websites you visit beyond the specific title you're currently watching together.
+
+Because anyone with your room code or invite link can open that room, treat the link like a private link and only share it with the people you're watching with.
 
 ## Data sharing
 
@@ -26,13 +29,17 @@ Tether does not sell, rent, or share your data with any third party, other than 
 
 ## Data retention and deletion
 
-Chat and notes data persists in the shared database for as long as the room exists. Deleting the extension does not delete existing room data. To request deletion of data associated with a specific room code, open an issue at [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues).
+Chat and notes stay in the shared database until you delete them. To delete them, open Tether's Chat tab and choose **Clear chat and notes**. This removes every chat message and the shared notes for that room, for everyone in it, immediately and permanently. Playback state, the title you're watching, and your nickname are overwritten as you use Tether rather than kept as a history.
+
+Leaving a room or uninstalling the extension does not delete that room's chat and notes, so clear them first if you want them gone.
+
+Please never post your room code or invite link anywhere public, including GitHub issues, since anyone who sees it can open your room.
 
 ## Changes to this policy
 
 This policy may be updated as Tether adds features. Check back here for the current version.
 
-Contact: [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues)
+Contact: [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues) (issues are public, so leave your room code out)
 
 ---
 
