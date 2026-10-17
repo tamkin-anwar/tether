@@ -1,6 +1,6 @@
 # Tether
 
-Watch Netflix, Hulu, Disney+, Crunchyroll, Max, or YouTube together while you're apart. Playback stays in sync across both your tabs, plus a shared notes pad and chat, without needing six different apps.
+Watch Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube together while you're apart. Playback stays in sync across both your tabs, plus a shared notes pad and chat, without needing a different app for every service.
 
 ## How it works
 
@@ -71,15 +71,16 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
 3. Click the Tether icon in your toolbar, paste the Database URL from step 4 above into **Firebase Database URL**, and click **Connect**.
 4. Send your girlfriend this same folder (or once we're happy with it, publish it to the Chrome Web Store so she can just install it) and have her do steps 1 to 3 with the *same* Database URL.
 5. One of you opens the popup and clicks **Copy invite link**, then sends that over. Clicking it drops the other person straight into the room, and once you've pressed play, straight to the exact title (see `content_scripts/join.js`). Pasting just the room code into **Their code** under "Join someone else's room" still works too, for anyone who'd rather send that instead.
-6. Both open Netflix, Hulu, Disney+, Crunchyroll, Max, or YouTube, both hit play on the same title. Playback will mirror from here.
+6. Both open Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube, both hit play on the same title. Playback will mirror from here.
 
 ## What's here now, and what's next
 
-- Done: play/pause/seek sync on Netflix, Hulu, Disney+, Crunchyroll, Max, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync, and an automatic catch-up to wherever the other person already is the moment your own video loads
+- Done: play/pause/seek sync on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync, and an automatic catch-up to wherever the other person already is the moment your own video loads
+- Done: ad-tier support: ad breaks are never sent as the shared position, and whoever's ad ends catches back up to the other person instead of pulling them back. On Prime Video, where ads are stitched into the stream itself, positions are exchanged in the episode's own time, so different ads on each side never put you out of step
+- Done: playback speed syncs, and live streams sync play and pause only (they have no shared timeline)
 - Done: a real invite link, not just a room code, that drops the other person straight into the exact title once they've pressed play (`content_scripts/join.js`)
 - Done: presence ("someone else is in this room," not just "connected"), with an optional nickname attached to it and to chat
 - Done: a shared notes pad, a basic chat, and emoji reactions, the last two both in the popup and, for reactions, as a floating overlay on the video itself
-- Not yet: Prime Video support (same approach as the others, just needs a small site-specific adapter, like `content_scripts/hulu.js`; Prime's player is more obfuscated and changes more often, so it'll likely need more upkeep than the rest)
 - Not yet: a shared file drop (needs Firebase Storage, a bit more setup than Realtime Database)
 - Not yet: an on-page chat overlay while watching, instead of only in the popup (reactions already work this way, chat itself still doesn't)
 

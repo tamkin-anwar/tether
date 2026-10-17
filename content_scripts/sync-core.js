@@ -36,6 +36,8 @@
   const APPLY_REMOTE_GUARD_MS = 400; // suppress re-broadcasting a change we just applied ourselves
   const DRIFT_CHECK_MS = 2000;
   const DRIFT_TOLERANCE_S = 0.5;
+  const SEEK_THRESHOLD_S = 0.35;  // how far off a remote update has to be before it's worth a seek at all
+  const PUSH_SETTLE_MS = 120;     // see schedulePush
   const CLOCK_RECALIBRATE_MS = 60000;
   const PRESENCE_HEARTBEAT_MS = 5000;
   const STALE_CHECK_MS = 20000;
@@ -60,7 +62,26 @@
   let baselineDuration = null; // longest real (non-ad-like) duration seen on the current page, the "this is what long-form looks like" reference point
   let baselineUrl = null;      // which page that baseline belongs to
 
+  // When an ad ends, the player puts the show back where it stopped, and
+  // that fires the same seeked/play events as you seeking yourself would.
+  // Pushed, they sent the position from before the ad as if it were new and
+  // pulled the other person back to it, undoing however far they'd watched
+  // in the meantime. For a moment after an ad, this side only catches up
+  // (see checkDrift) and never pushes.
+  const AD_RESUME_QUIET_MS = 2500;
+  let lastAdSignal = false;
+  let adEndedAt = 0;
   function looksLikeAd() {
+    const ad = adSignal();
+    if (lastAdSignal && !ad) adEndedAt = Date.now();
+    lastAdSignal = ad;
+    return ad;
+  }
+  function justLeftAd() {
+    return Date.now() - adEndedAt < AD_RESUME_QUIET_MS;
+  }
+
+  function adSignal() {
     if (!video) return false;
     // A site that can tell us directly (currently just Disney+, via its own
     // ad-interstitial flag; see disneyplus.js) beats guessing from duration.
@@ -195,6 +216,9 @@
   // Disney+ can add a locale prefix, so two people in different regions
   // watching the same thing would otherwise never match.
   function contentKey() {
+    // Prime Video can't be keyed from the URL at all (see prime.js), so a
+    // site can supply its own.
+    if (siteControls?.contentKey) return siteControls.contentKey();
     const v = new URLSearchParams(location.search).get('v');
     if (location.pathname === '/watch' && v) return 'yt:' + v;
     const m = location.pathname.match(/\/watch\/([^/]+)/) || location.pathname.match(/\/(?:play|video)\/([^/]+)/);
@@ -203,12 +227,67 @@
   // Payloads from an older version carry no content key: nothing to compare,
   // so they're trusted, the same as before this check existed.
   function sameContent(key) {
-    return !key || key === contentKey();
+    if (!key) return true;
+    if (siteControls?.sameContent) return siteControls.sameContent(key, contentKey());
+    return key === contentKey();
   }
 
+  // A live stream (a YouTube live, Hulu + Live TV) has no shared timeline:
+  // each viewer's video.currentTime counts from whenever their own session
+  // started, so seeking one to the other's number lands somewhere arbitrary.
+  // Play and pause still sync; position doesn't.
+  function isLive() {
+    return !siteControls?.getCurrentTime && !!video && video.duration === Infinity;
+  }
+
+  function playbackRate() {
+    const r = video ? video.playbackRate : 1;
+    return Number.isFinite(r) && r > 0 ? r : 1;
+  }
+  function clampRate(r) {
+    return (typeof r === 'number' && Number.isFinite(r)) ? Math.min(4, Math.max(0.25, r)) : 1;
+  }
+
+  // Sites whose players rebuffer badly on every seek (Prime Video, see
+  // prime.js) ask for more slack; a second off beats a stutter every few
+  // seconds.
+  function driftTolerance() { return siteControls?.driftToleranceS ?? DRIFT_TOLERANCE_S; }
+  function seekThreshold() { return siteControls?.driftToleranceS ?? SEEK_THRESHOLD_S; }
+
+  // A native event is pushed a beat later rather than the instant it fires.
+  // A player's own transitions arrive as bursts (a seek is often
+  // pause + seeked + play, an ad starting on YouTube swaps the source a
+  // moment before its ad-showing class appears), and reading state once
+  // everything has settled sends one accurate update instead of several,
+  // the first of which could carry an ad's 0:00 as the shared position.
+  let pushTimer = null;
+  let pushType = null;
+  // Players fire ratechange while loading (setting 1x on a video that was
+  // already at 1x), and an episode starting is exactly the wrong moment to
+  // send this side's position as news. Only a real change of speed counts.
+  let knownRate = 1;
+  function onRateChange() {
+    const r = playbackRate();
+    if (Math.abs(r - knownRate) < 0.01) return;
+    knownRate = r;
+    schedulePush('rate');
+  }
+  function schedulePush(type) {
+    if (applyingRemote) return; // an echo of something we just applied, not a local action
+    pushType = type;
+    if (pushTimer) return;
+    pushTimer = setTimeout(() => {
+      pushTimer = null;
+      pushSync(pushType);
+    }, PUSH_SETTLE_MS);
+  }
+
+  // Only ever called through schedulePush, which already dropped echoes of
+  // our own remote-applied changes at the moment their events fired.
   function pushSync(type) {
-    if (!config || applyingRemote || !video) return;
+    if (!config || !video) return;
     if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
+    if (justLeftAd()) return;
     // See currentTimeSeconds/isPlayingNow above: on a site where the
     // <video> element itself can't be trusted for position, read through
     // the site's own player instead. Either can come back null if that
@@ -217,7 +296,8 @@
     const playing = isPlayingNow();
     if (time == null || playing == null) return;
     const content = contentKey();
-    const payload = { type, time, playing, content, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
+    const rate = playbackRate();
+    const payload = { type, time, playing, rate, content, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
     // by our own action. Whichever side acts less often ends up with a
@@ -229,7 +309,7 @@
     // timestamp is deliberately consistent with what checkDrift compares
     // against on this same device, not less accurate: it's this device's
     // own clock-corrected "now" either way.
-    lastRemote = { time, ts: serverNow(), playing, content };
+    lastRemote = { time, ts: serverNow(), playing, rate, content };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
@@ -261,7 +341,8 @@
     // A different title or episode: not a position this video can use, and
     // not something checkDrift should keep steering toward either.
     if (!sameContent(data.content)) return;
-    lastRemote = { time: data.time, ts: data.ts, playing: data.playing, content: data.content };
+    const rate = clampRate(data.rate);
+    lastRemote = { time: data.time, ts: data.ts, playing: data.playing, rate, content: data.content };
     // Keep lastRemote current either way, so the moment this side's own ad
     // ends there's already a fresh target to catch up to, but don't touch
     // an ad that's actually playing right now: seeking it to a content
@@ -274,11 +355,20 @@
     // (or reconnecting) minutes into someone else's pause would seek to
     // "where they'd be if they'd kept playing" instead of where they
     // actually are: sitting still.
-    const elapsed = data.playing ? Math.max(0, (serverNow() - data.ts) / 1000) : 0;
+    // Multiplied by their speed: at 1.5x, ten seconds in flight is fifteen
+    // seconds of show.
+    const elapsed = data.playing ? Math.max(0, (serverNow() - data.ts) / 1000) * rate : 0;
     const localTime = data.time + elapsed;
     const current = currentTimeSeconds();
-    const needsSeek = current == null || Math.abs(current - localTime) > 0.35;
+    const needsSeek = !isLive() && (current == null || Math.abs(current - localTime) > seekThreshold());
     withRemoteGuard(() => {
+      // Speed is part of staying together: one of you at 1.25x drifts a
+      // full minute every four, and drift correction would be seeking
+      // every two seconds trying to hold that together. Older versions
+      // send no rate; clampRate reads that as normal speed.
+      if (Math.abs(playbackRate() - rate) > 0.01) {
+        try { video.playbackRate = rate; knownRate = rate; } catch (e) { /* a site that refuses keeps its own */ }
+      }
       // See siteControls above: on a site where setting video.currentTime
       // directly isn't safe, route the same change through the site's own
       // player instead.
@@ -295,7 +385,23 @@
   }
 
   let wasAdLike = false;
+  let lastContentKey = null;
   function checkDrift() {
+    // A new title or episode in the same <video> element. YouTube does this
+    // on every video (it never swaps the element), and Prime Video between
+    // episodes, so attachVideo's own catch-up never runs again. The other
+    // person's latest position for this title may have arrived while this
+    // tab was still on the old one, and was rightly ignored then; fetch it
+    // now. The invite link should point at the new title too.
+    const key = contentKey();
+    if (key !== lastContentKey) {
+      lastContentKey = key;
+      if (config) {
+        writeNowWatching();
+        fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+      }
+      return;
+    }
     const adLike = looksLikeAd();
     if (adLike !== wasAdLike) {
       wasAdLike = adLike;
@@ -315,11 +421,11 @@
     // lastRemote can outlive the episode it came from (this tab just moved on
     // to the next one); don't pull the new episode toward the old one's clock.
     if (!sameContent(lastRemote.content)) return;
-    if (!isPlayingNow()) return;
+    if (!isPlayingNow() || isLive()) return;
     const current = currentTimeSeconds();
     if (current == null) return;
-    const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000;
-    if (Math.abs(current - expected) > DRIFT_TOLERANCE_S) {
+    const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000 * (lastRemote.rate || 1);
+    if (Math.abs(current - expected) > driftTolerance()) {
       withRemoteGuard(() => {
         if (siteControls) siteControls.seek(expected);
         else video.currentTime = expected;
@@ -451,13 +557,14 @@
     // 'idle'; now that there's actually something to sync, say so.
     if (es && es.readyState === EventSource.OPEN) onStatus('connected');
     videoListeners = {
-      play: () => pushSync('play'),
-      pause: () => pushSync('pause'),
-      seeked: () => pushSync('seek'),
+      play: () => schedulePush('play'),
+      pause: () => schedulePush('pause'),
+      seeked: () => schedulePush('seek'),
+      ratechange: onRateChange,
     };
-    video.addEventListener('play', videoListeners.play);
-    video.addEventListener('pause', videoListeners.pause);
-    video.addEventListener('seeked', videoListeners.seeked);
+    knownRate = playbackRate();
+    for (const [type, fn] of Object.entries(videoListeners)) video.addEventListener(type, fn);
+    lastContentKey = contentKey();
     driftTimer = setInterval(checkDrift, DRIFT_CHECK_MS);
     // Firebase's stream delivers the room's current state once, right as the
     // connection opens (see connect()), which is how a newly-arriving video
@@ -473,10 +580,10 @@
 
   function detachVideo() {
     if (video && videoListeners) {
-      video.removeEventListener('play', videoListeners.play);
-      video.removeEventListener('pause', videoListeners.pause);
-      video.removeEventListener('seeked', videoListeners.seeked);
+      for (const [type, fn] of Object.entries(videoListeners)) video.removeEventListener(type, fn);
     }
+    clearTimeout(pushTimer);
+    pushTimer = null;
     videoListeners = null;
     video = null;
     updateSyncingFlag();
