@@ -184,19 +184,27 @@
       // someone came back to it, silently unsynced the whole time. setTimeout
       // is only throttled in the background, never stopped.
       let checkScheduled = false;
+      function check() {
+        const v = findVideo();
+        if (v !== current) {
+          current = v;
+          window.TetherSync.setVideo(v);
+        }
+      }
       const observer = new MutationObserver(() => {
         if (checkScheduled) return;
         checkScheduled = true;
         setTimeout(() => {
           checkScheduled = false;
-          const v = findVideo();
-          if (v !== current) {
-            current = v;
-            window.TetherSync.setVideo(v);
-          }
+          check();
         }, 50);
       });
       observer.observe(document.documentElement, { childList: true, subtree: true });
+      // Plus a slow check on a timer, for changes no element is added or
+      // removed for: Prime Video shows and hides its player overlay with CSS
+      // alone, and a <video> becoming ready to play (which some adapters wait
+      // for) changes nothing in the DOM at all.
+      setInterval(check, 1000);
 
       // catch the case where a video is already present on script injection
       current = findVideo();

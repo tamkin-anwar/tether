@@ -260,6 +260,57 @@
   // moment before its ad-showing class appears), and reading state once
   // everything has settled sends one accurate update instead of several,
   // the first of which could carry an ad's 0:00 as the shared position.
+  // The first few seconds of a video, or of a new title in the same one.
+  // A player's own startup fires the same events a person would: it seeks
+  // to wherever this account last left off (or 0:00) and autoplays. Pushed,
+  // that told the other person, already watching, to jump to it, so whoever
+  // opened the title second yanked the first back to their own resume
+  // point. During this window this side only catches up. If there turned
+  // out to be nobody to catch up to (this side is first), where it is gets
+  // announced at the end instead, so starting a title first still works,
+  // just a moment later.
+  const STARTUP_QUIET_MS = 3000;
+  let startupUntil = 0;
+  let startupTimer = null;
+  let caughtUp = false;
+  let startupPush = null;
+  function beginStartup() {
+    startupUntil = Date.now() + STARTUP_QUIET_MS;
+    caughtUp = false;
+    startupPush = null;
+    clearTimeout(startupTimer);
+    startupTimer = setTimeout(endStartup, STARTUP_QUIET_MS);
+    if (config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+  }
+  function endStartup() {
+    startupUntil = 0;
+    if (!video || !config) return;
+    if (caughtUp) {
+      // Once more now that it has settled: a player that finished its own
+      // startup seek after our catch-up would otherwise be left where it
+      // put itself, not where the other person is.
+      fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    } else {
+      // Even with no event seen: a player's startup can play and seek
+      // before this video was attached at all, and the other person should
+      // still hear where this side is.
+      pushSync(startupPush || 'start');
+    }
+    startupPush = null;
+  }
+  // A new title showing up in the same <video> element (every YouTube video,
+  // Prime episodes) is a fresh start too. Checked on every event, not only
+  // on checkDrift's timer, so the new title's own startup events are caught.
+  let lastContentKey = null;
+  function noteContent() {
+    const key = contentKey();
+    if (key === lastContentKey) return false;
+    lastContentKey = key;
+    if (config) writeNowWatching(); // the invite link should point at the new title
+    beginStartup();
+    return true;
+  }
+
   let pushTimer = null;
   let pushType = null;
   // Players fire ratechange while loading (setting 1x on a video that was
@@ -274,6 +325,8 @@
   }
   function schedulePush(type) {
     if (applyingRemote) return; // an echo of something we just applied, not a local action
+    noteContent();
+    if (Date.now() < startupUntil) { startupPush = type; return; }
     pushType = type;
     if (pushTimer) return;
     pushTimer = setTimeout(() => {
@@ -349,6 +402,7 @@
     // timestamp, or pausing/playing it to match, is meaningless at best and
     // can visibly glitch or restart the ad at worst.
     if (looksLikeAd()) return;
+    caughtUp = true;
     // Only project the position forward if the video was actually playing at
     // the moment this was written. A paused video doesn't advance just
     // because time passed before this arrived, if it did, joining a room
@@ -385,23 +439,12 @@
   }
 
   let wasAdLike = false;
-  let lastContentKey = null;
   function checkDrift() {
-    // A new title or episode in the same <video> element. YouTube does this
-    // on every video (it never swaps the element), and Prime Video between
-    // episodes, so attachVideo's own catch-up never runs again. The other
-    // person's latest position for this title may have arrived while this
-    // tab was still on the old one, and was rightly ignored then; fetch it
-    // now. The invite link should point at the new title too.
-    const key = contentKey();
-    if (key !== lastContentKey) {
-      lastContentKey = key;
-      if (config) {
-        writeNowWatching();
-        fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
-      }
-      return;
-    }
+    // A new title or episode in the same <video> element, with no event
+    // from it yet: catch up to the other person (see noteContent). Their
+    // latest position for it may have arrived while this tab was still on
+    // the old one, and was rightly ignored then.
+    if (noteContent()) return;
     const adLike = looksLikeAd();
     if (adLike !== wasAdLike) {
       wasAdLike = adLike;
@@ -564,7 +607,6 @@
     };
     knownRate = playbackRate();
     for (const [type, fn] of Object.entries(videoListeners)) video.addEventListener(type, fn);
-    lastContentKey = contentKey();
     driftTimer = setInterval(checkDrift, DRIFT_CHECK_MS);
     // Firebase's stream delivers the room's current state once, right as the
     // connection opens (see connect()), which is how a newly-arriving video
@@ -574,7 +616,11 @@
     // missed with nothing to retry it. Fetch the current state directly the
     // moment a video actually exists to attach it to, instead of only ever
     // reacting to the other person's next play, pause, or seek.
-    if (config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    //
+    // Done as the start of the startup window (see beginStartup), so this
+    // video's own startup events can't be sent ahead of that catch-up.
+    lastContentKey = contentKey();
+    beginStartup();
     writeNowWatching();
   }
 
@@ -584,6 +630,8 @@
     }
     clearTimeout(pushTimer);
     pushTimer = null;
+    clearTimeout(startupTimer);
+    startupUntil = 0;
     videoListeners = null;
     video = null;
     updateSyncingFlag();

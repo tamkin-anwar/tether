@@ -156,8 +156,10 @@
     inAd: false,
     adStartClock: null,
     settleUntil: 0,
+    videoSince: 0,      // when this video was first seen
 
     reset() {
+      this.videoSince = Date.now();
       this.offset = null;
       this.samples = [];
       this.candidate = null;
@@ -181,8 +183,15 @@
 
     // While a disagreeing reading waits on confirmation, nobody can say
     // which offset is right, so nothing is read or seeked through it (see
-    // getCurrentTime and doSeek below).
-    get unsure() { return this.candidate != null; },
+    // getCurrentTime and doSeek below). Same for the first few seconds of a
+    // new video before the time bar has given any reading at all: seeking
+    // on a guessed offset of zero put someone joining mid-episode in the
+    // wrong place. If the time bar never shows up (Prime changed its
+    // markup), the plain video clock is used after that, which is still
+    // right on any title without ads before the current point.
+    get unsure() {
+      return this.candidate != null || (this.offset == null && Date.now() - this.videoSince < 3000);
+    },
 
     tick() {
       const box = playerBox();
@@ -330,27 +339,32 @@
     return OffsetTracker.offset ?? 0;
   }
 
-  function doSeek(episodeSeconds, tries = 0) {
+  // `requestedAt` because a seek can wait here (spacing, or an offset not yet
+  // known) while the show keeps playing; the target moves on with it, or it
+  // lands exactly as far behind as it waited.
+  function doSeek(episodeSeconds, requestedAt) {
     const v = findVideo();
     if (!v) return;
     offsetNow();
-    if (OffsetTracker.unsure && tries < 8) {
-      setTimeout(() => doSeek(episodeSeconds, tries + 1), 250);
+    if (OffsetTracker.unsure && Date.now() - requestedAt < 3500) {
+      setTimeout(() => doSeek(episodeSeconds, requestedAt), 250);
       return;
     }
+    const waited = v.paused ? 0 : (Date.now() - requestedAt) / 1000 * (v.playbackRate || 1);
     lastSeekAt = Date.now();
-    try { v.currentTime = Math.max(0, episodeSeconds + offsetNow()); } catch (e) { /* not seekable yet */ }
+    try { v.currentTime = Math.max(0, episodeSeconds + waited + offsetNow()); } catch (e) { /* not seekable yet */ }
   }
 
   window.TetherSite.start(findVideo, {
     seek(seconds) {
-      const wait = SEEK_SPACING_MS - (Date.now() - lastSeekAt);
-      if (wait <= 0) { doSeek(seconds); return; }
-      pendingSeek = seconds;
+      const now = Date.now();
+      const wait = SEEK_SPACING_MS - (now - lastSeekAt);
+      if (wait <= 0) { doSeek(seconds, now); return; }
+      pendingSeek = { seconds, at: now };
       if (pendingTimer) return;
       pendingTimer = setTimeout(() => {
         pendingTimer = null;
-        if (pendingSeek != null) doSeek(pendingSeek);
+        if (pendingSeek) doSeek(pendingSeek.seconds, pendingSeek.at);
         pendingSeek = null;
       }, wait);
     },
