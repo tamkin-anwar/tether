@@ -34,9 +34,20 @@
   // to an actual partner.
   let OWNER_ID = null;
   const APPLY_REMOTE_GUARD_MS = 400; // suppress re-broadcasting a change we just applied ourselves
-  const DRIFT_CHECK_MS = 2000;
-  const DRIFT_TOLERANCE_S = 0.5;
-  const SEEK_THRESHOLD_S = 0.35;  // how far off a remote update has to be before it's worth a seek at all
+  const DRIFT_CHECK_MS = 1000;
+  // How tightly playback is held together. Within PRECISION_S, nothing
+  // happens. Beyond it and up to SEEK_LIMIT_S, the gap is closed by playing a
+  // few percent faster or slower for a moment (see nudge), which nobody
+  // watching can see or hear. Only past SEEK_LIMIT_S is it a seek, which
+  // rebuffers and visibly jumps. Sites can loosen both (Prime, see prime.js).
+  const PRECISION_S = 0.06;
+  const SEEK_LIMIT_S = 1.0;
+  // How far off an incoming update (the other person pressing play, pause or
+  // seeking) has to be to seek right then rather than leave it to the
+  // nudging above. Paused, it's the exact frame you're both looking at, and
+  // there's no nudging a paused video, so that's held much tighter.
+  const SEEK_THRESHOLD_PLAYING_S = 0.35;
+  const SEEK_THRESHOLD_PAUSED_S = 0.15;
   const PUSH_SETTLE_MS = 120;     // see schedulePush
   const CLOCK_RECALIBRATE_MS = 60000;
   const PRESENCE_HEARTBEAT_MS = 5000;
@@ -158,7 +169,7 @@
   let clockTimer = null;
   let presenceTimer = null;
   let staleCheckTimer = null;
-  let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
+  let serverOffsetMs = 0;   // add to localNow() to estimate the Firebase server's clock (see calibrateClock)
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
   let onReaction = () => {}; // callback(emoji), only for a reaction that arrived from the other person
 
@@ -193,20 +204,41 @@
   // Firebase server's clock (the same NTP-style trick used for any
   // low-latency sync): write a server-timestamp placeholder, see what the
   // server resolved it to, and back out the round-trip-adjusted offset.
-  async function calibrateClock() {
+  //
+  // One round trip is a noisy measurement: the offset it gives is only as
+  // good as the assumption that the request and the response took equally
+  // long, and the database lives in Singapore, a long way from most people
+  // using this, so a slow leg on either side skews it by tens of
+  // milliseconds. Several samples are kept, and the one with the fastest
+  // round trip wins, because the less time a sample spent in flight, the
+  // less room there was for the two legs to differ (the standard NTP
+  // approach). A burst of samples on connect gets a good estimate within a
+  // second; one more a minute keeps it fresh.
+  //
+  // Timed on the monotonic clock rather than Date.now(), which can jump
+  // when the system clock gets corrected mid-session.
+  const CLOCK_SAMPLES_KEPT = 12;
+  let clockSamples = [];
+  function localNow() { return performance.timeOrigin + performance.now(); }
+  async function clockSample() {
     if (!config) return;
     try {
-      const t0 = Date.now();
+      const t0 = localNow();
       const res = await fetch(roomUrl('_clock'), { method: 'PUT', body: JSON.stringify({ '.sv': 'timestamp' }) });
-      const t1 = Date.now();
+      const t1 = localNow();
       const serverTime = await res.json();
       if (typeof serverTime !== 'number') return;
       const rtt = t1 - t0;
-      const estimatedServerNow = serverTime + rtt / 2; // the server likely stamped this roughly mid-flight
-      serverOffsetMs = estimatedServerNow - t1;
+      // The server likely stamped this roughly mid-flight.
+      clockSamples.push({ rtt, offset: serverTime + rtt / 2 - t1 });
+      if (clockSamples.length > CLOCK_SAMPLES_KEPT) clockSamples.shift();
+      serverOffsetMs = clockSamples.reduce((best, c) => (c.rtt < best.rtt ? c : best)).offset;
     } catch (e) { /* keep the previous offset if this attempt fails */ }
   }
-  function serverNow() { return Date.now() + serverOffsetMs; }
+  async function calibrateClock(burst) {
+    for (let i = 0; i < (burst ? 5 : 1); i++) await clockSample();
+  }
+  function serverNow() { return localNow() + serverOffsetMs; }
 
   // Which title/episode a position belongs to. A bare timestamp means
   // nothing without it: at an episode change, one side's 0:00 on the new
@@ -248,11 +280,56 @@
     return (typeof r === 'number' && Number.isFinite(r)) ? Math.min(4, Math.max(0.25, r)) : 1;
   }
 
-  // Sites whose players rebuffer badly on every seek (Prime Video, see
-  // prime.js) ask for more slack; a second off beats a stutter every few
-  // seconds.
-  function driftTolerance() { return siteControls?.driftToleranceS ?? DRIFT_TOLERANCE_S; }
-  function seekThreshold() { return siteControls?.driftToleranceS ?? SEEK_THRESHOLD_S; }
+  // Sites whose players rebuffer badly on every seek, or can only tell us
+  // their position to within a fraction of a second (Prime Video, see
+  // prime.js), ask for more slack.
+  function precision() { return siteControls?.precisionS ?? PRECISION_S; }
+  function seekLimit() { return siteControls?.seekLimitS ?? SEEK_LIMIT_S; }
+  function seekThreshold(playing) {
+    return playing
+      ? Math.max(SEEK_THRESHOLD_PLAYING_S, siteControls?.precisionS ?? 0)
+      : Math.max(SEEK_THRESHOLD_PAUSED_S, siteControls?.precisionS ?? 0);
+  }
+
+  // A seek isn't instant: while the player fetches and buffers the new spot,
+  // the shared timeline keeps moving, so seeking to exactly where the other
+  // person is lands behind them by however long that took. Seeks made while
+  // playing aim that far ahead. It starts at a typical value and learns this
+  // site and connection's real one from how far off each seek actually
+  // landed (measured on the next drift check).
+  let seekLead = 0.25;
+  let probeLead = false;
+  function learnLead(miss) {
+    // miss: where we landed minus where we should be. Behind means negative.
+    if (Math.abs(miss) < 1.5) seekLead = Math.min(1.5, Math.max(0, seekLead - 0.6 * miss));
+  }
+
+  // Closing a small gap by speed instead of a seek. Up to 10% faster or
+  // slower, scaled to the gap, with the pitch kept as is (Chrome's default):
+  // a few seconds of that is imperceptible, where a seek is a visible jump
+  // and a moment of buffering. Stops once back within a fraction of the
+  // target, so it doesn't hunt back and forth around it.
+  let nudging = false;
+  let nudgeRate = 1;
+  // A player that keeps putting its own speed back (some sites manage speed
+  // themselves) can't be nudged; after a few tries, this page goes back to
+  // closing every gap past precision with a seek, the way it always did.
+  let nudgeRefusals = 0;
+  function canNudge() { return nudgeRefusals < 3; }
+  function nudge(gap) {
+    if (nudging && Math.abs(playbackRate() - nudgeRate) > 0.005) nudgeRefusals++;
+    const amount = Math.min(0.1, 0.04 + Math.abs(gap) * 0.15);
+    const r = knownRate * (gap < 0 ? 1 + amount : 1 - amount);
+    if (nudging && Math.abs(r - nudgeRate) < 0.005) return;
+    nudging = true;
+    nudgeRate = r;
+    try { video.playbackRate = r; } catch (e) { nudging = false; }
+  }
+  function stopNudge() {
+    if (!nudging) return;
+    nudging = false;
+    try { if (video) video.playbackRate = knownRate; } catch (e) { /* nothing to restore */ }
+  }
 
   // A native event is pushed a beat later rather than the instant it fires.
   // A player's own transitions arrive as bursts (a seek is often
@@ -319,7 +396,9 @@
   let knownRate = 1;
   function onRateChange() {
     const r = playbackRate();
+    if (nudging && Math.abs(r - nudgeRate) < 0.001) return; // our own nudge
     if (Math.abs(r - knownRate) < 0.01) return;
+    nudging = false; // someone picked a speed; that wins over any nudge
     knownRate = r;
     schedulePush('rate');
   }
@@ -349,8 +428,19 @@
     const playing = isPlayingNow();
     if (time == null || playing == null) return;
     const content = contentKey();
-    const rate = playbackRate();
-    const payload = { type, time, playing, rate, content, ts: { '.sv': 'timestamp' }, from: CLIENT_ID };
+    // The speed someone chose, not a nudge in progress.
+    const rate = nudging ? knownRate : playbackRate();
+    // Stamped with the moment the position was read, on the shared server
+    // clock (see calibrateClock), not with when the server received the
+    // write. A server timestamp arrived one upload later than the position
+    // it described, and the other side, projecting forward from it, always
+    // landed exactly that far behind: a tenth to a fifth of a second on a
+    // typical connection to this database, every single time.
+    // Until the first clock sample is back (the first second or so after
+    // connecting), the server's own timestamp: late by an upload, but never
+    // wrong by however far off this device's clock happens to be.
+    const ts = clockSamples.length ? Math.round(serverNow()) : null;
+    const payload = { type, time, playing, rate, content, ts: ts ?? { '.sv': 'timestamp' }, from: CLIENT_ID };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
     // by our own action. Whichever side acts less often ends up with a
@@ -362,7 +452,7 @@
     // timestamp is deliberately consistent with what checkDrift compares
     // against on this same device, not less accurate: it's this device's
     // own clock-corrected "now" either way.
-    lastRemote = { time, ts: serverNow(), playing, rate, content };
+    lastRemote = { time, ts: ts ?? serverNow(), playing, rate, content };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
@@ -414,24 +504,28 @@
     const elapsed = data.playing ? Math.max(0, (serverNow() - data.ts) / 1000) * rate : 0;
     const localTime = data.time + elapsed;
     const current = currentTimeSeconds();
-    const needsSeek = !isLive() && (current == null || Math.abs(current - localTime) > seekThreshold());
+    const needsSeek = !isLive() && (current == null || Math.abs(current - localTime) > seekThreshold(data.playing));
+    // Playing, aim ahead by the time the seek itself takes (see seekLead).
+    const target = data.playing ? localTime + seekLead : localTime;
+    if (needsSeek && data.playing) probeLead = true;
+    stopNudge();
     withRemoteGuard(() => {
       // Speed is part of staying together: one of you at 1.25x drifts a
       // full minute every four, and drift correction would be seeking
       // every two seconds trying to hold that together. Older versions
       // send no rate; clampRate reads that as normal speed.
-      if (Math.abs(playbackRate() - rate) > 0.01) {
-        try { video.playbackRate = rate; knownRate = rate; } catch (e) { /* a site that refuses keeps its own */ }
+      if (Math.abs(knownRate - rate) > 0.01 || Math.abs(playbackRate() - rate) > 0.01) {
+        try { knownRate = rate; video.playbackRate = rate; } catch (e) { /* a site that refuses keeps its own */ }
       }
       // See siteControls above: on a site where setting video.currentTime
       // directly isn't safe, route the same change through the site's own
       // player instead.
       if (siteControls) {
-        if (needsSeek) siteControls.seek(localTime);
+        if (needsSeek) siteControls.seek(target);
         if (data.playing) siteControls.play();
         if (!data.playing) siteControls.pause();
       } else {
-        if (needsSeek) video.currentTime = localTime;
+        if (needsSeek) video.currentTime = target;
         if (data.playing && video.paused) video.play().catch(() => {});
         if (!data.playing && !video.paused) video.pause();
       }
@@ -459,20 +553,33 @@
       }
       return;
     }
-    if (adLike) return;
-    if (!lastRemote || !lastRemote.playing || !video || applyingRemote) return;
+    if (adLike) { stopNudge(); return; }
+    if (applyingRemote || Date.now() < startupUntil) return;
     // lastRemote can outlive the episode it came from (this tab just moved on
     // to the next one); don't pull the new episode toward the old one's clock.
-    if (!sameContent(lastRemote.content)) return;
-    if (!isPlayingNow() || isLive()) return;
+    if (!video || !lastRemote || !lastRemote.playing || !sameContent(lastRemote.content) ||
+        !isPlayingNow() || isLive()) {
+      stopNudge();
+      probeLead = false;
+      return;
+    }
     const current = currentTimeSeconds();
     if (current == null) return;
     const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000 * (lastRemote.rate || 1);
-    if (Math.abs(current - expected) > driftTolerance()) {
+    const gap = current - expected; // positive: ahead of the other person
+    if (probeLead) { probeLead = false; learnLead(gap); }
+    const seekPast = canNudge() ? seekLimit() : Math.max(precision(), 0.5);
+    if (Math.abs(gap) > seekPast) {
+      stopNudge();
+      probeLead = true;
       withRemoteGuard(() => {
-        if (siteControls) siteControls.seek(expected);
-        else video.currentTime = expected;
+        if (siteControls) siteControls.seek(expected + seekLead);
+        else video.currentTime = expected + seekLead;
       }, true);
+    } else if (Math.abs(gap) > precision() && canNudge()) {
+      nudge(gap);
+    } else if (nudging && Math.abs(gap) < precision() * 0.4) {
+      stopNudge();
     }
   }
 
@@ -545,8 +652,9 @@
     if (presenceTimer) clearInterval(presenceTimer);
     if (staleCheckTimer) clearInterval(staleCheckTimer);
     if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
-    calibrateClock();
-    clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
+    clockSamples = [];
+    calibrateClock(true);
+    clockTimer = setInterval(() => calibrateClock(false), CLOCK_RECALIBRATE_MS);
     writePresence();
     presenceTimer = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
     // Covers the case where the video attached before config existed yet
@@ -632,6 +740,8 @@
     pushTimer = null;
     clearTimeout(startupTimer);
     startupUntil = 0;
+    stopNudge();
+    probeLead = false;
     videoListeners = null;
     video = null;
     updateSyncingFlag();

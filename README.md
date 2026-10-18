@@ -78,6 +78,7 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
 - Done: play/pause/seek sync on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync, and an automatic catch-up to wherever the other person already is the moment your own video loads
 - Done: ad-tier support: ad breaks are never sent as the shared position, and whoever's ad ends catches back up to the other person instead of pulling them back. On Prime Video, where ads are stitched into the stream itself, positions are exchanged in the episode's own time, so different ads on each side never put you out of step
 - Done: playback speed syncs, and live streams sync play and pause only (they have no shared timeline)
+- Done: sub-tenth-of-a-second sync. Positions are timestamped the moment they're read on a server-calibrated clock (best of several round trips), small drift is closed by an imperceptible speed nudge instead of a visible seek, and seeks aim ahead by a learned seek latency
 - Done: a real invite link, not just a room code, that drops the other person straight into the exact title once they've pressed play (`content_scripts/join.js`)
 - Done: presence ("someone else is in this room," not just "connected"), with an optional nickname attached to it and to chat
 - Done: a shared notes pad, a basic chat, and emoji reactions, the last two both in the popup and, for reactions, as a floating overlay on the video itself

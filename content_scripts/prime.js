@@ -97,6 +97,10 @@
   // player's language.
   const AD_TEXT = /(?:^|[^a-zÀ-ɏ])(?:ad|ads|anuncio|publicidad|werbung|publicité|pubblicità|reclame|reklam|propaganda)[^0-9a-z]{0,3}\d{1,2}:\d{2}|fast forward and rewind (?:are )?unavailable during ads/i;
 
+  // Reading the player's text means a layout pass, and this runs ten times
+  // a second, so that last-resort check is only redone every half second.
+  let textCheckAt = 0;
+  let textSaysAd = false;
   function adPlaying(box) {
     for (const selector of AD_SELECTORS) {
       for (const el of box.querySelectorAll(selector)) {
@@ -104,8 +108,11 @@
         if (el.matches('[class*="skip-ad"]') || el.textContent.trim()) return true;
       }
     }
-    const words = (box.innerText || '').slice(0, 4000);
-    return AD_TEXT.test(words);
+    if (Date.now() - textCheckAt >= 500) {
+      textCheckAt = Date.now();
+      textSaysAd = AD_TEXT.test((box.innerText || '').slice(0, 4000));
+    }
+    return textSaysAd;
   }
 
   // ---------------------------------------------------------------------
@@ -124,7 +131,7 @@
   //
   // From the time bar: it only shows whole seconds, so one reading is only
   // good to within a second. But the moment the bar ticks over to a new
-  // second is exact, so the offset is sampled at those ticks, polled four
+  // second is exact, so the offset is sampled at those ticks, polled ten
   // times a second. A sample can only be up to one poll late, never early,
   // which makes the smallest recent sample the best estimate.
   //
@@ -243,13 +250,13 @@
         if (this.offset == null || Math.abs(raw - this.offset) <= 1.5) {
           this.candidate = null;
           this.samples.push(raw);
-          if (this.samples.length > 8) this.samples.shift();
+          if (this.samples.length > 20) this.samples.shift();
         } else if (this.confirm(raw)) {
           this.samples = [raw];
         } else {
           return;
         }
-        this.offset = Math.min(...this.samples) - 0.1;
+        this.offset = Math.min(...this.samples) - 0.05; // half a poll: the tick happened somewhere within the last one
       } else {
         // A jump (a seek, the player opening, the controls coming back):
         // the episode is somewhere in the second shown, so the middle of it.
@@ -261,7 +268,7 @@
       }
     },
   };
-  setInterval(() => OffsetTracker.tick(), 250);
+  setInterval(() => OffsetTracker.tick(), 100);
 
   // ---------------------------------------------------------------------
   // Which title and episode. The URL's id is the series (or the movie), and
@@ -389,6 +396,10 @@
     },
     contentKey,
     sameContent,
-    driftToleranceS: 1,
+    // Prime's position is only known to a fraction of a second (the time
+    // bar shows whole seconds; see OffsetTracker), and its seeks are fragile,
+    // so it's held a little looser and leans on speed nudging more.
+    precisionS: 0.2,
+    seekLimitS: 2.5,
   });
 })();
