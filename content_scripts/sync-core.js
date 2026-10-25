@@ -354,6 +354,26 @@
   // out to be nobody to catch up to (this side is first), where it is gets
   // announced at the end instead, so starting a title first still works,
   // just a moment later.
+  // Catching up means following someone who is watching right now. The
+  // room keeps its last playback state forever, so without this check,
+  // starting last night's episode again tonight, alone, snapped you to
+  // wherever the two of you stopped yesterday. Only applied if the other
+  // person is in a session at this moment (an older version that doesn't
+  // report sessions counts if it's there at all).
+  async function catchUp() {
+    if (!config || !isLeader()) return;
+    try {
+      const [presence, data] = await Promise.all([
+        fetch(roomUrl('presence')).then((res) => res.json()),
+        fetch(roomUrl('sync')).then((res) => res.json()),
+      ]);
+      const now = serverNow();
+      const someoneWatching = Object.entries(presence || {}).some(([id, p]) =>
+        id !== CLIENT_ID && p && p.watching !== false && (!p.owner || p.owner !== OWNER_ID) && now - p.ts < 15000);
+      if (someoneWatching) applyRemote(data);
+    } catch (e) { /* nothing to catch up to */ }
+  }
+
   const STARTUP_QUIET_MS = 3000;
   let startupUntil = 0;
   let startupTimer = null;
@@ -365,7 +385,7 @@
     startupPush = null;
     clearTimeout(startupTimer);
     startupTimer = setTimeout(endStartup, STARTUP_QUIET_MS);
-    if (config && isLeader()) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    catchUp();
   }
   function endStartup() {
     startupUntil = 0;
@@ -374,7 +394,7 @@
       // Once more now that it has settled: a player that finished its own
       // startup seek after our catch-up would otherwise be left where it
       // put itself, not where the other person is.
-      fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+      catchUp();
     } else {
       // Even with no event seen: a player's startup can play and seek
       // before this video was attached at all, and the other person should
@@ -606,7 +626,7 @@
         // shared position could be stale by exactly that much now. Fetch
         // the current value directly instead of waiting on the other
         // person's next play, pause, or seek to correct it.
-        fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+        catchUp();
       }
       return;
     }
@@ -833,7 +853,7 @@
   let leader = null; // { id, at, playing }
   function isLeader() { return !!leader && leader.id === TAB_ID; }
   function leaderStale() { return !leader || Date.now() - leader.at > LEADER_STALE_MS; }
-  function claimLeader(catchUp = true) {
+  function claimLeader(withCatchUp = true) {
     if (!config || !config.roomId || !video || !sessionOn()) return;
     const was = isLeader();
     leader = { id: TAB_ID, at: Date.now(), playing: !!isPlayingNow() };
@@ -842,7 +862,7 @@
     // Newly in charge: catch up to the other person, who may have moved on
     // while this tab was standing by. Not when it's taking over because of
     // something you just did in it, which is what gets sent instead.
-    if (!was && catchUp && config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    if (!was && withCatchUp) catchUp();
   }
   function releaseLeader() {
     if (!isLeader()) return;
@@ -903,8 +923,13 @@
     streamsOpen = true;
     lastEventAt = Date.now();
     es = new EventSource(roomUrl('sync'));
+    // The stream opens with a snapshot of whatever is stored, which is not
+    // news and may be from yesterday (see catchUp, which decides whether to
+    // follow it). Everything after that is the other person acting now.
+    let snapshot = true;
     es.addEventListener('put', (e) => {
       lastEventAt = Date.now();
+      if (snapshot) { snapshot = false; return; }
       try { applyRemote(JSON.parse(e.data).data); } catch (err) { /* ignore malformed frames */ }
     });
     es.addEventListener('patch', (e) => {
@@ -915,7 +940,16 @@
     // quiet room specifically so a still-good connection doesn't look dead;
     // count them the same as a real update for staleness purposes.
     es.addEventListener('keep-alive', () => { lastEventAt = Date.now(); });
-    es.onopen = () => { lastEventAt = Date.now(); onStatus(video ? 'connected' : 'idle'); };
+    // Every (re)connect starts with a snapshot. After a dropped connection,
+    // the other person may have acted in the gap, so that's worth catching
+    // up to, through the same check as joining.
+    let opens = 0;
+    es.onopen = () => {
+      lastEventAt = Date.now();
+      snapshot = true;
+      if (opens++ > 0) catchUp();
+      onStatus(video ? 'connected' : 'idle');
+    };
     es.onerror = () => { onStatus('disconnected'); };
     // Belt and suspenders: an SSE connection can go quietly dead (a NAT or
     // proxy dropping it) without ever firing the EventSource's own onerror,
@@ -923,7 +957,7 @@
     // nothing actually gets through. If nothing at all has been heard,
     // including Firebase's own keep-alives, open fresh ones.
     staleCheckTimer = setInterval(() => {
-      if (Date.now() - lastEventAt > STALE_AFTER_MS) openStreams();
+      if (Date.now() - lastEventAt > STALE_AFTER_MS) { openStreams(); catchUp(); }
     }, STALE_CHECK_MS);
 
     reactionsEs = new EventSource(roomUrl('reactions'));
