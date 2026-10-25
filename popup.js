@@ -375,6 +375,7 @@ function sessionActive() {
 }
 function startSession() {
   if (!roomId) return;
+  markWelcomed();
   const now = Date.now();
   session = { roomId, startedAt: now, lastVideoAt: now };
   chrome.storage.local.set({ [SESSION_KEY]: session });
@@ -406,6 +407,23 @@ function renderSession() {
   }
 }
 sessionBtn.addEventListener('click', () => { if (sessionActive()) endSession(); else startSession(); });
+
+// ---------------------------------------------------------------------
+// first run: a short how-it-works at the top until it's dismissed, or the
+// first time a session starts (by then they've figured it out). This page
+// is also what opens in a tab right after installing (see background.js).
+// ---------------------------------------------------------------------
+const welcomeCard = document.getElementById('welcomeCard');
+const roomHint = document.getElementById('roomHint'); // says the same thing in brief; one at a time
+function markWelcomed() {
+  welcomeCard.style.display = 'none';
+  roomHint.style.display = '';
+  chrome.storage.local.set({ tetherWelcomed: true });
+}
+document.getElementById('welcomeDone').addEventListener('click', markWelcomed);
+chrome.storage.local.get(['tetherWelcomed'], (local) => {
+  if (!local.tetherWelcomed) { welcomeCard.style.display = 'block'; roomHint.style.display = 'none'; }
+});
 chrome.storage.local.get([SESSION_KEY], (local) => { session = local[SESSION_KEY] || null; renderSession(); });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[SESSION_KEY]) { session = changes[SESSION_KEY].newValue || null; renderSession(); }

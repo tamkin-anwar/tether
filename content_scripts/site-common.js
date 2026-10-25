@@ -72,10 +72,55 @@
   // ---------------------------------------------------------------------
   // Status badge
   // ---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
+  // One-time tips: the first time someone sees the "Watch together" button,
+  // and the first time they're in a session, a short note says what it's
+  // for. Each shows once per browser, ever, and goes away on its own.
+  // ---------------------------------------------------------------------
+  const TIPS_KEY = 'tetherTips';
+  let tipsSeen = null; // loaded from storage before any tip can show
+  try { chrome.storage.local.get([TIPS_KEY], (l) => { tipsSeen = l[TIPS_KEY] || {}; }); } catch (e) { tipsSeen = {}; }
+  let tipEl = null;
+  let tipFor = null; // which status it explains; gone once that changes
+  function closeTip() {
+    if (!tipEl) return;
+    const node = tipEl;
+    tipEl = null;
+    node.style.opacity = '0';
+    setTimeout(() => node.remove(), 300);
+  }
+  function showTip(id, text, bottom) {
+    if (!tipsSeen || tipsSeen[id] || tipEl) return;
+    tipsSeen = { ...tipsSeen, [id]: true };
+    try { chrome.storage.local.set({ [TIPS_KEY]: tipsSeen }); } catch (e) { /* extension reloaded */ }
+    tipEl = el('div', `position: fixed; bottom: ${bottom}px; right: 24px; max-width: 250px; pointer-events: auto;
+      font: 400 12.5px/1.4 ${FONT}; color: #fff; padding: 10px 30px 10px 12px; border-radius: 12px; ${GLASS}
+      transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; transform: translateY(6px);`, text);
+    const x = el('button', `all: initial; position: absolute; top: 6px; right: 8px; cursor: pointer;
+      font: 500 13px ${FONT}; color: rgba(255,255,255,0.6);`, '✕');
+    x.setAttribute('aria-label', 'Dismiss tip');
+    const node = tipEl;
+    const close = () => { if (tipEl === node) closeTip(); };
+    x.addEventListener('click', close);
+    tipEl.appendChild(x);
+    root.appendChild(tipEl);
+    requestAnimationFrame(() => { node.style.opacity = '1'; node.style.transform = 'translateY(0)'; });
+    setTimeout(() => { node.style.opacity = '1'; node.style.transform = 'translateY(0)'; }, 50);
+    setTimeout(close, 12000);
+  }
+  function maybeTip(status) {
+    tipFor = status;
+    if (status === 'off') showTip('start', 'Watching with someone? Click Watch together to sync this with them. They get an invite on their screen.', 66);
+    if (status === 'connected') showTip('session', "You're watching together. 💬 chat and 🙂 reactions are here, and you can end the session from the chat.", 110);
+  }
+
   let statusBadge = null;
   let currentStatus = null;
   function showStatus(status) {
     currentStatus = status;
+    if (tipEl && tipFor !== status) closeTip();
+    // Tips load from storage a moment after the page does; give them that moment.
+    setTimeout(() => { if (currentStatus === status) maybeTip(status); }, 1500);
     // Not watching together: none of the session's UI, just the offer to
     // start one on a player page (see buildStartButton).
     const off = status === 'off' || status === 'off-browse';
@@ -222,6 +267,7 @@
         copied = true;
       } catch (e) { /* the popup has the link too */ }
       showNotice(copied ? 'Watching together. Invite link copied' : 'Watching together. Share your invite link from the Tether popup');
+      closeTip();
     });
     root.appendChild(startButton);
   }
