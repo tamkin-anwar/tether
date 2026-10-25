@@ -145,7 +145,12 @@
   </nav>
 
   <div class="panel active" id="panel-room">
-    <div class="hint" style="margin: -4px 0 12px; padding: 0 2px;">Chat and notes are ready anytime. Playback syncs the moment you're both watching on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.</div>
+    <div class="hint" style="margin: -4px 0 12px; padding: 0 2px;">Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.</div>
+    <div class="card" id="sessionCard">
+      <div class="peer-line" style="margin: 0 0 10px;"><span class="dot" id="sessionDot"></span><span id="sessionText">Not watching together</span></div>
+      <button class="btn full" id="sessionBtn">Start watching together</button>
+      <div class="hint" id="sessionHint">Your partner gets an invite on their screen. Ends on its own after 30 minutes without a video.</div>
+    </div>
     <div class="card" id="setupCard" style="display:none">
       <label for="dbUrlInput">Firebase Database URL</label>
       <div class="row">

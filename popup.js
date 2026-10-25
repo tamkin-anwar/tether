@@ -28,6 +28,10 @@ const peerDot = document.getElementById('peerDot');
 const peerText = document.getElementById('peerText');
 const leaveRoomLink = document.getElementById('leaveRoomLink');
 const nicknameInput = document.getElementById('nicknameInput');
+const sessionDot = document.getElementById('sessionDot');
+const sessionText = document.getElementById('sessionText');
+const sessionBtn = document.getElementById('sessionBtn');
+const sessionHint = document.getElementById('sessionHint');
 
 let dbUrl = null;
 let roomId = null;
@@ -197,6 +201,7 @@ function enterRoom(newRoomId) {
   writePresence();
   presenceHeartbeat = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
   clearInterval(presencePoll);
+  renderSession(); // a session belongs to one room; switching rooms ends it here
   pollPresence();
   presencePoll = setInterval(pollPresence, PRESENCE_HEARTBEAT_MS);
 }
@@ -218,7 +223,7 @@ function writePresence() {
   // distance pair, this app's entire premise.
   fetch(roomUrl('presence/' + myClientId), {
     method: 'PUT',
-    body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: myOwnerId || null }),
+    body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: myOwnerId || null, watching: sessionActive() }),
   }).catch(() => {});
 }
 
@@ -234,6 +239,8 @@ function pollPresence() {
     // mismatched owner counts as a real peer, missing covers an older
     // version's presence entry that predates this field.
     const peer = others.find(([, entry]) => !entry.owner || entry.owner !== myOwnerId);
+    partnerWatching = peer && peer[1].watching === true ? { name: peer[1].name || null } : null;
+    renderSession();
     const myOtherDevice = !peer && others.find(([, entry]) => entry.owner === myOwnerId);
     peerDot.className = 'dot' + (peer ? ' connected' : '');
     if (peer) {
@@ -254,6 +261,9 @@ const JOIN_URL_BASE = 'https://tamkin-anwar.github.io/tether/join.html';
 
 copyLinkBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(`${JOIN_URL_BASE}?code=${roomId || ''}`);
+  // Sending the link is starting to watch together: the link only takes
+  // them to the show once this side is in a session (see join.js).
+  if (!sessionActive()) startSession();
   copyLinkBtn.textContent = 'Copied ✓';
   setTimeout(() => { copyLinkBtn.textContent = 'Copy invite link'; }, 1200);
 });
@@ -347,6 +357,58 @@ notesArea.addEventListener('input', saveNotesDebounced);
 // popup closing and the user switching to another extension tab/panel.
 window.addEventListener('pagehide', () => {
   if (notesSaveTimer) { clearTimeout(notesSaveTimer); saveNotesNow(); }
+});
+
+// ---------------------------------------------------------------------
+// watching together: a session you start, not always on (see sync-core.js
+// for the full picture). Kept in storage.local, which every streaming tab
+// in this browser listens to, so starting or ending it here takes effect
+// in all of them at once.
+// ---------------------------------------------------------------------
+const SESSION_KEY = 'tetherSession';
+const SESSION_IDLE_MS = 30 * 60e3;
+let session = null;
+let partnerWatching = null;
+function sessionActive() {
+  return !!(session && roomId && session.roomId === roomId &&
+    Date.now() - (session.lastVideoAt || session.startedAt) < SESSION_IDLE_MS);
+}
+function startSession() {
+  if (!roomId) return;
+  const now = Date.now();
+  session = { roomId, startedAt: now, lastVideoAt: now };
+  chrome.storage.local.set({ [SESSION_KEY]: session });
+  writePresence();
+  renderSession();
+}
+function endSession() {
+  session = null;
+  chrome.storage.local.remove(SESSION_KEY);
+  writePresence();
+  renderSession();
+}
+function renderSession() {
+  const on = sessionActive();
+  sessionDot.className = 'dot' + (on ? ' connected' : '');
+  sessionBtn.classList.toggle('secondary', on);
+  if (on) {
+    sessionText.textContent = 'Watching together';
+    sessionBtn.textContent = 'End session';
+    sessionHint.textContent = 'Playback is synced in your streaming tabs. Ends on its own after 30 minutes without a video.';
+  } else if (partnerWatching) {
+    sessionText.textContent = `${partnerWatching.name || 'The other person'} is watching together`;
+    sessionBtn.textContent = 'Join';
+    sessionHint.textContent = 'Join to sync your playback with theirs.';
+  } else {
+    sessionText.textContent = 'Not watching together';
+    sessionBtn.textContent = 'Start watching together';
+    sessionHint.textContent = 'Your partner gets an invite on their screen. Ends on its own after 30 minutes without a video.';
+  }
+}
+sessionBtn.addEventListener('click', () => { if (sessionActive()) endSession(); else startSession(); });
+chrome.storage.local.get([SESSION_KEY], (local) => { session = local[SESSION_KEY] || null; renderSession(); });
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes[SESSION_KEY]) { session = changes[SESSION_KEY].newValue || null; renderSession(); }
 });
 
 // ---------------------------------------------------------------------

@@ -84,6 +84,7 @@ Firebase Realtime Database is the shared "phone line" between your two tabs. I c
 - Done: a shared notes pad, a basic chat, and emoji reactions, the last two both in the popup and, for reactions, as a floating overlay on the video itself
 - Done: chat on the video page itself (same conversation as the popup), with unread counts and new messages popping up briefly while it's closed; everything on the page follows the player into fullscreen
 - Done: notices of what the other person did ("Ridu paused", "Ridu skipped to 12:04"), and a one-click "Join them" when they're on a different title
+- Done: watching together is a session you start, not always on. Nothing about what you watch is shared outside one. The other person gets an invite to join (never pulled in), and a session ends with End or after 30 minutes without a video
 - Done: one tab per browser holds the live connections (the database is HTTP/1.1, capped at six connections per site), so any number of streaming tabs can be open without sync stalling
 - Not yet: a shared file drop (needs Firebase Storage, a bit more setup than Realtime Database)
 

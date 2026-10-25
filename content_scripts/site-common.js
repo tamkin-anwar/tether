@@ -61,8 +61,10 @@
   function wake() {
     if (controlsEl) controlsEl.style.opacity = '1';
     clearTimeout(idleTimer);
+    if (startButton) startButton.style.opacity = '1';
     idleTimer = setTimeout(() => {
       if (controlsEl && !chatOpen && !pickerOpen) controlsEl.style.opacity = '0';
+      if (startButton) startButton.style.opacity = '0';
     }, 3000);
   }
   document.addEventListener('mousemove', wake, { passive: true });
@@ -71,7 +73,19 @@
   // Status badge
   // ---------------------------------------------------------------------
   let statusBadge = null;
+  let currentStatus = null;
   function showStatus(status) {
+    currentStatus = status;
+    // Not watching together: none of the session's UI, just the offer to
+    // start one on a player page (see buildStartButton).
+    const off = status === 'off' || status === 'off-browse';
+    if (controlsEl) controlsEl.style.display = off || status === 'no-room' ? 'none' : 'flex';
+    if (startButton) startButton.style.display = status === 'off' ? 'flex' : 'none';
+    if (off) {
+      if (chatOpen) setChatOpen(false);
+      if (statusBadge) { statusBadge.style.opacity = '0'; statusBadge.style.transform = 'translateY(6px)'; }
+      return;
+    }
     if (!statusBadge) {
       statusBadge = el('div', `
         position: fixed; bottom: 24px; right: 24px;
@@ -106,8 +120,6 @@
         statusBadge.style.transform = 'translateY(6px)';
       }, 3500);
     }
-    // Reactions and chat only make sense once there's a room to send to.
-    if (controlsEl) controlsEl.style.display = status === 'no-room' ? 'none' : 'flex';
   }
 
   // ---------------------------------------------------------------------
@@ -160,6 +172,58 @@
     if (action.type === 'seek') return `${who} skipped to ${clock(action.time)}`;
     if (action.type === 'rate') return action.rate === 1 ? `${who} went back to normal speed` : `${who} set speed to ${action.rate}×`;
     return null;
+  }
+
+  // The other person started watching together: offered, never forced.
+  // Nothing about this tab changes until you choose to join.
+  let inviteBanner = null;
+  let dismissedInvite = null;
+  function showInvite(info) {
+    if (inviteBanner) { dismiss(inviteBanner); inviteBanner = null; }
+    if (!info || info.key === dismissedInvite) return;
+    const b = pill('display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; pointer-events: auto;');
+    b.append(el('span', '', `${info.name || 'The other person'} started watching together`));
+    const join = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
+      background: #007aff; padding: 6px 12px; border-radius: 999px;`, 'Join');
+    join.addEventListener('click', () => {
+      window.TetherSync.startSession();
+      showNotice(`Watching together with ${info.name || 'them'}`);
+    });
+    const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7);
+      padding: 4px 8px;`, '✕');
+    close.setAttribute('aria-label', 'Not now');
+    close.addEventListener('click', () => {
+      dismissedInvite = info.key; // until they start a new one
+      dismiss(b);
+      if (inviteBanner === b) inviteBanner = null;
+    });
+    b.append(join, close);
+    inviteBanner = b;
+    noticeStack.appendChild(b);
+    reveal(b);
+  }
+
+  // Starting a session from the video itself. Also copies the invite link,
+  // for someone who isn't in the room yet; someone who already is gets the
+  // invite on their own screen.
+  let startButton = null;
+  function buildStartButton() {
+    startButton = el('button', `all: initial; position: fixed; bottom: 24px; right: 24px; cursor: pointer;
+      display: none; align-items: center; gap: 7px; font: 600 12.5px ${FONT}; color: #fff;
+      padding: 8px 14px; border-radius: 999px; pointer-events: auto; transition: opacity 0.4s ease; ${GLASS}`);
+    startButton.append(el('span', 'font-size: 13px;', '👥'), el('span', '', 'Watch together'));
+    startButton.title = 'Start watching together';
+    startButton.addEventListener('click', async () => {
+      const code = window.TetherSync.roomId;
+      window.TetherSync.startSession();
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(`https://tamkin-anwar.github.io/tether/join.html?code=${code}`);
+        copied = true;
+      } catch (e) { /* the popup has the link too */ }
+      showNotice(copied ? 'Watching together. Invite link copied' : 'Watching together. Share your invite link from the Tether popup');
+    });
+    root.appendChild(startButton);
   }
 
   let elsewhereBanner = null;
@@ -324,6 +388,11 @@
     const head = el('div', `display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px 14px;
       font: 600 13px ${FONT}; color: #fff;`);
     head.append(el('span', '', 'Chat'));
+    const end = el('button', `all: initial; cursor: pointer; font: 500 12px ${FONT}; color: rgba(255,255,255,0.6);
+      padding: 2px 6px; margin-left: auto; margin-right: 4px;`, 'End session');
+    end.title = 'Stop watching together. Chat stays in the Tether popup.';
+    end.addEventListener('click', () => { window.TetherSync.endSession(); showNotice('Stopped watching together'); });
+    head.append(end);
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7); padding: 2px 6px;`, '✕');
     close.setAttribute('aria-label', 'Close chat');
     close.addEventListener('click', () => setChatOpen(false));
@@ -406,6 +475,8 @@
     start(findVideo, playerControls) {
       buildControls();
       buildChat();
+      buildStartButton();
+      window.TetherSync.on('invite', showInvite);
       window.TetherSync.on('chat', onChat);
       window.TetherSync.on('action', (a) => { const t = describe(a); if (t) showNotice(t); });
       window.TetherSync.on('elsewhere', showElsewhere);

@@ -46,8 +46,12 @@
 
   chrome.storage.sync.get(['dbUrl'], (stored) => {
     const dbUrl = stored.dbUrl || DEFAULT_DB_URL;
-    // Joins the room the same way pasting the code into the popup would.
+    // Joins the room the same way pasting the code into the popup would,
+    // and joins the session: following an invite link is accepting the
+    // invite (see sync-core.js), so playback syncs as soon as the video opens.
     chrome.storage.sync.set({ roomId: code });
+    const now = Date.now();
+    chrome.storage.local.set({ tetherSession: { roomId: code, startedAt: now, lastVideoAt: now } });
 
     function roomUrl(path) {
       return `${dbUrl.replace(/\/$/, '')}/rooms/${encodeURIComponent(code)}/${path}.json`;

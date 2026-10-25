@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tether: Watch Together",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "Watch Netflix, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions.",
   "icons": {
     "16": "icons/icon16.png",

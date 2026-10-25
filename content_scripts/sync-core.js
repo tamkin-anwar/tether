@@ -411,6 +411,7 @@
     schedulePush('rate');
   }
   function schedulePush(type) {
+    if (!sessionOn()) return; // not watching together: nothing is shared
     if (applyingRemote) return; // an echo of something we just applied, not a local action
     // Playing, pausing or seeking in the tab you're looking at makes it the
     // one in charge (see claimLeader). A tab in the background that isn't
@@ -643,7 +644,7 @@
   // extension deliberately uses (see the file header) has no equivalent of
   // the Firebase SDK's connection-aware onDisconnect, so presence is inferred
   // from "has this client written a timestamp recently" instead.
-  function writePresence() {
+  function writePresence(watching = sessionOn()) {
     if (!config || !CLIENT_ID) return;
     // A server timestamp, not this device's own clock: the popup's presence
     // check (see popup.js) compares this against its own idea of "now" to
@@ -654,7 +655,9 @@
     // swapped.
     fetch(roomUrl('presence/' + CLIENT_ID), {
       method: 'PUT',
-      body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: OWNER_ID || null }),
+      // watching: in a session right now, which is what the other person's
+      // Tether offers to join (see pollInvite).
+      body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: OWNER_ID || null, watching: !!watching }),
     }).catch(() => {});
   }
 
@@ -673,7 +676,7 @@
   // format so join.js only applies a freshness check to writers that
   // actually keep it fresh, not to an older version that never did.
   function writeNowWatching() {
-    if (!config) return;
+    if (!config || !sessionOn()) return;
     fetch(roomUrl('nowWatching'), {
       method: 'PUT',
       body: JSON.stringify({ url: location.href, ts: { '.sv': 'timestamp' }, live: true }),
@@ -681,6 +684,8 @@
   }
 
   function heartbeat() {
+    if (!sessionOn()) { endSession(); return; } // 30 minutes without a video
+    bumpSession();
     writePresence();
     if (video) writeNowWatching();
     // The tab in charge says it's still here (and whether it's playing);
@@ -737,7 +742,74 @@
   // this file's variables): only while a video is attached in a room should
   // the page be kept believing it's visible when you switch tabs.
   function updateSyncingFlag() {
-    document.documentElement.toggleAttribute('data-tether-syncing', !!(video && config && config.roomId));
+    document.documentElement.toggleAttribute('data-tether-syncing', !!(video && config && config.roomId && sessionOn()));
+  }
+
+  // ---------------------------------------------------------------------
+  // Watching together is a session you start, not something that's always
+  // on. The room itself is permanent (its code, chat and notes are always
+  // there), but playback is only synced, and what you're watching only
+  // shared, while a session is on: started from the popup or the page,
+  // joined by accepting the other person's invite, or by opening an invite
+  // link. Without one, Tether shares nothing about what you watch; it only
+  // checks, while you're looking at a streaming tab, whether the other
+  // person has started a session, so it can offer to join it.
+  //
+  // Kept per browser (storage.local): starting a session on your laptop
+  // doesn't start one on your desktop. It ends with End, or on its own
+  // after 30 minutes without a video open.
+  // ---------------------------------------------------------------------
+  const SESSION_KEY = 'tetherSession';
+  const SESSION_IDLE_MS = 30 * 60e3;
+  let session = null; // { roomId, startedAt, lastVideoAt }
+  function sessionOn() {
+    return !!(session && config && config.roomId && session.roomId === config.roomId &&
+      Date.now() - (session.lastVideoAt || session.startedAt) < SESSION_IDLE_MS);
+  }
+  function startSession() {
+    if (!config || !config.roomId) return;
+    const now = Date.now();
+    session = { roomId: config.roomId, startedAt: now, lastVideoAt: now };
+    try { chrome.storage.local.set({ [SESSION_KEY]: session }); } catch (e) { /* extension reloaded */ }
+    connect();
+  }
+  function endSession() {
+    const wasOn = !!session;
+    session = null;
+    try { chrome.storage.local.remove(SESSION_KEY); } catch (e) { /* extension reloaded */ }
+    // Tell the other side right away, rather than leaving them an invite to
+    // a session that's over until this entry goes stale on its own.
+    if (wasOn) writePresence(false);
+    connect();
+  }
+  let lastVideoBump = 0;
+  function bumpSession() {
+    if (!session || !video || Date.now() - lastVideoBump < 30000) return;
+    lastVideoBump = Date.now();
+    session = { ...session, lastVideoAt: lastVideoBump };
+    try { chrome.storage.local.set({ [SESSION_KEY]: session }); } catch (e) { /* extension reloaded */ }
+  }
+
+  // Without a session: is the other person in one? Read only, and only from
+  // the tab you're looking at, every few seconds.
+  const INVITE_POLL_MS = 8000;
+  let inviteTimer = null;
+  let inviteShown = null;
+  function setInvite(next) {
+    if ((next && next.key) === (inviteShown && inviteShown.key)) return;
+    inviteShown = next;
+    emit('invite', next);
+  }
+  async function pollInvite() {
+    if (!config || !config.roomId || sessionOn() || document.hidden) return;
+    try {
+      if (!clockSamples.length) await clockSample();
+      const data = await (await fetch(roomUrl('presence'))).json();
+      const now = serverNow();
+      const partner = Object.entries(data || {}).find(([id, p]) =>
+        id !== CLIENT_ID && p && p.watching === true && (!p.owner || p.owner !== OWNER_ID) && now - p.ts < 15000);
+      setInvite(partner ? { key: partner[0], name: partner[1].name || null } : null);
+    } catch (e) { /* try again next time */ }
   }
 
   // ---------------------------------------------------------------------
@@ -762,7 +834,7 @@
   function isLeader() { return !!leader && leader.id === TAB_ID; }
   function leaderStale() { return !leader || Date.now() - leader.at > LEADER_STALE_MS; }
   function claimLeader(catchUp = true) {
-    if (!config || !config.roomId || !video) return;
+    if (!config || !config.roomId || !video || !sessionOn()) return;
     const was = isLeader();
     leader = { id: TAB_ID, at: Date.now(), playing: !!isPlayingNow() };
     try { chrome.storage.local.set({ [LEADER_KEY]: leader }); } catch (e) { /* extension reloaded */ }
@@ -797,12 +869,14 @@
     // This is the real visibility; keep-playing.js only changes what the
     // site's own scripts see.
     if (!document.hidden && video) claimLeader();
+    if (!document.hidden && !sessionOn()) pollInvite();
   });
   window.addEventListener('pagehide', releaseLeader);
 
   let streamsOpen = false;
   let idleStatus = null;
   function updateStreams() {
+    if (!sessionOn()) { if (streamsOpen) closeStreams(); return; }
     // The tab in charge keeps its streams for a moment even between videos
     // (Netflix swaps the element at every episode), rather than dropping and
     // reopening them; heartbeat hands over if it stays off a player.
@@ -870,7 +944,20 @@
     closeStreams();
     if (clockTimer) clearInterval(clockTimer);
     if (presenceTimer) clearInterval(presenceTimer);
+    if (inviteTimer) { clearInterval(inviteTimer); inviteTimer = null; }
+    idleStatus = null;
     if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
+    if (!sessionOn()) {
+      // A session that timed out while nothing was open to end it.
+      if (session) { session = null; try { chrome.storage.local.remove(SESSION_KEY); } catch (e) { /* reloaded */ } }
+      releaseLeader();
+      noteElsewhere(null);
+      onStatus(video ? 'off' : 'off-browse');
+      pollInvite();
+      inviteTimer = setInterval(pollInvite, INVITE_POLL_MS);
+      return;
+    }
+    setInvite(null);
     clockSamples = [];
     calibrateClock(true);
     clockTimer = setInterval(() => calibrateClock(false), CLOCK_RECALIBRATE_MS);
@@ -882,6 +969,11 @@
     if (video) writeNowWatching();
     if (video) maybeClaim(true);
     updateStreams();
+    // Joining (or starting) a session is a fresh start like opening a video
+    // (see beginStartup): catch up to whoever's already watching, and only
+    // announce this side's position if there's nobody to catch up to, so
+    // joining brings you to them, never them to you.
+    if (video) { lastContentKey = contentKey(); beginStartup(); }
   }
 
   let videoListeners = null;
@@ -892,6 +984,7 @@
     // The connection usually opened back on a browse page, which reported
     // 'idle'; now that there's actually something to sync, say so.
     if (es && es.readyState === EventSource.OPEN) onStatus('connected');
+    if (config && config.roomId && !sessionOn()) onStatus('off');
     videoListeners = {
       play: () => schedulePush('play'),
       pause: () => schedulePush('pause'),
@@ -932,6 +1025,7 @@
     videoListeners = null;
     video = null;
     updateSyncingFlag();
+    if (config && config.roomId && !sessionOn()) onStatus('off-browse');
     if (driftTimer) clearInterval(driftTimer);
   }
 
@@ -955,8 +1049,9 @@
       // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
         resolveOwnerId(() => {
-          chrome.storage.local.get([LEADER_KEY], (local) => {
+          chrome.storage.local.get([LEADER_KEY, SESSION_KEY], (local) => {
             leader = local[LEADER_KEY] || null;
+            session = local[SESSION_KEY] || null;
             chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
               config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
               nickname = stored.nickname || '';
@@ -965,6 +1060,12 @@
           });
           chrome.storage.onChanged.addListener((changes, area) => {
             if (area === 'local' && changes[LEADER_KEY]) onLeaderChanged(changes[LEADER_KEY].newValue);
+            // Started or ended in another tab, the popup, or by an invite link.
+            if (area === 'local' && changes[SESSION_KEY]) {
+              const was = sessionOn();
+              session = changes[SESSION_KEY].newValue || null;
+              if (sessionOn() !== was) connect();
+            }
             if (area !== 'sync') return;
             if (changes.nickname) nickname = changes.nickname.newValue || '';
             // Self-heals the rare case where this device and another one
@@ -990,6 +1091,10 @@
     },
     sendReaction,
     sendChat,
+    startSession,
+    endSession,
+    get sessionActive() { return sessionOn(); },
+    get roomId() { return config && config.roomId; },
     on(name, fn) { (listeners[name] = listeners[name] || []).push(fn); },
     get clientId() { return CLIENT_ID; },
     // For diagnosing from the console: is this tab the one in charge?
