@@ -172,6 +172,14 @@
   let serverOffsetMs = 0;   // add to localNow() to estimate the Firebase server's clock (see calibrateClock)
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
   let onReaction = () => {}; // callback(emoji), only for a reaction that arrived from the other person
+  let chatEs = null;
+  // Everything else the on-page UI (site-common.js) listens for: 'chat'
+  // (the newest messages), 'action' (the other person played, paused,
+  // skipped or changed speed), 'elsewhere' (they're on a different title).
+  const listeners = {};
+  function emit(name, detail) {
+    for (const fn of listeners[name] || []) { try { fn(detail); } catch (e) { /* one bad listener can't break sync */ } }
+  }
 
   function log(...args) { console.log('[Tether]', ...args); }
 
@@ -357,11 +365,11 @@
     startupPush = null;
     clearTimeout(startupTimer);
     startupTimer = setTimeout(endStartup, STARTUP_QUIET_MS);
-    if (config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+    if (config && isLeader()) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
   }
   function endStartup() {
     startupUntil = 0;
-    if (!video || !config) return;
+    if (!video || !config || !isLeader()) return;
     if (caughtUp) {
       // Once more now that it has settled: a player that finished its own
       // startup seek after our catch-up would otherwise be left where it
@@ -404,6 +412,13 @@
   }
   function schedulePush(type) {
     if (applyingRemote) return; // an echo of something we just applied, not a local action
+    // Playing, pausing or seeking in the tab you're looking at makes it the
+    // one in charge (see claimLeader). A tab in the background that isn't
+    // in charge is just a stray video; it doesn't speak for you.
+    if (!isLeader()) {
+      if (document.hidden) return;
+      claimLeader(false);
+    }
     noteContent();
     if (Date.now() < startupUntil) { startupPush = type; return; }
     pushType = type;
@@ -440,7 +455,13 @@
     // connecting), the server's own timestamp: late by an upload, but never
     // wrong by however far off this device's clock happens to be.
     const ts = clockSamples.length ? Math.round(serverNow()) : null;
-    const payload = { type, time, playing, rate, content, ts: ts ?? { '.sv': 'timestamp' }, from: CLIENT_ID };
+    // name: so the other side can say who did it ("Ridu paused").
+    // url: where this is, so the other side can offer to join if they're on
+    // something else (see noteElsewhere).
+    const payload = {
+      type, time, playing, rate, content, ts: ts ?? { '.sv': 'timestamp' }, from: CLIENT_ID,
+      name: nickname || null, url: location.href,
+    };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
     // by our own action. Whichever side acts less often ends up with a
@@ -480,10 +501,13 @@
   }
 
   function applyRemote(data) {
-    if (!data || data.from === CLIENT_ID || !video) return;
+    if (!data || data.from === CLIENT_ID || !video || !isLeader()) return;
     // A different title or episode: not a position this video can use, and
-    // not something checkDrift should keep steering toward either.
-    if (!sameContent(data.content)) return;
+    // not something checkDrift should keep steering toward either. But worth
+    // telling this person about, with a way to get there.
+    if (!sameContent(data.content)) { noteElsewhere(data); return; }
+    noteElsewhere(null);
+    noteAction(data);
     const rate = clampRate(data.rate);
     lastRemote = { time: data.time, ts: data.ts, playing: data.playing, rate, content: data.content };
     // Keep lastRemote current either way, so the moment this side's own ad
@@ -532,8 +556,40 @@
     }, needsSeek);
   }
 
+  // The other person on a different title: offered as a one-click "join
+  // them", the same way an invite link works. Only while it's current: their
+  // last update has to be recent, or, if they're still playing, from within
+  // the length of a long movie, since nothing new is sent while someone just
+  // watches.
+  let elsewhereShown = null;
+  function noteElsewhere(data) {
+    let next = null;
+    if (data && data.url && data.url !== location.href && typeof data.ts === 'number') {
+      const age = serverNow() - data.ts;
+      if (age < (data.playing ? 4 * 3600e3 : 15 * 60e3)) next = { name: data.name || null, url: data.url };
+    }
+    if ((next && next.url) === (elsewhereShown && elsewhereShown.url)) return;
+    elsewhereShown = next;
+    emit('elsewhere', next);
+  }
+
+  // "Ridu paused", "Ridu skipped to 12:04": so a change that just happened
+  // to your playback is never a mystery. Only for something that just
+  // happened (not the state fetched on joining, or replayed on reconnect),
+  // and only once, since the same update can arrive by stream and by fetch.
+  let lastActionKey = null;
+  function noteAction(data) {
+    if (!['play', 'pause', 'seek', 'rate'].includes(data.type) || typeof data.ts !== 'number') return;
+    if (Math.abs(serverNow() - data.ts) > 6000) return;
+    const key = data.from + ':' + data.ts;
+    if (key === lastActionKey) return;
+    lastActionKey = key;
+    emit('action', { type: data.type, name: data.name || null, time: data.time, rate: clampRate(data.rate) });
+  }
+
   let wasAdLike = false;
   function checkDrift() {
+    if (!isLeader()) return; // standing by; the tab in charge keeps time
     // A new title or episode in the same <video> element, with no event
     // from it yet: catch up to the other person (see noteContent). Their
     // latest position for it may have arrived while this tab was still on
@@ -627,6 +683,46 @@
   function heartbeat() {
     writePresence();
     if (video) writeNowWatching();
+    // The tab in charge says it's still here (and whether it's playing);
+    // any other tab on a player checks whether it should step in.
+    if (isLeader() && !video) {
+      releaseLeader();
+    } else if (isLeader()) {
+      leader = { id: TAB_ID, at: Date.now(), playing: !!isPlayingNow() };
+      try { chrome.storage.local.set({ [LEADER_KEY]: leader }); } catch (e) { /* extension reloaded */ }
+    } else {
+      maybeClaim();
+    }
+  }
+
+  // Same messages, same shape, as the popup's chat (see popup.js), so a
+  // message sent from either shows up in both, for both people.
+  function sendChat(text) {
+    const t = String(text || '').trim().slice(0, 500);
+    if (!config || !t) return;
+    fetch(roomUrl('chat'), {
+      method: 'POST',
+      body: JSON.stringify({ text: t, from: CLIENT_ID, name: nickname || null, ts: { '.sv': 'timestamp' } }),
+    }).catch(() => {});
+  }
+
+  function startChatStream() {
+    if (chatEs) chatEs.close();
+    let messages = {};
+    // Newest 40 only, the same reasoning as the popup's stream.
+    chatEs = new EventSource(roomUrl('chat') + '?orderBy=%22%24key%22&limitToLast=40');
+    const handle = (e) => {
+      try {
+        const { path, data } = JSON.parse(e.data);
+        const initial = path === '/';
+        if (initial) messages = data || {};
+        else if (data === null) delete messages[path.slice(1)];
+        else messages[path.slice(1)] = data;
+        emit('chat', { messages, initial });
+      } catch (err) { /* ignore malformed frames */ }
+    };
+    chatEs.addEventListener('put', handle);
+    chatEs.addEventListener('patch', handle);
   }
 
   function sendReaction(emoji) {
@@ -644,23 +740,93 @@
     document.documentElement.toggleAttribute('data-tether-syncing', !!(video && config && config.roomId));
   }
 
-  function connect() {
-    updateSyncingFlag();
-    if (es) es.close();
-    if (reactionsEs) reactionsEs.close();
-    if (clockTimer) clearInterval(clockTimer);
-    if (presenceTimer) clearInterval(presenceTimer);
-    if (staleCheckTimer) clearInterval(staleCheckTimer);
-    if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
-    clockSamples = [];
-    calibrateClock(true);
-    clockTimer = setInterval(() => calibrateClock(false), CLOCK_RECALIBRATE_MS);
-    writePresence();
-    presenceTimer = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
-    // Covers the case where the video attached before config existed yet
-    // (attachVideo's own call is a no-op then, guarded on config): now that
-    // config is valid, make sure whatever's already playing gets recorded.
-    if (video) writeNowWatching();
+  // ---------------------------------------------------------------------
+  // One tab holds the live connections.
+  //
+  // The database only speaks HTTP/1.1, and Chrome allows six open
+  // connections to one server per site. Each live stream (playback,
+  // reactions, chat) holds one open for as long as it runs, so three
+  // YouTube tabs used all six between them, and every save (play, pause,
+  // presence) queued behind them forever: sync silently froze in every tab.
+  // So in each browser, only the tab you're actually watching in holds the
+  // streams. It's chosen through extension storage, which every tab shares:
+  // a tab takes over when you play, pause or seek in it, when you switch to
+  // it, or when the current one goes quiet (closed, crashed, or left the
+  // player for over 15 seconds); every other tab stands by with nothing
+  // open, and steps back in the moment it's chosen.
+  // ---------------------------------------------------------------------
+  const TAB_ID = 't_' + Math.random().toString(36).slice(2, 10);
+  const LEADER_KEY = 'tetherLeader';
+  const LEADER_STALE_MS = 15000;
+  let leader = null; // { id, at, playing }
+  function isLeader() { return !!leader && leader.id === TAB_ID; }
+  function leaderStale() { return !leader || Date.now() - leader.at > LEADER_STALE_MS; }
+  function claimLeader(catchUp = true) {
+    if (!config || !config.roomId || !video) return;
+    const was = isLeader();
+    leader = { id: TAB_ID, at: Date.now(), playing: !!isPlayingNow() };
+    try { chrome.storage.local.set({ [LEADER_KEY]: leader }); } catch (e) { /* extension reloaded */ }
+    updateStreams();
+    // Newly in charge: catch up to the other person, who may have moved on
+    // while this tab was standing by. Not when it's taking over because of
+    // something you just did in it, which is what gets sent instead.
+    if (!was && catchUp && config) fetch(roomUrl('sync')).then((r) => r.json()).then(applyRemote).catch(() => {});
+  }
+  function releaseLeader() {
+    if (!isLeader()) return;
+    leader = null;
+    try { chrome.storage.local.remove(LEADER_KEY); } catch (e) { /* extension reloaded */ }
+    updateStreams();
+  }
+  // Take over only if the tab in charge has gone quiet. Or, when a video
+  // opens in the tab you're looking at, if the tab in charge isn't playing
+  // anything. Never from a tab in the background just because the one in
+  // charge is paused: pausing is part of watching, not leaving.
+  function maybeClaim(opening = false) {
+    if (!video || isLeader()) return;
+    if (leaderStale() || (opening && !document.hidden && !leader.playing)) claimLeader();
+  }
+  function onLeaderChanged(next) {
+    leader = next || null;
+    updateStreams();
+    // The leader stepped down (left its player, closed): a tab that's still
+    // on one picks up, after a beat so two tabs don't both jump at once.
+    if (!leader && video) setTimeout(maybeClaim, 200 + Math.random() * 600);
+  }
+  document.addEventListener('visibilitychange', () => {
+    // This is the real visibility; keep-playing.js only changes what the
+    // site's own scripts see.
+    if (!document.hidden && video) claimLeader();
+  });
+  window.addEventListener('pagehide', releaseLeader);
+
+  let streamsOpen = false;
+  let idleStatus = null;
+  function updateStreams() {
+    // The tab in charge keeps its streams for a moment even between videos
+    // (Netflix swaps the element at every episode), rather than dropping and
+    // reopening them; heartbeat hands over if it stays off a player.
+    const want = !!(config && config.roomId && isLeader());
+    if (want && !streamsOpen) openStreams();
+    else if (!want && streamsOpen) closeStreams();
+    // Only on a change, or every leadership heartbeat would flash the badge.
+    const next = want ? null : (config && config.roomId ? (video ? 'standby' : 'idle') : null);
+    if (next && next !== idleStatus) onStatus(next);
+    idleStatus = next;
+  }
+
+  function closeStreams() {
+    streamsOpen = false;
+    if (es) { es.close(); es = null; }
+    if (reactionsEs) { reactionsEs.close(); reactionsEs = null; }
+    if (chatEs) { chatEs.close(); chatEs = null; }
+    if (staleCheckTimer) { clearInterval(staleCheckTimer); staleCheckTimer = null; }
+    stopNudge();
+  }
+
+  function openStreams() {
+    closeStreams();
+    streamsOpen = true;
     lastEventAt = Date.now();
     es = new EventSource(roomUrl('sync'));
     es.addEventListener('put', (e) => {
@@ -675,17 +841,15 @@
     // quiet room specifically so a still-good connection doesn't look dead;
     // count them the same as a real update for staleness purposes.
     es.addEventListener('keep-alive', () => { lastEventAt = Date.now(); });
-    // "In sync" is only true with a video attached; on a browse page (see the
-    // adapters' player-page check) there's nothing being synced yet.
     es.onopen = () => { lastEventAt = Date.now(); onStatus(video ? 'connected' : 'idle'); };
     es.onerror = () => { onStatus('disconnected'); };
     // Belt and suspenders: an SSE connection can go quietly dead (a NAT or
     // proxy dropping it) without ever firing the EventSource's own onerror,
     // which would otherwise leave this stuck reporting "connected" while
     // nothing actually gets through. If nothing at all has been heard,
-    // including Firebase's own keep-alives, force a fresh connection.
+    // including Firebase's own keep-alives, open fresh ones.
     staleCheckTimer = setInterval(() => {
-      if (Date.now() - lastEventAt > STALE_AFTER_MS) connect();
+      if (Date.now() - lastEventAt > STALE_AFTER_MS) openStreams();
     }, STALE_CHECK_MS);
 
     reactionsEs = new EventSource(roomUrl('reactions'));
@@ -697,6 +861,27 @@
     };
     reactionsEs.addEventListener('put', handleReaction);
     reactionsEs.addEventListener('patch', handleReaction);
+
+    startChatStream();
+  }
+
+  function connect() {
+    updateSyncingFlag();
+    closeStreams();
+    if (clockTimer) clearInterval(clockTimer);
+    if (presenceTimer) clearInterval(presenceTimer);
+    if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
+    clockSamples = [];
+    calibrateClock(true);
+    clockTimer = setInterval(() => calibrateClock(false), CLOCK_RECALIBRATE_MS);
+    writePresence();
+    presenceTimer = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
+    // Covers the case where the video attached before config existed yet
+    // (attachVideo's own call is a no-op then, guarded on config): now that
+    // config is valid, make sure whatever's already playing gets recorded.
+    if (video) writeNowWatching();
+    if (video) maybeClaim(true);
+    updateStreams();
   }
 
   let videoListeners = null;
@@ -728,6 +913,7 @@
     // Done as the start of the startup window (see beginStartup), so this
     // video's own startup events can't be sent ahead of that catch-up.
     lastContentKey = contentKey();
+    maybeClaim(true);
     beginStartup();
     writeNowWatching();
   }
@@ -742,6 +928,7 @@
     startupUntil = 0;
     stopNudge();
     probeLead = false;
+    noteElsewhere(null);
     videoListeners = null;
     video = null;
     updateSyncingFlag();
@@ -768,12 +955,16 @@
       // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
         resolveOwnerId(() => {
-          chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
-            config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
-            nickname = stored.nickname || '';
-            connect();
+          chrome.storage.local.get([LEADER_KEY], (local) => {
+            leader = local[LEADER_KEY] || null;
+            chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
+              config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+              nickname = stored.nickname || '';
+              connect();
+            });
           });
           chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'local' && changes[LEADER_KEY]) onLeaderChanged(changes[LEADER_KEY].newValue);
             if (area !== 'sync') return;
             if (changes.nickname) nickname = changes.nickname.newValue || '';
             // Self-heals the rare case where this device and another one
@@ -798,5 +989,10 @@
       if (el) attachVideo(el);
     },
     sendReaction,
+    sendChat,
+    on(name, fn) { (listeners[name] = listeners[name] || []).push(fn); },
+    get clientId() { return CLIENT_ID; },
+    // For diagnosing from the console: is this tab the one in charge?
+    get state() { return { tab: TAB_ID, leader: leader && leader.id, streamsOpen, hasVideo: !!video }; },
   };
 })();
