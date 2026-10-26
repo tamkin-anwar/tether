@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Tether promo tiles</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; color: #fff; -webkit-font-smoothing: antialiased;
+    background: #0b0c10; overflow: hidden; position: relative; }
+  .art { position: absolute; inset: 0; }
+  .shade { position: absolute; inset: 0; }
+  .glass { background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6); -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.08) inset; }
+  .pill { position: absolute; display: flex; align-items: center; gap: 8px; border-radius: 999px; font-weight: 590; white-space: nowrap; }
+  .dot { border-radius: 50%; background: #34c759; }
+</style>
+<script src="scene.js"></script></head><body>
+<script>
+const kind = new URLSearchParams(location.search).get('kind') || 'small';
+const size = kind === 'small' ? [440, 280] : [1400, 560];
+document.documentElement.style.width = document.body.style.width = size[0] + 'px';
+document.documentElement.style.height = document.body.style.height = size[1] + 'px';
+const k = size[0] / 440; // small tile is the base; the banner scales up
+document.body.innerHTML = kind === 'small' ? `
+  <div class="art">${scene('dusk')}</div>
+  <div class="shade" style="background:linear-gradient(90deg, rgba(8,8,12,0.92) 0%, rgba(8,8,12,0.75) 48%, rgba(8,8,12,0.05) 100%)"></div>
+  <div style="position:absolute;left:28px;top:30px;display:flex;align-items:center;gap:10px">
+    <img src="icon128.png" style="width:38px;height:38px;border-radius:10px"><span style="font:650 24px inherit;font-family:inherit;letter-spacing:-0.02em">Tether</span></div>
+  <div style="position:absolute;left:28px;top:96px;width:250px;font:700 27px/1.12 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:-0.03em">Watch the same show at the same time, apart.</div>
+  <div class="pill glass" style="left:28px;bottom:28px;padding:7px 12px;font-size:12px"><span class="dot" style="width:7px;height:7px"></span>In sync with Sam</div>`
+: `
+  <div class="art">${scene('dusk')}</div>
+  <div class="shade" style="background:linear-gradient(90deg, rgba(8,8,12,0.94) 0%, rgba(8,8,12,0.8) 40%, rgba(8,8,12,0.1) 75%)"></div>
+  <div style="position:absolute;left:96px;top:88px;display:flex;align-items:center;gap:16px">
+    <img src="icon128.png" style="width:60px;height:60px;border-radius:15px"><span style="font:650 36px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:-0.02em">Tether</span></div>
+  <div style="position:absolute;left:96px;top:196px;width:640px;font:700 56px/1.06 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:-0.035em">Watch the same show at the same time, apart.</div>
+  <div style="position:absolute;left:96px;top:342px;width:560px;font:400 21px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;color:rgba(255,255,255,0.7)">Works with the streaming services you already have, with chat and reactions right on the video.</div>
+  <div class="pill glass" style="right:96px;bottom:84px;padding:11px 18px;font-size:17px"><span class="dot" style="width:10px;height:10px"></span>In sync with Sam</div>`;
+document.body.dataset.ready = '1';
+</script></body></html>
