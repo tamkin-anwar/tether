@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether：一緒に見よう"
+  },
+  "extDescription": {
+    "message": "Netflix、Hulu、Disney+、Max、YouTube などを遠くの相手と同時再生。チャット、メモ、リアクションも使えます。"
+  },
+  "tabRoom": {
+    "message": "ルーム"
+  },
+  "tabNotes": {
+    "message": "メモ"
+  },
+  "tabChat": {
+    "message": "チャット"
+  },
+  "roomHint": {
+    "message": "チャットとメモはいつでも使えます。Netflix、Prime Video、Hulu、Disney+、Max、Crunchyroll、YouTube の再生を同期するには「一緒に見る」を始めてください。"
+  },
+  "welcomeTitle": {
+    "message": "Tether へようこそ"
+  },
+  "welcomeStep1": {
+    "message": "下に<strong>名前を入力</strong>すると、相手にあなただと伝わります。"
+  },
+  "welcomeStep2": {
+    "message": "<strong>招待リンクを送ります</strong>。一度だけで大丈夫。以後はこのルームを共有します。"
+  },
+  "welcomeStep3": {
+    "message": "<strong>作品を開いて 👥 一緒に見る をクリック。</strong>相手の画面に招待が届き、「参加」を押すと同期されます。"
+  },
+  "welcomeAside": {
+    "message": "視聴中は、動画の右下に 💬 チャットと 🙂 リアクションがあります。招待リンクを受け取った方は、Tether をインストールした今、もう一度リンクをクリックしてください。"
+  },
+  "welcomeDone": {
+    "message": "OK"
+  },
+  "sessionOff": {
+    "message": "一緒に見ていません"
+  },
+  "sessionStart": {
+    "message": "一緒に見る"
+  },
+  "sessionHintOff": {
+    "message": "相手の画面に招待が届きます。動画を開かずに30分たつと自動で終了します。"
+  },
+  "sessionOn": {
+    "message": "一緒に見ています"
+  },
+  "sessionEnd": {
+    "message": "セッションを終了"
+  },
+  "sessionHintOn": {
+    "message": "ストリーミングのタブで再生が同期されています。動画を開かずに30分たつと自動で終了します。"
+  },
+  "sessionPartner": {
+    "message": "$1 さんが一緒に見ています"
+  },
+  "sessionHintJoin": {
+    "message": "参加すると、相手と再生が同期されます。"
+  },
+  "join": {
+    "message": "参加"
+  },
+  "partnerFallback": {
+    "message": "相手"
+  },
+  "dbLabel": {
+    "message": "Firebase データベースの URL"
+  },
+  "dbConnect": {
+    "message": "接続"
+  },
+  "dbError": {
+    "message": "そのデータベースに接続できませんでした。URL と、Realtime Database（Firestore ではない）であることを確認してください。"
+  },
+  "nameLabel": {
+    "message": "あなたの名前"
+  },
+  "namePlaceholder": {
+    "message": "相手にあなただと伝わります"
+  },
+  "roomCodeLabel": {
+    "message": "ルームコード"
+  },
+  "copyInvite": {
+    "message": "招待リンクをコピー"
+  },
+  "inviteHint": {
+    "message": "あなたが再生を始めると、ワンクリックで相手も同じ作品の同じ場面へ。"
+  },
+  "copyCode": {
+    "message": "コードだけコピー"
+  },
+  "copied": {
+    "message": "コピーしました ✓"
+  },
+  "peerChecking": {
+    "message": "相手を確認しています..."
+  },
+  "peerHere": {
+    "message": "$1 さんがこのルームにいます"
+  },
+  "peerSomeone": {
+    "message": "このルームにほかの人がいます"
+  },
+  "peerOtherDevice": {
+    "message": "あなたの別のデバイスでも開いています"
+  },
+  "peerWaiting": {
+    "message": "相手を待っています..."
+  },
+  "leaveRoom": {
+    "message": "このルームを出る"
+  },
+  "leaveConfirm": {
+    "message": "このルームを出て、新しいルームを作りますか？一緒に見る相手には新しいコードが必要になります。"
+  },
+  "joinLabel": {
+    "message": "ほかの人のルームに参加"
+  },
+  "joinPlaceholder": {
+    "message": "相手のコード"
+  },
+  "changeDb": {
+    "message": "別のデータベースを使う（上級者向け）"
+  },
+  "notesLabel": {
+    "message": "共有メモ"
+  },
+  "notesPlaceholder": {
+    "message": "次に見る作品、予定、二人で覚えておきたいことなど。"
+  },
+  "saved": {
+    "message": "保存しました"
+  },
+  "noMessages": {
+    "message": "まだメッセージはありません"
+  },
+  "chatPlaceholder": {
+    "message": "メッセージを入力"
+  },
+  "send": {
+    "message": "送信"
+  },
+  "clearHistory": {
+    "message": "チャットとメモを消去"
+  },
+  "clearConfirm": {
+    "message": "このルームのメッセージとメモをすべて削除しますか？お二人とも見られなくなり、元に戻せません。"
+  },
+  "statusConnected": {
+    "message": "接続中"
+  },
+  "statusOffline": {
+    "message": "オフライン"
+  },
+  "statusNotSetUp": {
+    "message": "未設定"
+  },
+  "tipStart": {
+    "message": "誰かと見ていますか？「一緒に見る」をクリックすると同期できます。相手の画面に招待が届きます。"
+  },
+  "tipSession": {
+    "message": "一緒に見ています。💬 チャットと 🙂 リアクションはここ。セッションはチャットから終了できます。"
+  },
+  "noticeJoined": {
+    "message": "$1 さんが参加しました"
+  },
+  "noticeLeft": {
+    "message": "$1 さんが退出しました"
+  },
+  "noticeWatchingWith": {
+    "message": "$1 さんと一緒に見ています"
+  },
+  "statusInSyncWith": {
+    "message": "$1 さんと同期中"
+  },
+  "statusInSync": {
+    "message": "同期中"
+  },
+  "statusWaitingJoin": {
+    "message": "相手の参加を待っています"
+  },
+  "statusIdle": {
+    "message": "準備完了。作品を開くと同期します"
+  },
+  "statusStandby": {
+    "message": "別のタブで同期しています"
+  },
+  "statusReconnecting": {
+    "message": "再接続しています..."
+  },
+  "statusNoRoom": {
+    "message": "Tether を開いてルームに参加してください"
+  },
+  "actionPaused": {
+    "message": "$1 さんが一時停止しました"
+  },
+  "actionPlayed": {
+    "message": "$1 さんが再生しました"
+  },
+  "actionSkipped": {
+    "message": "$1 さんが $2 に移動しました"
+  },
+  "actionSpeed": {
+    "message": "$1 さんが速度を $2× にしました"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 さんが通常の速度に戻しました"
+  },
+  "inviteStarted": {
+    "message": "$1 さんが「一緒に見る」を始めました"
+  },
+  "notNow": {
+    "message": "あとで"
+  },
+  "watchingTogetherWith": {
+    "message": "$1 さんと一緒に見ています"
+  },
+  "startButton": {
+    "message": "一緒に見る"
+  },
+  "startedCopied": {
+    "message": "一緒に見るを開始。招待リンクをコピーしました"
+  },
+  "startedShare": {
+    "message": "一緒に見るを開始。Tether から招待リンクを共有してください"
+  },
+  "elsewhere": {
+    "message": "$1 さんは別の作品を見ています"
+  },
+  "joinThem": {
+    "message": "移動する"
+  },
+  "dismiss": {
+    "message": "閉じる"
+  },
+  "reactLove": {
+    "message": "好き"
+  },
+  "reactLaugh": {
+    "message": "笑い"
+  },
+  "reactWow": {
+    "message": "びっくり"
+  },
+  "reactClap": {
+    "message": "拍手"
+  },
+  "reactSad": {
+    "message": "悲しい"
+  },
+  "sendReaction": {
+    "message": "リアクションを送る"
+  },
+  "chatTitle": {
+    "message": "チャット"
+  },
+  "chatEmpty": {
+    "message": "あいさつしてみましょう。メッセージはここと Tether に表示されます。"
+  },
+  "endSessionTitle": {
+    "message": "一緒に見るのをやめます。チャットは Tether に残ります。"
+  },
+  "closeChat": {
+    "message": "チャットを閉じる"
+  },
+  "messagePlaceholder": {
+    "message": "メッセージ"
+  },
+  "stoppedTogether": {
+    "message": "一緒に見るのを終了しました"
+  },
+  "joinConnectingTitle": {
+    "message": "Tether に接続しています..."
+  },
+  "joinConnecting": {
+    "message": "正しい場所へご案内します。"
+  },
+  "joinInvalidTitle": {
+    "message": "このリンクは無効です"
+  },
+  "joinInvalid": {
+    "message": "ルームコードがありません。送ってくれた相手に新しい招待リンクを頼んでください。"
+  },
+  "joinWaitingTitle": {
+    "message": "相手を待っています"
+  },
+  "joinWaiting": {
+    "message": "相手が見始めるのを待っています..."
+  },
+  "joinStillWaiting": {
+    "message": "まだ待っています。すでにルームに入っているので、いつでもご自分でストリーミングサービスを開けます。"
+  },
+  "joinGaveUpTitle": {
+    "message": "まだ始まっていません"
+  },
+  "joinGaveUp": {
+    "message": "相手が再生を始めたらこのページを再読み込みするか、ご自分でサービスを開いてください。すでにルームに入っています。"
+  },
+  "joinTroubleTitle": {
+    "message": "接続に問題があります"
+  },
+  "joinRetrying": {
+    "message": "再試行しています..."
+  },
+  "joinFailedTitle": {
+    "message": "接続できません"
+  },
+  "joinFailed": {
+    "message": "このページを再読み込みするか、ご自分でサービスを開いてください。すでにルームに入っています。"
+  }
+}

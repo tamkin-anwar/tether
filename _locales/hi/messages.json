@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether: साथ मिलकर देखें"
+  },
+  "extDescription": {
+    "message": "दूर बैठे किसी अपने के साथ Netflix, Hulu, Disney+, Max, YouTube और भी बहुत कुछ एक साथ देखें, चैट, नोट्स और रिएक्शन के साथ।"
+  },
+  "tabRoom": {
+    "message": "रूम"
+  },
+  "tabNotes": {
+    "message": "नोट्स"
+  },
+  "tabChat": {
+    "message": "चैट"
+  },
+  "roomHint": {
+    "message": "चैट और नोट्स हमेशा तैयार हैं। Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll या YouTube पर प्लेबैक सिंक करने के लिए साथ देखना शुरू करें।"
+  },
+  "welcomeTitle": {
+    "message": "Tether में आपका स्वागत है"
+  },
+  "welcomeStep1": {
+    "message": "नीचे <strong>अपना नाम जोड़ें</strong>, ताकि उन्हें पता रहे कि यह आप हैं।"
+  },
+  "welcomeStep2": {
+    "message": "<strong>अपना इनवाइट लिंक भेजें</strong>, बस एक बार। उसके बाद आप यही रूम शेयर करेंगे।"
+  },
+  "welcomeStep3": {
+    "message": "<strong>कोई शो खोलें और 👥 साथ देखें पर क्लिक करें।</strong> उनकी स्क्रीन पर इनवाइट आएगा, वे जुड़ें दबाएँगे और आप दोनों सिंक में होंगे।"
+  },
+  "welcomeAside": {
+    "message": "देखते समय 💬 चैट और 🙂 रिएक्शन वीडियो के नीचे दाईं ओर मिलेंगे। किसी ने आपको इनवाइट लिंक भेजा है? Tether इंस्टॉल हो गया है, अब उस लिंक पर फिर से क्लिक करें।"
+  },
+  "welcomeDone": {
+    "message": "समझ गया"
+  },
+  "sessionOff": {
+    "message": "अभी साथ नहीं देख रहे"
+  },
+  "sessionStart": {
+    "message": "साथ देखना शुरू करें"
+  },
+  "sessionHintOff": {
+    "message": "आपके साथी की स्क्रीन पर इनवाइट आएगा। वीडियो के बिना 30 मिनट बाद अपने आप खत्म हो जाता है।"
+  },
+  "sessionOn": {
+    "message": "साथ देख रहे हैं"
+  },
+  "sessionEnd": {
+    "message": "सेशन खत्म करें"
+  },
+  "sessionHintOn": {
+    "message": "आपके स्ट्रीमिंग टैब में प्लेबैक सिंक है। वीडियो के बिना 30 मिनट बाद अपने आप खत्म हो जाता है।"
+  },
+  "sessionPartner": {
+    "message": "$1 साथ देख रहे हैं"
+  },
+  "sessionHintJoin": {
+    "message": "अपना प्लेबैक उनके साथ सिंक करने के लिए जुड़ें।"
+  },
+  "join": {
+    "message": "जुड़ें"
+  },
+  "partnerFallback": {
+    "message": "आपके साथी"
+  },
+  "dbLabel": {
+    "message": "Firebase डेटाबेस URL"
+  },
+  "dbConnect": {
+    "message": "कनेक्ट करें"
+  },
+  "dbError": {
+    "message": "उस डेटाबेस तक नहीं पहुँच पाए। URL जाँचें और देखें कि यह Realtime Database है (Firestore नहीं)।"
+  },
+  "nameLabel": {
+    "message": "आपका नाम"
+  },
+  "namePlaceholder": {
+    "message": "ताकि उन्हें पता रहे कि यह आप हैं"
+  },
+  "roomCodeLabel": {
+    "message": "आपका रूम कोड"
+  },
+  "copyInvite": {
+    "message": "इनवाइट लिंक कॉपी करें"
+  },
+  "inviteHint": {
+    "message": "आपके प्ले दबाने के बाद, एक क्लिक उन्हें उसी शो और उसी पल पर ले आता है।"
+  },
+  "copyCode": {
+    "message": "सिर्फ कोड कॉपी करें"
+  },
+  "copied": {
+    "message": "कॉपी हो गया ✓"
+  },
+  "peerChecking": {
+    "message": "दूसरे व्यक्ति को ढूँढ रहे हैं..."
+  },
+  "peerHere": {
+    "message": "$1 इस रूम में हैं"
+  },
+  "peerSomeone": {
+    "message": "कोई और इस रूम में है"
+  },
+  "peerOtherDevice": {
+    "message": "आपके दूसरे डिवाइस पर भी खुला है"
+  },
+  "peerWaiting": {
+    "message": "दूसरे व्यक्ति का इंतज़ार..."
+  },
+  "leaveRoom": {
+    "message": "यह रूम छोड़ें"
+  },
+  "leaveConfirm": {
+    "message": "यह रूम छोड़कर नया शुरू करें? जिनके साथ आप देखते हैं, उन्हें आपका नया कोड चाहिए होगा।"
+  },
+  "joinLabel": {
+    "message": "किसी और के रूम में जुड़ें"
+  },
+  "joinPlaceholder": {
+    "message": "उनका कोड"
+  },
+  "changeDb": {
+    "message": "दूसरा डेटाबेस इस्तेमाल करें (एडवांस्ड)"
+  },
+  "notesLabel": {
+    "message": "शेयर किए गए नोट्स"
+  },
+  "notesPlaceholder": {
+    "message": "आगे क्या देखना है, प्लान, या कुछ भी जो साथ याद रखना हो।"
+  },
+  "saved": {
+    "message": "सेव हो गया"
+  },
+  "noMessages": {
+    "message": "अभी कोई मैसेज नहीं"
+  },
+  "chatPlaceholder": {
+    "message": "कुछ लिखें"
+  },
+  "send": {
+    "message": "भेजें"
+  },
+  "clearHistory": {
+    "message": "चैट और नोट्स मिटाएँ"
+  },
+  "clearConfirm": {
+    "message": "इस रूम के सभी मैसेज और नोट्स मिटाएँ? ये आप दोनों के लिए हट जाएँगे, और वापस नहीं आएँगे।"
+  },
+  "statusConnected": {
+    "message": "कनेक्टेड"
+  },
+  "statusOffline": {
+    "message": "ऑफ़लाइन"
+  },
+  "statusNotSetUp": {
+    "message": "सेट अप नहीं"
+  },
+  "tipStart": {
+    "message": "किसी के साथ देख रहे हैं? इसे उनके साथ सिंक करने के लिए साथ देखें पर क्लिक करें। उनकी स्क्रीन पर इनवाइट आएगा।"
+  },
+  "tipSession": {
+    "message": "आप साथ देख रहे हैं। 💬 चैट और 🙂 रिएक्शन यहीं हैं, और चैट से सेशन खत्म कर सकते हैं।"
+  },
+  "noticeJoined": {
+    "message": "$1 जुड़ गए"
+  },
+  "noticeLeft": {
+    "message": "$1 चले गए"
+  },
+  "noticeWatchingWith": {
+    "message": "$1 के साथ देख रहे हैं"
+  },
+  "statusInSyncWith": {
+    "message": "$1 के साथ सिंक में"
+  },
+  "statusInSync": {
+    "message": "सिंक में"
+  },
+  "statusWaitingJoin": {
+    "message": "उनके जुड़ने का इंतज़ार"
+  },
+  "statusIdle": {
+    "message": "तैयार। सिंक करने के लिए कोई टाइटल खोलें"
+  },
+  "statusStandby": {
+    "message": "आपके दूसरे टैब में सिंक हो रहा है"
+  },
+  "statusReconnecting": {
+    "message": "फिर से कनेक्ट हो रहा है..."
+  },
+  "statusNoRoom": {
+    "message": "रूम में जुड़ने के लिए Tether खोलें"
+  },
+  "actionPaused": {
+    "message": "$1 ने पॉज़ किया"
+  },
+  "actionPlayed": {
+    "message": "$1 ने प्ले किया"
+  },
+  "actionSkipped": {
+    "message": "$1 ने $2 पर स्किप किया"
+  },
+  "actionSpeed": {
+    "message": "$1 ने स्पीड $2× की"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 ने स्पीड सामान्य की"
+  },
+  "inviteStarted": {
+    "message": "$1 ने साथ देखना शुरू किया"
+  },
+  "notNow": {
+    "message": "अभी नहीं"
+  },
+  "watchingTogetherWith": {
+    "message": "$1 के साथ देख रहे हैं"
+  },
+  "startButton": {
+    "message": "साथ देखें"
+  },
+  "startedCopied": {
+    "message": "साथ देख रहे हैं। इनवाइट लिंक कॉपी हो गया"
+  },
+  "startedShare": {
+    "message": "साथ देख रहे हैं। Tether से अपना इनवाइट लिंक शेयर करें"
+  },
+  "elsewhere": {
+    "message": "$1 कुछ और देख रहे हैं"
+  },
+  "joinThem": {
+    "message": "वहाँ जाएँ"
+  },
+  "dismiss": {
+    "message": "हटाएँ"
+  },
+  "reactLove": {
+    "message": "प्यार"
+  },
+  "reactLaugh": {
+    "message": "हँसी"
+  },
+  "reactWow": {
+    "message": "हैरानी"
+  },
+  "reactClap": {
+    "message": "तालियाँ"
+  },
+  "reactSad": {
+    "message": "उदास"
+  },
+  "sendReaction": {
+    "message": "रिएक्शन भेजें"
+  },
+  "chatTitle": {
+    "message": "चैट"
+  },
+  "chatEmpty": {
+    "message": "हाय कहें। मैसेज यहाँ और Tether में दिखेंगे।"
+  },
+  "endSessionTitle": {
+    "message": "साथ देखना बंद करें। चैट Tether में बनी रहेगी।"
+  },
+  "closeChat": {
+    "message": "चैट बंद करें"
+  },
+  "messagePlaceholder": {
+    "message": "मैसेज"
+  },
+  "stoppedTogether": {
+    "message": "साथ देखना बंद हुआ"
+  },
+  "joinConnectingTitle": {
+    "message": "Tether से कनेक्ट हो रहा है..."
+  },
+  "joinConnecting": {
+    "message": "आपको सही जगह ले जा रहे हैं।"
+  },
+  "joinInvalidTitle": {
+    "message": "यह लिंक मान्य नहीं है"
+  },
+  "joinInvalid": {
+    "message": "इसमें रूम कोड नहीं है। भेजने वाले से नया इनवाइट लिंक माँगें।"
+  },
+  "joinWaitingTitle": {
+    "message": "उनका इंतज़ार"
+  },
+  "joinWaiting": {
+    "message": "दूसरे व्यक्ति के देखना शुरू करने का इंतज़ार..."
+  },
+  "joinStillWaiting": {
+    "message": "अब भी इंतज़ार है। आप पहले से रूम में हैं, तो जब चाहें अपनी स्ट्रीमिंग सर्विस खुद खोल सकते हैं।"
+  },
+  "joinGaveUpTitle": {
+    "message": "अभी तक कुछ नहीं"
+  },
+  "joinGaveUp": {
+    "message": "उनके प्ले दबाने के बाद यह पेज रीफ़्रेश करें, या सर्विस खुद खोलें। आप पहले से रूम में हैं।"
+  },
+  "joinTroubleTitle": {
+    "message": "कनेक्ट करने में दिक्कत"
+  },
+  "joinRetrying": {
+    "message": "फिर से कोशिश कर रहे हैं..."
+  },
+  "joinFailedTitle": {
+    "message": "कनेक्शन नहीं हो रहा"
+  },
+  "joinFailed": {
+    "message": "यह पेज रीफ़्रेश करें, या सर्विस खुद खोलें। आप पहले से रूम में हैं।"
+  }
+}

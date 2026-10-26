@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether: Assistir juntos"
+  },
+  "extDescription": {
+    "message": "Assista Netflix, Hulu, Disney+, Max, YouTube e mais em sincronia com alguém longe, com chat, notas e reações."
+  },
+  "tabRoom": {
+    "message": "Sala"
+  },
+  "tabNotes": {
+    "message": "Notas"
+  },
+  "tabChat": {
+    "message": "Chat"
+  },
+  "roomHint": {
+    "message": "Chat e notas ficam sempre disponíveis. Comece a assistir juntos para sincronizar Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll ou YouTube."
+  },
+  "welcomeTitle": {
+    "message": "Boas-vindas ao Tether"
+  },
+  "welcomeStep1": {
+    "message": "<strong>Adicione seu nome</strong> abaixo, para saberem que é você."
+  },
+  "welcomeStep2": {
+    "message": "<strong>Envie seu link de convite</strong>, só uma vez. A partir daí vocês compartilham esta sala."
+  },
+  "welcomeStep3": {
+    "message": "<strong>Abra um título e clique em 👥 Assistir juntos.</strong> A outra pessoa recebe um convite na tela, toca em Entrar e vocês ficam em sincronia."
+  },
+  "welcomeAside": {
+    "message": "Enquanto assistem, o 💬 chat e as 🙂 reações ficam no canto inferior direito do vídeo. Recebeu um link de convite? Clique nele de novo agora que o Tether está instalado."
+  },
+  "welcomeDone": {
+    "message": "Entendi"
+  },
+  "sessionOff": {
+    "message": "Não estão assistindo juntos"
+  },
+  "sessionStart": {
+    "message": "Começar a assistir juntos"
+  },
+  "sessionHintOff": {
+    "message": "A outra pessoa recebe um convite na tela. Termina sozinha após 30 minutos sem vídeo."
+  },
+  "sessionOn": {
+    "message": "Assistindo juntos"
+  },
+  "sessionEnd": {
+    "message": "Encerrar sessão"
+  },
+  "sessionHintOn": {
+    "message": "A reprodução está sincronizada nas suas abas. Termina sozinha após 30 minutos sem vídeo."
+  },
+  "sessionPartner": {
+    "message": "$1 está assistindo juntos"
+  },
+  "sessionHintJoin": {
+    "message": "Entre para sincronizar sua reprodução com a dela."
+  },
+  "join": {
+    "message": "Entrar"
+  },
+  "partnerFallback": {
+    "message": "A outra pessoa"
+  },
+  "dbLabel": {
+    "message": "URL do banco de dados do Firebase"
+  },
+  "dbConnect": {
+    "message": "Conectar"
+  },
+  "dbError": {
+    "message": "Não foi possível acessar esse banco de dados. Confira a URL e se é um Realtime Database (não Firestore)."
+  },
+  "nameLabel": {
+    "message": "Seu nome"
+  },
+  "namePlaceholder": {
+    "message": "Para saberem que é você"
+  },
+  "roomCodeLabel": {
+    "message": "Código da sua sala"
+  },
+  "copyInvite": {
+    "message": "Copiar link de convite"
+  },
+  "inviteHint": {
+    "message": "Um clique leva a pessoa ao mesmo título e ao mesmo momento, depois que você der play."
+  },
+  "copyCode": {
+    "message": "Copiar só o código"
+  },
+  "copied": {
+    "message": "Copiado ✓"
+  },
+  "peerChecking": {
+    "message": "Procurando a outra pessoa..."
+  },
+  "peerHere": {
+    "message": "$1 está nesta sala"
+  },
+  "peerSomeone": {
+    "message": "Há outra pessoa nesta sala"
+  },
+  "peerOtherDevice": {
+    "message": "Também aberto no seu outro dispositivo"
+  },
+  "peerWaiting": {
+    "message": "Esperando a outra pessoa..."
+  },
+  "leaveRoom": {
+    "message": "Sair desta sala"
+  },
+  "leaveConfirm": {
+    "message": "Sair desta sala e criar uma nova? Quem assiste com você vai precisar do novo código."
+  },
+  "joinLabel": {
+    "message": "Entrar na sala de outra pessoa"
+  },
+  "joinPlaceholder": {
+    "message": "Código da pessoa"
+  },
+  "changeDb": {
+    "message": "Usar outro banco de dados (avançado)"
+  },
+  "notesLabel": {
+    "message": "Notas compartilhadas"
+  },
+  "notesPlaceholder": {
+    "message": "O que assistir depois, planos ou qualquer coisa que valha lembrar."
+  },
+  "saved": {
+    "message": "Salvo"
+  },
+  "noMessages": {
+    "message": "Nenhuma mensagem ainda"
+  },
+  "chatPlaceholder": {
+    "message": "Diga algo"
+  },
+  "send": {
+    "message": "Enviar"
+  },
+  "clearHistory": {
+    "message": "Apagar chat e notas"
+  },
+  "clearConfirm": {
+    "message": "Apagar todas as mensagens e notas desta sala? Elas somem para os dois, e não dá para desfazer."
+  },
+  "statusConnected": {
+    "message": "Conectado"
+  },
+  "statusOffline": {
+    "message": "Offline"
+  },
+  "statusNotSetUp": {
+    "message": "Não configurado"
+  },
+  "tipStart": {
+    "message": "Assistindo com alguém? Clique em Assistir juntos para sincronizar. A pessoa recebe um convite na tela."
+  },
+  "tipSession": {
+    "message": "Vocês estão assistindo juntos. O 💬 chat e as 🙂 reações ficam aqui, e você pode encerrar a sessão pelo chat."
+  },
+  "noticeJoined": {
+    "message": "$1 entrou"
+  },
+  "noticeLeft": {
+    "message": "$1 saiu"
+  },
+  "noticeWatchingWith": {
+    "message": "Assistindo com $1"
+  },
+  "statusInSyncWith": {
+    "message": "Em sincronia com $1"
+  },
+  "statusInSync": {
+    "message": "Em sincronia"
+  },
+  "statusWaitingJoin": {
+    "message": "Esperando a pessoa entrar"
+  },
+  "statusIdle": {
+    "message": "Pronto. Abra um título para sincronizar"
+  },
+  "statusStandby": {
+    "message": "Sincronizando na sua outra aba"
+  },
+  "statusReconnecting": {
+    "message": "Reconectando..."
+  },
+  "statusNoRoom": {
+    "message": "Abra o Tether para entrar em uma sala"
+  },
+  "actionPaused": {
+    "message": "$1 pausou"
+  },
+  "actionPlayed": {
+    "message": "$1 deu play"
+  },
+  "actionSkipped": {
+    "message": "$1 pulou para $2"
+  },
+  "actionSpeed": {
+    "message": "$1 mudou a velocidade para $2×"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 voltou à velocidade normal"
+  },
+  "inviteStarted": {
+    "message": "$1 começou a assistir juntos"
+  },
+  "notNow": {
+    "message": "Agora não"
+  },
+  "watchingTogetherWith": {
+    "message": "Assistindo juntos com $1"
+  },
+  "startButton": {
+    "message": "Assistir juntos"
+  },
+  "startedCopied": {
+    "message": "Assistindo juntos. Link de convite copiado"
+  },
+  "startedShare": {
+    "message": "Assistindo juntos. Compartilhe seu link de convite pelo Tether"
+  },
+  "elsewhere": {
+    "message": "$1 está assistindo outra coisa"
+  },
+  "joinThem": {
+    "message": "Ir junto"
+  },
+  "dismiss": {
+    "message": "Dispensar"
+  },
+  "reactLove": {
+    "message": "Amei"
+  },
+  "reactLaugh": {
+    "message": "Risada"
+  },
+  "reactWow": {
+    "message": "Surpresa"
+  },
+  "reactClap": {
+    "message": "Aplausos"
+  },
+  "reactSad": {
+    "message": "Triste"
+  },
+  "sendReaction": {
+    "message": "Enviar uma reação"
+  },
+  "chatTitle": {
+    "message": "Chat"
+  },
+  "chatEmpty": {
+    "message": "Diga oi. As mensagens aparecem aqui e no Tether."
+  },
+  "endSessionTitle": {
+    "message": "Parar de assistir juntos. O chat continua no Tether."
+  },
+  "closeChat": {
+    "message": "Fechar chat"
+  },
+  "messagePlaceholder": {
+    "message": "Mensagem"
+  },
+  "stoppedTogether": {
+    "message": "Vocês pararam de assistir juntos"
+  },
+  "joinConnectingTitle": {
+    "message": "Conectando ao Tether..."
+  },
+  "joinConnecting": {
+    "message": "Levando você ao lugar certo."
+  },
+  "joinInvalidTitle": {
+    "message": "Este link não é válido"
+  },
+  "joinInvalid": {
+    "message": "Falta o código da sala. Peça um link novo a quem enviou."
+  },
+  "joinWaitingTitle": {
+    "message": "Esperando"
+  },
+  "joinWaiting": {
+    "message": "Esperando a outra pessoa começar a assistir..."
+  },
+  "joinStillWaiting": {
+    "message": "Ainda esperando. Você já está na sala, então pode abrir seu serviço de streaming quando quiser."
+  },
+  "joinGaveUpTitle": {
+    "message": "Nada ainda"
+  },
+  "joinGaveUp": {
+    "message": "Recarregue esta página quando a pessoa der play, ou abram o serviço vocês mesmos. Você já está na sala."
+  },
+  "joinTroubleTitle": {
+    "message": "Problemas para conectar"
+  },
+  "joinRetrying": {
+    "message": "Tentando de novo..."
+  },
+  "joinFailedTitle": {
+    "message": "Algo não está conectando"
+  },
+  "joinFailed": {
+    "message": "Recarregue esta página, ou abram o serviço vocês mesmos. Você já está na sala."
+  }
+}

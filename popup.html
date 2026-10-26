@@ -147,22 +147,22 @@
   </header>
 
   <nav>
-    <button class="tab-btn active" data-tab="room">Room</button>
-    <button class="tab-btn" data-tab="notes">Notes</button>
-    <button class="tab-btn" data-tab="chat">Chat</button>
+    <button class="tab-btn active" data-tab="room" data-i18n="tabRoom">Room</button>
+    <button class="tab-btn" data-tab="notes" data-i18n="tabNotes">Notes</button>
+    <button class="tab-btn" data-tab="chat" data-i18n="tabChat">Chat</button>
   </nav>
 
   <div class="panel active" id="panel-room">
-    <div class="hint" id="roomHint" style="margin: -4px 0 12px; padding: 0 2px;">Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.</div>
+    <div class="hint" id="roomHint" data-i18n="roomHint" style="margin: -4px 0 12px; padding: 0 2px;">Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.</div>
     <div class="card welcome" id="welcomeCard" style="display:none">
-      <h2>Welcome to Tether</h2>
+      <h2 data-i18n="welcomeTitle">Welcome to Tether</h2>
       <ol>
-        <li><strong>Add your name</strong> below, so they know it's you.</li>
-        <li><strong>Send your invite link</strong>, just once. You'll share this room from then on.</li>
-        <li><strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, tap Join, and you're in sync.</li>
+        <li data-i18n-html="welcomeStep1"><strong>Add your name</strong> below, so they know it's you.</li>
+        <li data-i18n-html="welcomeStep2"><strong>Send your invite link</strong>, just once. You'll share this room from then on.</li>
+        <li data-i18n-html="welcomeStep3"><strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, tap Join, and you're in sync.</li>
       </ol>
-      <div class="aside">While you watch, 💬 chat and 🙂 reactions sit at the bottom right of the video. Got an invite link from someone? Click it again now that Tether's installed.</div>
-      <button class="btn full" id="welcomeDone">Got it</button>
+      <div class="aside" data-i18n="welcomeAside">While you watch, 💬 chat and 🙂 reactions sit at the bottom right of the video. Got an invite link from someone? Click it again now that Tether's installed.</div>
+      <button class="btn full" id="welcomeDone" data-i18n="welcomeDone">Got it</button>
     </div>
     <div class="card" id="sessionCard">
       <div class="peer-line" style="margin: 0 0 10px;"><span class="dot" id="sessionDot"></span><span id="sessionText">Not watching together</span></div>
@@ -170,57 +170,57 @@
       <div class="hint" id="sessionHint">Your partner gets an invite on their screen. Ends on its own after 30 minutes without a video.</div>
     </div>
     <div class="card" id="setupCard" style="display:none">
-      <label for="dbUrlInput">Firebase Database URL</label>
+      <label for="dbUrlInput" data-i18n="dbLabel">Firebase Database URL</label>
       <div class="row">
         <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
       </div>
-      <button class="btn full" id="saveDbUrl" style="margin-top:8px">Connect</button>
+      <button class="btn full" id="saveDbUrl" data-i18n="dbConnect" style="margin-top:8px">Connect</button>
       <div class="err-flash" id="dbUrlStatus"></div>
     </div>
 
     <div class="card">
-      <label for="nicknameInput">Your name</label>
-      <input type="text" id="nicknameInput" placeholder="So they know it's you" maxlength="24">
+      <label for="nicknameInput" data-i18n="nameLabel">Your name</label>
+      <input type="text" id="nicknameInput" data-i18n-placeholder="namePlaceholder" placeholder="So they know it's you" maxlength="24">
     </div>
 
     <div class="card">
-      <label>Your room code</label>
+      <label data-i18n="roomCodeLabel">Your room code</label>
       <div class="room-code" id="roomCode">······</div>
-      <button class="btn full" id="copyLink">Copy invite link</button>
-      <div class="hint">One click brings them to the exact show and the exact moment, once you've pressed play.</div>
-      <div id="copyCodeLink" class="text-link">Copy code only</div>
-      <div class="peer-line"><span class="dot" id="peerDot"></span><span id="peerText">Checking for the other person...</span></div>
-      <div id="leaveRoomLink" class="text-link">Leave this room</div>
+      <button class="btn full" id="copyLink" data-i18n="copyInvite">Copy invite link</button>
+      <div class="hint" data-i18n="inviteHint">One click brings them to the exact show and the exact moment, once you've pressed play.</div>
+      <div id="copyCodeLink" class="text-link" data-i18n="copyCode">Copy code only</div>
+      <div class="peer-line"><span class="dot" id="peerDot"></span><span id="peerText" data-i18n="peerChecking">Checking for the other person...</span></div>
+      <div id="leaveRoomLink" class="text-link" data-i18n="leaveRoom">Leave this room</div>
     </div>
 
     <div class="card">
-      <label for="joinCodeInput">Join someone else's room</label>
+      <label for="joinCodeInput" data-i18n="joinLabel">Join someone else's room</label>
       <div class="row">
-        <input type="text" id="joinCodeInput" placeholder="Their code">
-        <button class="btn" id="joinRoom">Join</button>
+        <input type="text" id="joinCodeInput" data-i18n-placeholder="joinPlaceholder" placeholder="Their code">
+        <button class="btn" id="joinRoom" data-i18n="join">Join</button>
       </div>
     </div>
 
-    <div id="changeDbLink" class="text-link subtle" style="margin-top:4px;">Use a different database (advanced)</div>
+    <div id="changeDbLink" class="text-link subtle" data-i18n="changeDb" style="margin-top:4px;">Use a different database (advanced)</div>
   </div>
 
   <div class="panel" id="panel-notes">
     <div class="card">
-      <label for="notesArea">Shared notes</label>
-      <textarea id="notesArea" placeholder="What to watch next, plans, or anything worth remembering together."></textarea>
-      <div class="save-flash" id="notesStatus">Saved</div>
+      <label for="notesArea" data-i18n="notesLabel">Shared notes</label>
+      <textarea id="notesArea" data-i18n-placeholder="notesPlaceholder" placeholder="What to watch next, plans, or anything worth remembering together."></textarea>
+      <div class="save-flash" id="notesStatus" data-i18n="saved">Saved</div>
     </div>
   </div>
 
   <div class="panel" id="panel-chat">
     <div class="card">
-      <div id="chatLog"><div class="empty-state">No messages yet</div></div>
+      <div id="chatLog"><div class="empty-state" data-i18n="noMessages">No messages yet</div></div>
       <div class="row">
-        <input type="text" id="chatInput" placeholder="Say something" maxlength="500">
-        <button class="btn" id="sendChat">Send</button>
+        <input type="text" id="chatInput" data-i18n-placeholder="chatPlaceholder" placeholder="Say something" maxlength="500">
+        <button class="btn" id="sendChat" data-i18n="send">Send</button>
       </div>
     </div>
-    <div id="clearHistoryLink" class="text-link subtle" style="margin-top:4px;">Clear chat and notes</div>
+    <div id="clearHistoryLink" class="text-link subtle" data-i18n="clearHistory" style="margin-top:4px;">Clear chat and notes</div>
   </div>
 
   </div>

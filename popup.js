@@ -5,6 +5,16 @@
 // the whole setup: no Firebase account, no URL to find or paste in. Anyone
 // who wants their own private backend instead can still switch it under
 // "Use a different database (advanced)".
+// Every string the person sees comes from _locales/<their Chrome language>,
+// with English as the fallback (see tools/build_locales.py). The static
+// markup is filled in from its data-i18n attributes here, before anything
+// else renders.
+const t = (key, ...subs) => chrome.i18n.getMessage(key, subs.map(String)) || key;
+document.documentElement.lang = chrome.i18n.getUILanguage();
+document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+
 const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
 
 const dbUrlInput = document.getElementById('dbUrlInput');
@@ -121,7 +131,7 @@ function roomUrl(path) {
 function setConnectionStatus(state) {
   // state: 'connected' | 'disconnected' | 'unknown'
   statusDot.className = 'dot' + (state === 'connected' ? ' connected' : state === 'disconnected' ? ' disconnected' : '');
-  statusText.textContent = state === 'connected' ? 'Connected' : state === 'disconnected' ? 'Offline' : 'Not set up';
+  statusText.textContent = t(state === 'connected' ? 'statusConnected' : state === 'disconnected' ? 'statusOffline' : 'statusNotSetUp');
 }
 
 // ---------------------------------------------------------------------
@@ -153,7 +163,7 @@ async function testConnection() {
     setConnectionStatus('connected');
     return true;
   } catch (e) {
-    dbUrlStatus.textContent = "Couldn't reach that database. Check the URL and that it's a Realtime Database (not Firestore).";
+    dbUrlStatus.textContent = t('dbError');
     setConnectionStatus('disconnected');
     return false;
   }
@@ -245,11 +255,11 @@ function pollPresence() {
     peerDot.className = 'dot' + (peer ? ' connected' : '');
     if (peer) {
       const peerName = peer[1].name;
-      peerText.textContent = peerName ? `${peerName} is in this room` : 'Someone else is in this room';
+      peerText.textContent = peerName ? t('peerHere', peerName) : t('peerSomeone');
     } else if (myOtherDevice) {
-      peerText.textContent = 'Also open on your other device';
+      peerText.textContent = t('peerOtherDevice');
     } else {
-      peerText.textContent = "Waiting for the other person...";
+      peerText.textContent = t('peerWaiting');
     }
   }).catch(() => {});
 }
@@ -264,14 +274,14 @@ copyLinkBtn.addEventListener('click', () => {
   // Sending the link is starting to watch together: the link only takes
   // them to the show once this side is in a session (see join.js).
   if (!sessionActive()) startSession();
-  copyLinkBtn.textContent = 'Copied ✓';
-  setTimeout(() => { copyLinkBtn.textContent = 'Copy invite link'; }, 1200);
+  copyLinkBtn.textContent = t('copied');
+  setTimeout(() => { copyLinkBtn.textContent = t('copyInvite'); }, 1200);
 });
 
 copyCodeLink.addEventListener('click', () => {
   navigator.clipboard.writeText(roomId || '');
-  copyCodeLink.textContent = 'Copied ✓';
-  setTimeout(() => { copyCodeLink.textContent = 'Copy code only'; }, 1200);
+  copyCodeLink.textContent = t('copied');
+  setTimeout(() => { copyCodeLink.textContent = t('copyCode'); }, 1200);
 });
 
 // Accepts the whole invite link too, not just a bare code: pasting the link
@@ -300,7 +310,7 @@ joinRoomBtn.addEventListener('click', () => {
 // the escape hatch: only your own side leaves, the other person's room is
 // untouched until they also leave or join elsewhere.
 leaveRoomLink.addEventListener('click', () => {
-  if (!confirm("Leave this room and start a new one? Whoever you're watching with will need your new code.")) return;
+  if (!confirm(t('leaveConfirm'))) return;
   enterRoom(randomRoomCode());
 });
 
@@ -393,17 +403,17 @@ function renderSession() {
   sessionDot.className = 'dot' + (on ? ' connected' : '');
   sessionBtn.classList.toggle('secondary', on);
   if (on) {
-    sessionText.textContent = 'Watching together';
-    sessionBtn.textContent = 'End session';
-    sessionHint.textContent = 'Playback is synced in your streaming tabs. Ends on its own after 30 minutes without a video.';
+    sessionText.textContent = t('sessionOn');
+    sessionBtn.textContent = t('sessionEnd');
+    sessionHint.textContent = t('sessionHintOn');
   } else if (partnerWatching) {
-    sessionText.textContent = `${partnerWatching.name || 'The other person'} is watching together`;
-    sessionBtn.textContent = 'Join';
-    sessionHint.textContent = 'Join to sync your playback with theirs.';
+    sessionText.textContent = t('sessionPartner', partnerWatching.name || t('partnerFallback'));
+    sessionBtn.textContent = t('join');
+    sessionHint.textContent = t('sessionHintJoin');
   } else {
-    sessionText.textContent = 'Not watching together';
-    sessionBtn.textContent = 'Start watching together';
-    sessionHint.textContent = 'Your partner gets an invite on their screen. Ends on its own after 30 minutes without a video.';
+    sessionText.textContent = t('sessionOff');
+    sessionBtn.textContent = t('sessionStart');
+    sessionHint.textContent = t('sessionHintOff');
   }
 }
 sessionBtn.addEventListener('click', () => { if (sessionActive()) endSession(); else startSession(); });
@@ -440,7 +450,11 @@ function renderChat(messages) {
   // the instant either side sent another message.
   const nearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 40;
   if (!items.length) {
-    chatLog.innerHTML = '<div class="empty-state">No messages yet</div>';
+    chatLog.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = t('noMessages');
+    chatLog.appendChild(empty);
     return;
   }
   chatLog.innerHTML = '';
@@ -525,7 +539,7 @@ function sendChat() {
 const clearHistoryLink = document.getElementById('clearHistoryLink');
 clearHistoryLink.addEventListener('click', () => {
   if (!dbUrl || !roomId) return;
-  if (!confirm("Delete all chat messages and notes in this room? They'll be gone for both of you, and this can't be undone.")) return;
+  if (!confirm(t('clearConfirm'))) return;
   // A pending notes save would otherwise land right after the delete and
   // quietly bring the old text back.
   clearTimeout(notesSaveTimer);

@@ -9,6 +9,9 @@
 // ---------------------------------------------------------------------------
 
 (function () {
+  // Every string comes from _locales/<the person's Chrome language>, with
+  // English as the fallback (see tools/build_locales.py).
+  const tr = (key, ...subs) => chrome.i18n.getMessage(key, subs.map(String)) || key;
   const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif';
   const GLASS = `
     background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6);
@@ -98,7 +101,7 @@
       transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; transform: translateY(6px);`, text);
     const x = el('button', `all: initial; position: absolute; top: 6px; right: 8px; cursor: pointer;
       font: 500 13px ${FONT}; color: rgba(255,255,255,0.6);`, '✕');
-    x.setAttribute('aria-label', 'Dismiss tip');
+    x.setAttribute('aria-label', tr('dismiss'));
     const node = tipEl;
     const close = () => { if (tipEl === node) closeTip(); };
     x.addEventListener('click', close);
@@ -110,8 +113,8 @@
   }
   function maybeTip(status) {
     tipFor = status;
-    if (status === 'off') showTip('start', 'Watching with someone? Click Watch together to sync this with them. They get an invite on their screen.', 66);
-    if (status === 'connected') showTip('session', "You're watching together. 💬 chat and 🙂 reactions are here, and you can end the session from the chat.", 110);
+    if (status === 'off') showTip('start', tr('tipStart'), 66);
+    if (status === 'connected') showTip('session', tr('tipSession'), 110);
   }
 
   let statusBadge = null;
@@ -121,11 +124,11 @@
     const was = partnerNow;
     partnerNow = partner;
     if (first) {
-      if (partner) showNotice(`Watching with ${partner.name || 'them'}`);
+      if (partner) showNotice(tr('noticeWatchingWith', partner.name || tr('partnerFallback')));
     } else if (partner && !was) {
-      showNotice(`${partner.name || 'They'} joined`);
+      showNotice(tr('noticeJoined', partner.name || tr('partnerFallback')));
     } else if (!partner && was) {
-      showNotice(`${was.name || 'They'} left`);
+      showNotice(tr('noticeLeft', was.name || tr('partnerFallback')));
     }
     if (currentStatus === 'connected') showStatus('connected');
   }
@@ -160,11 +163,11 @@
     }
     const who = partnerNow && partnerNow.name;
     const labels = {
-      connected: partnerNow ? [who ? `In sync with ${who}` : 'In sync', '#34c759'] : ['Waiting for them to join', '#0a84ff'],
-      idle: ['Ready. Open a title to sync', '#8e8e93'],
-      standby: ['Syncing in your other tab', '#8e8e93'],
-      disconnected: ['Reconnecting...', '#ff9f0a'],
-      'no-room': ['Open Tether to join a room', '#8e8e93'],
+      connected: partnerNow ? [who ? tr('statusInSyncWith', who) : tr('statusInSync'), '#34c759'] : [tr('statusWaitingJoin'), '#0a84ff'],
+      idle: [tr('statusIdle'), '#8e8e93'],
+      standby: [tr('statusStandby'), '#8e8e93'],
+      disconnected: [tr('statusReconnecting'), '#ff9f0a'],
+      'no-room': [tr('statusNoRoom'), '#8e8e93'],
     };
     const [text, color] = labels[status] || ['', '#8e8e93'];
     statusBadge._label.textContent = text;
@@ -227,11 +230,11 @@
     return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
   }
   function describe(action) {
-    const who = action.name || 'They';
-    if (action.type === 'pause') return `${who} paused`;
-    if (action.type === 'play') return `${who} pressed play`;
-    if (action.type === 'seek') return `${who} skipped to ${clock(action.time)}`;
-    if (action.type === 'rate') return action.rate === 1 ? `${who} went back to normal speed` : `${who} set speed to ${action.rate}×`;
+    const who = action.name || tr('partnerFallback');
+    if (action.type === 'pause') return tr('actionPaused', who);
+    if (action.type === 'play') return tr('actionPlayed', who);
+    if (action.type === 'seek') return tr('actionSkipped', who, clock(action.time));
+    if (action.type === 'rate') return action.rate === 1 ? tr('actionSpeedNormal', who) : tr('actionSpeed', who, action.rate);
     return null;
   }
 
@@ -243,16 +246,16 @@
     if (inviteBanner) { dismiss(inviteBanner); inviteBanner = null; }
     if (!info || info.key === dismissedInvite) return;
     const b = pill('display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; pointer-events: auto;');
-    b.append(el('span', '', `${info.name || 'The other person'} started watching together`));
+    b.append(el('span', '', tr('inviteStarted', info.name || tr('partnerFallback'))));
     const join = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
-      background: #007aff; padding: 6px 12px; border-radius: 999px;`, 'Join');
+      background: #007aff; padding: 6px 12px; border-radius: 999px;`, tr('join'));
     join.addEventListener('click', () => {
       window.TetherSync.startSession();
-      showNotice(`Watching together with ${info.name || 'them'}`);
+      showNotice(tr('watchingTogetherWith', info.name || tr('partnerFallback')));
     });
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7);
       padding: 4px 8px;`, '✕');
-    close.setAttribute('aria-label', 'Not now');
+    close.setAttribute('aria-label', tr('notNow'));
     close.addEventListener('click', () => {
       dismissedInvite = info.key; // until they start a new one
       dismiss(b);
@@ -272,8 +275,8 @@
     startButton = el('button', `all: initial; position: fixed; bottom: 24px; right: 24px; cursor: pointer;
       display: none; align-items: center; gap: 7px; font: 600 12.5px ${FONT}; color: #fff;
       padding: 8px 14px; border-radius: 999px; pointer-events: auto; transition: opacity 0.4s ease; ${GLASS}`);
-    startButton.append(el('span', 'font-size: 13px;', '👥'), el('span', '', 'Watch together'));
-    startButton.title = 'Start watching together';
+    startButton.append(el('span', 'font-size: 13px;', '👥'), el('span', '', tr('startButton')));
+    startButton.title = tr('sessionStart');
     startButton.addEventListener('click', async () => {
       const code = window.TetherSync.roomId;
       window.TetherSync.startSession();
@@ -282,7 +285,7 @@
         await navigator.clipboard.writeText(`https://tamkin-anwar.github.io/tether/join.html?code=${code}`);
         copied = true;
       } catch (e) { /* the popup has the link too */ }
-      showNotice(copied ? 'Watching together. Invite link copied' : 'Watching together. Share your invite link from the Tether popup');
+      showNotice(tr(copied ? 'startedCopied' : 'startedShare'));
       closeTip();
     });
     root.appendChild(startButton);
@@ -293,13 +296,13 @@
     if (elsewhereBanner) { dismiss(elsewhereBanner); elsewhereBanner = null; }
     if (!info) return;
     const b = pill('display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; pointer-events: auto;');
-    b.append(el('span', '', `${info.name || 'The other person'} is watching something else`));
+    b.append(el('span', '', tr('elsewhere', info.name || tr('partnerFallback'))));
     const go = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
-      background: #007aff; padding: 6px 12px; border-radius: 999px;`, 'Join them');
+      background: #007aff; padding: 6px 12px; border-radius: 999px;`, tr('joinThem'));
     go.addEventListener('click', () => { location.href = info.url; });
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7);
       padding: 4px 8px;`, '✕');
-    close.setAttribute('aria-label', 'Dismiss');
+    close.setAttribute('aria-label', tr('dismiss'));
     close.addEventListener('click', () => { dismiss(b); if (elsewhereBanner === b) elsewhereBanner = null; });
     b.append(go, close);
     elsewhereBanner = b;
@@ -312,11 +315,11 @@
   // tabs, right on the video you're both looking at.
   // ---------------------------------------------------------------------
   const REACTIONS = [
-    { emoji: '❤️', label: 'Love' },
-    { emoji: '😂', label: 'Laughing' },
-    { emoji: '😮', label: 'Surprised' },
-    { emoji: '👏', label: 'Applause' },
-    { emoji: '😢', label: 'Sad' },
+    { emoji: '❤️', label: tr('reactLove') },
+    { emoji: '😂', label: tr('reactLaugh') },
+    { emoji: '😮', label: tr('reactWow') },
+    { emoji: '👏', label: tr('reactClap') },
+    { emoji: '😢', label: tr('reactSad') },
   ];
   const style = document.createElement('style');
   style.textContent = `
@@ -386,7 +389,7 @@
     chatLog.textContent = '';
     if (!items.length) {
       chatLog.appendChild(el('div', `font: 400 12px ${FONT}; color: rgba(255,255,255,0.5); text-align: center; padding: 24px 0;`,
-        'Say hi. Messages show up here and in the Tether popup.'));
+        tr('chatEmpty')));
       return;
     }
     let lastSender = null;
@@ -449,14 +452,14 @@
       display: none; flex-direction: column; border-radius: 16px; overflow: hidden; pointer-events: auto; ${GLASS}`);
     const head = el('div', `display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px 14px;
       font: 600 13px ${FONT}; color: #fff;`);
-    head.append(el('span', '', 'Chat'));
+    head.append(el('span', '', tr('chatTitle')));
     const end = el('button', `all: initial; cursor: pointer; font: 500 12px ${FONT}; color: rgba(255,255,255,0.6);
-      padding: 2px 6px; margin-left: auto; margin-right: 4px;`, 'End session');
-    end.title = 'Stop watching together. Chat stays in the Tether popup.';
-    end.addEventListener('click', () => { window.TetherSync.endSession(); showNotice('Stopped watching together'); });
+      padding: 2px 6px; margin-left: auto; margin-right: 4px;`, tr('sessionEnd'));
+    end.title = tr('endSessionTitle');
+    end.addEventListener('click', () => { window.TetherSync.endSession(); showNotice(tr('stoppedTogether')); });
     head.append(end);
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7); padding: 2px 6px;`, '✕');
-    close.setAttribute('aria-label', 'Close chat');
+    close.setAttribute('aria-label', tr('closeChat'));
     close.addEventListener('click', () => setChatOpen(false));
     head.append(close);
     chatLog = el('div', `flex: 1; min-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
@@ -466,10 +469,10 @@
       background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 10px;`);
     chatInput.type = 'text';
     chatInput.maxLength = 500;
-    chatInput.placeholder = 'Message';
-    chatInput.setAttribute('aria-label', 'Chat message');
+    chatInput.placeholder = tr('messagePlaceholder');
+    chatInput.setAttribute('aria-label', tr('messagePlaceholder'));
     const send = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
-      background: #007aff; border-radius: 10px; padding: 8px 12px;`, 'Send');
+      background: #007aff; border-radius: 10px; padding: 8px 12px;`, tr('send'));
     const submit = () => {
       if (!chatInput.value.trim()) return;
       window.TetherSync.sendChat(chatInput.value);
@@ -513,10 +516,10 @@
       });
       row.appendChild(b);
     }
-    const reactToggle = roundButton('Send a reaction', '🙂');
+    const reactToggle = roundButton(tr('sendReaction'), '🙂');
     reactToggle.addEventListener('click', () => setPickerOpen(!pickerOpen));
 
-    chatButton = roundButton('Chat', '💬');
+    chatButton = roundButton(tr('chatTitle'), '💬');
     unreadBadge = el('span', `position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px;
       box-sizing: border-box; border-radius: 999px; background: #ff3b30; color: #fff; font: 700 10px ${FONT};
       display: none; align-items: center; justify-content: center;`);

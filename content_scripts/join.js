@@ -9,11 +9,21 @@
 // ---------------------------------------------------------------------------
 
 (function () {
+  const tr = (key) => chrome.i18n.getMessage(key) || key;
   const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
 
   // Tells the plain page (join.html's own inline script, which has no way to
   // ask "is an extension installed") that Tether is here and taking over.
   document.documentElement.setAttribute('data-tether-active', 'true');
+
+  // join.html's own text is English (it's a plain web page); once it's
+  // there, show its first message in the person's language instead.
+  document.addEventListener('DOMContentLoaded', () => {
+    const h = document.querySelector('#waitingState h1');
+    const p = document.getElementById('joinStatus');
+    if (h && h.textContent === 'Connecting to Tether...') h.textContent = tr('joinConnectingTitle');
+    if (p && p.textContent === 'Getting you to the right spot.') p.textContent = tr('joinConnecting');
+  });
 
   function setStatus(text) {
     const el = document.getElementById('joinStatus');
@@ -39,8 +49,8 @@
   const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!code) {
     stopSpinner();
-    setHeadline("This link isn't valid");
-    setStatus("It's missing a room code. Ask whoever sent it for a fresh invite link.");
+    setHeadline(tr('joinInvalidTitle'));
+    setStatus(tr('joinInvalid'));
     return;
   }
 
@@ -108,16 +118,14 @@
         // fine, which should override and self-heal any "having trouble
         // connecting" headline left behind by an earlier transient network
         // error, without needing separate state to track that explicitly.
-        setHeadline("Waiting on them");
+        setHeadline(tr('joinWaitingTitle'));
         if (attempts >= GIVE_UP_AFTER) {
           stopSpinner();
-          setHeadline("Still nothing yet");
-          setStatus("Refresh this page once they've pressed play, or just open the service yourselves, you're already in the room.");
+          setHeadline(tr('joinGaveUpTitle'));
+          setStatus(tr('joinGaveUp'));
           return;
         }
-        setStatus(attempts < REASSURE_AFTER
-          ? "Waiting for the other person to start watching..."
-          : "Still waiting. You're already in the room, so feel free to open Netflix (or whichever you're both using) yourself whenever you're ready.");
+        setStatus(tr(attempts < REASSURE_AFTER ? 'joinWaiting' : 'joinStillWaiting'));
         setTimeout(tryRedirect, 2000);
       }).catch(() => {
         // A genuine network failure, not just "no data yet" (blocked by an
@@ -129,12 +137,12 @@
         attempts++;
         if (attempts >= GIVE_UP_AFTER) {
           stopSpinner();
-          setHeadline("Something's not connecting");
-          setStatus("Refresh this page, or just open the service yourselves, you're already in the room.");
+          setHeadline(tr('joinFailedTitle'));
+          setStatus(tr('joinFailed'));
           return;
         }
-        setHeadline("Having trouble connecting");
-        setStatus("Retrying...");
+        setHeadline(tr('joinTroubleTitle'));
+        setStatus(tr('joinRetrying'));
         setTimeout(tryRedirect, 3000);
       });
     }

@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether: Gemeinsam schauen"
+  },
+  "extDescription": {
+    "message": "Schau Netflix, Hulu, Disney+, Max, YouTube und mehr synchron mit jemandem in der Ferne, mit Chat, Notizen und Reaktionen."
+  },
+  "tabRoom": {
+    "message": "Raum"
+  },
+  "tabNotes": {
+    "message": "Notizen"
+  },
+  "tabChat": {
+    "message": "Chat"
+  },
+  "roomHint": {
+    "message": "Chat und Notizen sind jederzeit da. Starte gemeinsames Schauen, um Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll oder YouTube zu synchronisieren."
+  },
+  "welcomeTitle": {
+    "message": "Willkommen bei Tether"
+  },
+  "welcomeStep1": {
+    "message": "<strong>Gib unten deinen Namen ein</strong>, damit sie wissen, dass du es bist."
+  },
+  "welcomeStep2": {
+    "message": "<strong>Schick deinen Einladungslink</strong>, nur einmal. Danach teilt ihr diesen Raum."
+  },
+  "welcomeStep3": {
+    "message": "<strong>Öffne einen Titel und klicke auf 👥 Gemeinsam schauen.</strong> Die andere Person bekommt eine Einladung auf den Bildschirm, tippt auf Beitreten, und ihr seid synchron."
+  },
+  "welcomeAside": {
+    "message": "Beim Schauen findest du 💬 Chat und 🙂 Reaktionen unten rechts im Video. Hast du einen Einladungslink bekommen? Klick ihn noch einmal, jetzt wo Tether installiert ist."
+  },
+  "welcomeDone": {
+    "message": "Verstanden"
+  },
+  "sessionOff": {
+    "message": "Kein gemeinsames Schauen"
+  },
+  "sessionStart": {
+    "message": "Gemeinsam schauen"
+  },
+  "sessionHintOff": {
+    "message": "Die andere Person bekommt eine Einladung auf den Bildschirm. Endet nach 30 Minuten ohne Video von selbst."
+  },
+  "sessionOn": {
+    "message": "Ihr schaut gemeinsam"
+  },
+  "sessionEnd": {
+    "message": "Sitzung beenden"
+  },
+  "sessionHintOn": {
+    "message": "Die Wiedergabe ist in deinen Streaming-Tabs synchron. Endet nach 30 Minuten ohne Video von selbst."
+  },
+  "sessionPartner": {
+    "message": "$1 schaut gerade gemeinsam"
+  },
+  "sessionHintJoin": {
+    "message": "Tritt bei, um deine Wiedergabe mit der anderen zu synchronisieren."
+  },
+  "join": {
+    "message": "Beitreten"
+  },
+  "partnerFallback": {
+    "message": "Die andere Person"
+  },
+  "dbLabel": {
+    "message": "Firebase-Datenbank-URL"
+  },
+  "dbConnect": {
+    "message": "Verbinden"
+  },
+  "dbError": {
+    "message": "Diese Datenbank ist nicht erreichbar. Prüfe die URL und ob es eine Realtime Database ist (nicht Firestore)."
+  },
+  "nameLabel": {
+    "message": "Dein Name"
+  },
+  "namePlaceholder": {
+    "message": "Damit sie wissen, dass du es bist"
+  },
+  "roomCodeLabel": {
+    "message": "Dein Raumcode"
+  },
+  "copyInvite": {
+    "message": "Einladungslink kopieren"
+  },
+  "inviteHint": {
+    "message": "Ein Klick bringt sie zum selben Titel und zur selben Stelle, sobald du auf Play gedrückt hast."
+  },
+  "copyCode": {
+    "message": "Nur Code kopieren"
+  },
+  "copied": {
+    "message": "Kopiert ✓"
+  },
+  "peerChecking": {
+    "message": "Suche nach der anderen Person..."
+  },
+  "peerHere": {
+    "message": "$1 ist in diesem Raum"
+  },
+  "peerSomeone": {
+    "message": "Jemand anderes ist in diesem Raum"
+  },
+  "peerOtherDevice": {
+    "message": "Auch auf deinem anderen Gerät geöffnet"
+  },
+  "peerWaiting": {
+    "message": "Warte auf die andere Person..."
+  },
+  "leaveRoom": {
+    "message": "Diesen Raum verlassen"
+  },
+  "leaveConfirm": {
+    "message": "Diesen Raum verlassen und einen neuen anlegen? Wer mit dir schaut, braucht dann deinen neuen Code."
+  },
+  "joinLabel": {
+    "message": "Dem Raum einer anderen Person beitreten"
+  },
+  "joinPlaceholder": {
+    "message": "Ihr Code"
+  },
+  "changeDb": {
+    "message": "Andere Datenbank verwenden (erweitert)"
+  },
+  "notesLabel": {
+    "message": "Gemeinsame Notizen"
+  },
+  "notesPlaceholder": {
+    "message": "Was ihr als Nächstes schaut, Pläne oder alles, was ihr euch merken wollt."
+  },
+  "saved": {
+    "message": "Gespeichert"
+  },
+  "noMessages": {
+    "message": "Noch keine Nachrichten"
+  },
+  "chatPlaceholder": {
+    "message": "Schreib etwas"
+  },
+  "send": {
+    "message": "Senden"
+  },
+  "clearHistory": {
+    "message": "Chat und Notizen löschen"
+  },
+  "clearConfirm": {
+    "message": "Alle Nachrichten und Notizen in diesem Raum löschen? Sie sind dann für euch beide weg, und das lässt sich nicht rückgängig machen."
+  },
+  "statusConnected": {
+    "message": "Verbunden"
+  },
+  "statusOffline": {
+    "message": "Offline"
+  },
+  "statusNotSetUp": {
+    "message": "Nicht eingerichtet"
+  },
+  "tipStart": {
+    "message": "Schaust du mit jemandem? Klick auf Gemeinsam schauen, um das hier zu synchronisieren. Die Einladung erscheint auf dem anderen Bildschirm."
+  },
+  "tipSession": {
+    "message": "Ihr schaut gemeinsam. 💬 Chat und 🙂 Reaktionen sind hier, und im Chat kannst du die Sitzung beenden."
+  },
+  "noticeJoined": {
+    "message": "$1 ist beigetreten"
+  },
+  "noticeLeft": {
+    "message": "$1 ist gegangen"
+  },
+  "noticeWatchingWith": {
+    "message": "Du schaust mit $1"
+  },
+  "statusInSyncWith": {
+    "message": "Synchron mit $1"
+  },
+  "statusInSync": {
+    "message": "Synchron"
+  },
+  "statusWaitingJoin": {
+    "message": "Warte auf die andere Person"
+  },
+  "statusIdle": {
+    "message": "Bereit. Öffne einen Titel zum Synchronisieren"
+  },
+  "statusStandby": {
+    "message": "Synchronisiert in deinem anderen Tab"
+  },
+  "statusReconnecting": {
+    "message": "Verbinde neu..."
+  },
+  "statusNoRoom": {
+    "message": "Öffne Tether, um einem Raum beizutreten"
+  },
+  "actionPaused": {
+    "message": "$1 hat pausiert"
+  },
+  "actionPlayed": {
+    "message": "$1 hat auf Play gedrückt"
+  },
+  "actionSkipped": {
+    "message": "$1 ist zu $2 gesprungen"
+  },
+  "actionSpeed": {
+    "message": "$1 hat die Geschwindigkeit auf $2× gestellt"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 ist zur normalen Geschwindigkeit zurück"
+  },
+  "inviteStarted": {
+    "message": "$1 hat gemeinsames Schauen gestartet"
+  },
+  "notNow": {
+    "message": "Nicht jetzt"
+  },
+  "watchingTogetherWith": {
+    "message": "Du schaust gemeinsam mit $1"
+  },
+  "startButton": {
+    "message": "Gemeinsam schauen"
+  },
+  "startedCopied": {
+    "message": "Gemeinsames Schauen läuft. Einladungslink kopiert"
+  },
+  "startedShare": {
+    "message": "Gemeinsames Schauen läuft. Teile deinen Einladungslink über Tether"
+  },
+  "elsewhere": {
+    "message": "$1 schaut gerade etwas anderes"
+  },
+  "joinThem": {
+    "message": "Mitkommen"
+  },
+  "dismiss": {
+    "message": "Schließen"
+  },
+  "reactLove": {
+    "message": "Liebe"
+  },
+  "reactLaugh": {
+    "message": "Lachen"
+  },
+  "reactWow": {
+    "message": "Überrascht"
+  },
+  "reactClap": {
+    "message": "Applaus"
+  },
+  "reactSad": {
+    "message": "Traurig"
+  },
+  "sendReaction": {
+    "message": "Reaktion senden"
+  },
+  "chatTitle": {
+    "message": "Chat"
+  },
+  "chatEmpty": {
+    "message": "Sag hallo. Nachrichten erscheinen hier und in Tether."
+  },
+  "endSessionTitle": {
+    "message": "Gemeinsames Schauen beenden. Der Chat bleibt in Tether."
+  },
+  "closeChat": {
+    "message": "Chat schließen"
+  },
+  "messagePlaceholder": {
+    "message": "Nachricht"
+  },
+  "stoppedTogether": {
+    "message": "Gemeinsames Schauen beendet"
+  },
+  "joinConnectingTitle": {
+    "message": "Verbinde mit Tether..."
+  },
+  "joinConnecting": {
+    "message": "Wir bringen dich an die richtige Stelle."
+  },
+  "joinInvalidTitle": {
+    "message": "Dieser Link ist ungültig"
+  },
+  "joinInvalid": {
+    "message": "Der Raumcode fehlt. Bitte die Person, die ihn geschickt hat, um einen neuen Link."
+  },
+  "joinWaitingTitle": {
+    "message": "Warte auf die andere Person"
+  },
+  "joinWaiting": {
+    "message": "Warte, bis die andere Person zu schauen beginnt..."
+  },
+  "joinStillWaiting": {
+    "message": "Immer noch am Warten. Du bist schon im Raum, du kannst deinen Streamingdienst also jederzeit selbst öffnen."
+  },
+  "joinGaveUpTitle": {
+    "message": "Noch nichts"
+  },
+  "joinGaveUp": {
+    "message": "Lade diese Seite neu, sobald auf Play gedrückt wurde, oder öffnet den Dienst selbst. Du bist schon im Raum."
+  },
+  "joinTroubleTitle": {
+    "message": "Verbindungsprobleme"
+  },
+  "joinRetrying": {
+    "message": "Neuer Versuch..."
+  },
+  "joinFailedTitle": {
+    "message": "Keine Verbindung"
+  },
+  "joinFailed": {
+    "message": "Lade diese Seite neu oder öffnet den Dienst selbst. Du bist schon im Raum."
+  }
+}

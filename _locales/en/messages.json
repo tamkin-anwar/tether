@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether: Watch Together"
+  },
+  "extDescription": {
+    "message": "Watch Netflix, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions."
+  },
+  "tabRoom": {
+    "message": "Room"
+  },
+  "tabNotes": {
+    "message": "Notes"
+  },
+  "tabChat": {
+    "message": "Chat"
+  },
+  "roomHint": {
+    "message": "Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube."
+  },
+  "welcomeTitle": {
+    "message": "Welcome to Tether"
+  },
+  "welcomeStep1": {
+    "message": "<strong>Add your name</strong> below, so they know it's you."
+  },
+  "welcomeStep2": {
+    "message": "<strong>Send your invite link</strong>, just once. You'll share this room from then on."
+  },
+  "welcomeStep3": {
+    "message": "<strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, tap Join, and you're in sync."
+  },
+  "welcomeAside": {
+    "message": "While you watch, 💬 chat and 🙂 reactions sit at the bottom right of the video. Got an invite link from someone? Click it again now that Tether's installed."
+  },
+  "welcomeDone": {
+    "message": "Got it"
+  },
+  "sessionOff": {
+    "message": "Not watching together"
+  },
+  "sessionStart": {
+    "message": "Start watching together"
+  },
+  "sessionHintOff": {
+    "message": "Your partner gets an invite on their screen. Ends on its own after 30 minutes without a video."
+  },
+  "sessionOn": {
+    "message": "Watching together"
+  },
+  "sessionEnd": {
+    "message": "End session"
+  },
+  "sessionHintOn": {
+    "message": "Playback is synced in your streaming tabs. Ends on its own after 30 minutes without a video."
+  },
+  "sessionPartner": {
+    "message": "$1 is watching together"
+  },
+  "sessionHintJoin": {
+    "message": "Join to sync your playback with theirs."
+  },
+  "join": {
+    "message": "Join"
+  },
+  "partnerFallback": {
+    "message": "Your partner"
+  },
+  "dbLabel": {
+    "message": "Firebase Database URL"
+  },
+  "dbConnect": {
+    "message": "Connect"
+  },
+  "dbError": {
+    "message": "Couldn't reach that database. Check the URL and that it's a Realtime Database (not Firestore)."
+  },
+  "nameLabel": {
+    "message": "Your name"
+  },
+  "namePlaceholder": {
+    "message": "So they know it's you"
+  },
+  "roomCodeLabel": {
+    "message": "Your room code"
+  },
+  "copyInvite": {
+    "message": "Copy invite link"
+  },
+  "inviteHint": {
+    "message": "One click brings them to the exact show and the exact moment, once you've pressed play."
+  },
+  "copyCode": {
+    "message": "Copy code only"
+  },
+  "copied": {
+    "message": "Copied ✓"
+  },
+  "peerChecking": {
+    "message": "Checking for the other person..."
+  },
+  "peerHere": {
+    "message": "$1 is in this room"
+  },
+  "peerSomeone": {
+    "message": "Someone else is in this room"
+  },
+  "peerOtherDevice": {
+    "message": "Also open on your other device"
+  },
+  "peerWaiting": {
+    "message": "Waiting for the other person..."
+  },
+  "leaveRoom": {
+    "message": "Leave this room"
+  },
+  "leaveConfirm": {
+    "message": "Leave this room and start a new one? Whoever you're watching with will need your new code."
+  },
+  "joinLabel": {
+    "message": "Join someone else's room"
+  },
+  "joinPlaceholder": {
+    "message": "Their code"
+  },
+  "changeDb": {
+    "message": "Use a different database (advanced)"
+  },
+  "notesLabel": {
+    "message": "Shared notes"
+  },
+  "notesPlaceholder": {
+    "message": "What to watch next, plans, or anything worth remembering together."
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "noMessages": {
+    "message": "No messages yet"
+  },
+  "chatPlaceholder": {
+    "message": "Say something"
+  },
+  "send": {
+    "message": "Send"
+  },
+  "clearHistory": {
+    "message": "Clear chat and notes"
+  },
+  "clearConfirm": {
+    "message": "Delete all chat messages and notes in this room? They'll be gone for both of you, and this can't be undone."
+  },
+  "statusConnected": {
+    "message": "Connected"
+  },
+  "statusOffline": {
+    "message": "Offline"
+  },
+  "statusNotSetUp": {
+    "message": "Not set up"
+  },
+  "tipStart": {
+    "message": "Watching with someone? Click Watch together to sync this with them. They get an invite on their screen."
+  },
+  "tipSession": {
+    "message": "You're watching together. 💬 chat and 🙂 reactions are here, and you can end the session from the chat."
+  },
+  "noticeJoined": {
+    "message": "$1 joined"
+  },
+  "noticeLeft": {
+    "message": "$1 left"
+  },
+  "noticeWatchingWith": {
+    "message": "Watching with $1"
+  },
+  "statusInSyncWith": {
+    "message": "In sync with $1"
+  },
+  "statusInSync": {
+    "message": "In sync"
+  },
+  "statusWaitingJoin": {
+    "message": "Waiting for them to join"
+  },
+  "statusIdle": {
+    "message": "Ready. Open a title to sync"
+  },
+  "statusStandby": {
+    "message": "Syncing in your other tab"
+  },
+  "statusReconnecting": {
+    "message": "Reconnecting..."
+  },
+  "statusNoRoom": {
+    "message": "Open Tether to join a room"
+  },
+  "actionPaused": {
+    "message": "$1 paused"
+  },
+  "actionPlayed": {
+    "message": "$1 pressed play"
+  },
+  "actionSkipped": {
+    "message": "$1 skipped to $2"
+  },
+  "actionSpeed": {
+    "message": "$1 set speed to $2×"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 went back to normal speed"
+  },
+  "inviteStarted": {
+    "message": "$1 started watching together"
+  },
+  "notNow": {
+    "message": "Not now"
+  },
+  "watchingTogetherWith": {
+    "message": "Watching together with $1"
+  },
+  "startButton": {
+    "message": "Watch together"
+  },
+  "startedCopied": {
+    "message": "Watching together. Invite link copied"
+  },
+  "startedShare": {
+    "message": "Watching together. Share your invite link from the Tether popup"
+  },
+  "elsewhere": {
+    "message": "$1 is watching something else"
+  },
+  "joinThem": {
+    "message": "Join them"
+  },
+  "dismiss": {
+    "message": "Dismiss"
+  },
+  "reactLove": {
+    "message": "Love"
+  },
+  "reactLaugh": {
+    "message": "Laughing"
+  },
+  "reactWow": {
+    "message": "Surprised"
+  },
+  "reactClap": {
+    "message": "Applause"
+  },
+  "reactSad": {
+    "message": "Sad"
+  },
+  "sendReaction": {
+    "message": "Send a reaction"
+  },
+  "chatTitle": {
+    "message": "Chat"
+  },
+  "chatEmpty": {
+    "message": "Say hi. Messages show up here and in the Tether popup."
+  },
+  "endSessionTitle": {
+    "message": "Stop watching together. Chat stays in the Tether popup."
+  },
+  "closeChat": {
+    "message": "Close chat"
+  },
+  "messagePlaceholder": {
+    "message": "Message"
+  },
+  "stoppedTogether": {
+    "message": "Stopped watching together"
+  },
+  "joinConnectingTitle": {
+    "message": "Connecting to Tether..."
+  },
+  "joinConnecting": {
+    "message": "Getting you to the right spot."
+  },
+  "joinInvalidTitle": {
+    "message": "This link isn't valid"
+  },
+  "joinInvalid": {
+    "message": "It's missing a room code. Ask whoever sent it for a fresh invite link."
+  },
+  "joinWaitingTitle": {
+    "message": "Waiting on them"
+  },
+  "joinWaiting": {
+    "message": "Waiting for the other person to start watching..."
+  },
+  "joinStillWaiting": {
+    "message": "Still waiting. You're already in the room, so feel free to open your streaming service yourself whenever you're ready."
+  },
+  "joinGaveUpTitle": {
+    "message": "Still nothing yet"
+  },
+  "joinGaveUp": {
+    "message": "Refresh this page once they've pressed play, or just open the service yourselves. You're already in the room."
+  },
+  "joinTroubleTitle": {
+    "message": "Having trouble connecting"
+  },
+  "joinRetrying": {
+    "message": "Retrying..."
+  },
+  "joinFailedTitle": {
+    "message": "Something's not connecting"
+  },
+  "joinFailed": {
+    "message": "Refresh this page, or just open the service yourselves. You're already in the room."
+  }
+}

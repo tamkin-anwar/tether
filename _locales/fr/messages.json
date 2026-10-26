@@ -1,0 +1,314 @@
+{
+  "extName": {
+    "message": "Tether : Regarder ensemble"
+  },
+  "extDescription": {
+    "message": "Regardez Netflix, Hulu, Disney+, Max, YouTube et plus en synchro avec un proche éloigné, avec chat, notes et réactions."
+  },
+  "tabRoom": {
+    "message": "Salon"
+  },
+  "tabNotes": {
+    "message": "Notes"
+  },
+  "tabChat": {
+    "message": "Chat"
+  },
+  "roomHint": {
+    "message": "Le chat et les notes sont toujours là. Lancez une séance à deux pour synchroniser Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll ou YouTube."
+  },
+  "welcomeTitle": {
+    "message": "Bienvenue dans Tether"
+  },
+  "welcomeStep1": {
+    "message": "<strong>Ajoutez votre prénom</strong> ci-dessous, pour qu'on sache que c'est vous."
+  },
+  "welcomeStep2": {
+    "message": "<strong>Envoyez votre lien d'invitation</strong>, une seule fois. Vous partagerez ce salon ensuite."
+  },
+  "welcomeStep3": {
+    "message": "<strong>Ouvrez un programme et cliquez sur 👥 Regarder ensemble.</strong> L'autre personne reçoit une invitation à l'écran, touche Rejoindre, et vous êtes synchronisés."
+  },
+  "welcomeAside": {
+    "message": "Pendant le visionnage, le 💬 chat et les 🙂 réactions sont en bas à droite de la vidéo. On vous a envoyé un lien d'invitation ? Cliquez dessus à nouveau maintenant que Tether est installé."
+  },
+  "welcomeDone": {
+    "message": "Compris"
+  },
+  "sessionOff": {
+    "message": "Pas de séance en cours"
+  },
+  "sessionStart": {
+    "message": "Regarder ensemble"
+  },
+  "sessionHintOff": {
+    "message": "L'autre personne reçoit une invitation à l'écran. La séance s'arrête seule après 30 minutes sans vidéo."
+  },
+  "sessionOn": {
+    "message": "Séance en cours"
+  },
+  "sessionEnd": {
+    "message": "Terminer la séance"
+  },
+  "sessionHintOn": {
+    "message": "La lecture est synchronisée dans vos onglets. La séance s'arrête seule après 30 minutes sans vidéo."
+  },
+  "sessionPartner": {
+    "message": "$1 regarde en séance partagée"
+  },
+  "sessionHintJoin": {
+    "message": "Rejoignez pour synchroniser votre lecture avec la sienne."
+  },
+  "join": {
+    "message": "Rejoindre"
+  },
+  "partnerFallback": {
+    "message": "L'autre personne"
+  },
+  "dbLabel": {
+    "message": "URL de la base de données Firebase"
+  },
+  "dbConnect": {
+    "message": "Se connecter"
+  },
+  "dbError": {
+    "message": "Impossible de joindre cette base de données. Vérifiez l'URL et qu'il s'agit d'une Realtime Database (pas Firestore)."
+  },
+  "nameLabel": {
+    "message": "Votre prénom"
+  },
+  "namePlaceholder": {
+    "message": "Pour qu'on sache que c'est vous"
+  },
+  "roomCodeLabel": {
+    "message": "Code de votre salon"
+  },
+  "copyInvite": {
+    "message": "Copier le lien d'invitation"
+  },
+  "inviteHint": {
+    "message": "Un clic les amène au même programme, au même moment, une fois que vous avez lancé la lecture."
+  },
+  "copyCode": {
+    "message": "Copier le code seul"
+  },
+  "copied": {
+    "message": "Copié ✓"
+  },
+  "peerChecking": {
+    "message": "Recherche de l'autre personne..."
+  },
+  "peerHere": {
+    "message": "$1 est dans ce salon"
+  },
+  "peerSomeone": {
+    "message": "Quelqu'un d'autre est dans ce salon"
+  },
+  "peerOtherDevice": {
+    "message": "Aussi ouvert sur votre autre appareil"
+  },
+  "peerWaiting": {
+    "message": "En attente de l'autre personne..."
+  },
+  "leaveRoom": {
+    "message": "Quitter ce salon"
+  },
+  "leaveConfirm": {
+    "message": "Quitter ce salon et en créer un nouveau ? La personne avec qui vous regardez aura besoin du nouveau code."
+  },
+  "joinLabel": {
+    "message": "Rejoindre le salon de quelqu'un"
+  },
+  "joinPlaceholder": {
+    "message": "Son code"
+  },
+  "changeDb": {
+    "message": "Utiliser une autre base de données (avancé)"
+  },
+  "notesLabel": {
+    "message": "Notes partagées"
+  },
+  "notesPlaceholder": {
+    "message": "Que regarder ensuite, vos projets, ou tout ce qui vaut la peine d'être retenu."
+  },
+  "saved": {
+    "message": "Enregistré"
+  },
+  "noMessages": {
+    "message": "Aucun message pour l'instant"
+  },
+  "chatPlaceholder": {
+    "message": "Écrivez quelque chose"
+  },
+  "send": {
+    "message": "Envoyer"
+  },
+  "clearHistory": {
+    "message": "Effacer le chat et les notes"
+  },
+  "clearConfirm": {
+    "message": "Supprimer tous les messages et notes de ce salon ? Ils disparaîtront pour vous deux, et c'est irréversible."
+  },
+  "statusConnected": {
+    "message": "Connecté"
+  },
+  "statusOffline": {
+    "message": "Hors ligne"
+  },
+  "statusNotSetUp": {
+    "message": "Non configuré"
+  },
+  "tipStart": {
+    "message": "Vous regardez avec quelqu'un ? Cliquez sur Regarder ensemble pour synchroniser. L'invitation s'affiche sur son écran."
+  },
+  "tipSession": {
+    "message": "Vous regardez ensemble. Le 💬 chat et les 🙂 réactions sont ici, et vous pouvez terminer la séance depuis le chat."
+  },
+  "noticeJoined": {
+    "message": "$1 a rejoint"
+  },
+  "noticeLeft": {
+    "message": "$1 est parti(e)"
+  },
+  "noticeWatchingWith": {
+    "message": "Vous regardez avec $1"
+  },
+  "statusInSyncWith": {
+    "message": "Synchronisé avec $1"
+  },
+  "statusInSync": {
+    "message": "Synchronisé"
+  },
+  "statusWaitingJoin": {
+    "message": "En attente de l'autre personne"
+  },
+  "statusIdle": {
+    "message": "Prêt. Ouvrez un programme pour synchroniser"
+  },
+  "statusStandby": {
+    "message": "Synchronisation dans votre autre onglet"
+  },
+  "statusReconnecting": {
+    "message": "Reconnexion..."
+  },
+  "statusNoRoom": {
+    "message": "Ouvrez Tether pour rejoindre un salon"
+  },
+  "actionPaused": {
+    "message": "$1 a mis en pause"
+  },
+  "actionPlayed": {
+    "message": "$1 a lancé la lecture"
+  },
+  "actionSkipped": {
+    "message": "$1 est passé(e) à $2"
+  },
+  "actionSpeed": {
+    "message": "$1 a réglé la vitesse sur $2×"
+  },
+  "actionSpeedNormal": {
+    "message": "$1 est revenu(e) à la vitesse normale"
+  },
+  "inviteStarted": {
+    "message": "$1 a lancé une séance à deux"
+  },
+  "notNow": {
+    "message": "Plus tard"
+  },
+  "watchingTogetherWith": {
+    "message": "Vous regardez ensemble avec $1"
+  },
+  "startButton": {
+    "message": "Regarder ensemble"
+  },
+  "startedCopied": {
+    "message": "Séance lancée. Lien d'invitation copié"
+  },
+  "startedShare": {
+    "message": "Séance lancée. Partagez votre lien d'invitation depuis Tether"
+  },
+  "elsewhere": {
+    "message": "$1 regarde autre chose"
+  },
+  "joinThem": {
+    "message": "Y aller"
+  },
+  "dismiss": {
+    "message": "Ignorer"
+  },
+  "reactLove": {
+    "message": "J'adore"
+  },
+  "reactLaugh": {
+    "message": "Rire"
+  },
+  "reactWow": {
+    "message": "Surprise"
+  },
+  "reactClap": {
+    "message": "Bravo"
+  },
+  "reactSad": {
+    "message": "Triste"
+  },
+  "sendReaction": {
+    "message": "Envoyer une réaction"
+  },
+  "chatTitle": {
+    "message": "Chat"
+  },
+  "chatEmpty": {
+    "message": "Dites bonjour. Les messages s'affichent ici et dans Tether."
+  },
+  "endSessionTitle": {
+    "message": "Arrêter la séance. Le chat reste disponible dans Tether."
+  },
+  "closeChat": {
+    "message": "Fermer le chat"
+  },
+  "messagePlaceholder": {
+    "message": "Message"
+  },
+  "stoppedTogether": {
+    "message": "Séance terminée"
+  },
+  "joinConnectingTitle": {
+    "message": "Connexion à Tether..."
+  },
+  "joinConnecting": {
+    "message": "On vous amène au bon endroit."
+  },
+  "joinInvalidTitle": {
+    "message": "Ce lien n'est pas valide"
+  },
+  "joinInvalid": {
+    "message": "Il manque le code du salon. Demandez un nouveau lien à la personne qui vous l'a envoyé."
+  },
+  "joinWaitingTitle": {
+    "message": "En attente"
+  },
+  "joinWaiting": {
+    "message": "En attente que l'autre personne lance la lecture..."
+  },
+  "joinStillWaiting": {
+    "message": "Toujours en attente. Vous êtes déjà dans le salon, vous pouvez donc ouvrir votre service de streaming quand vous voulez."
+  },
+  "joinGaveUpTitle": {
+    "message": "Toujours rien"
+  },
+  "joinGaveUp": {
+    "message": "Actualisez cette page une fois la lecture lancée, ou ouvrez le service vous-mêmes. Vous êtes déjà dans le salon."
+  },
+  "joinTroubleTitle": {
+    "message": "Problème de connexion"
+  },
+  "joinRetrying": {
+    "message": "Nouvelle tentative..."
+  },
+  "joinFailedTitle": {
+    "message": "La connexion ne passe pas"
+  },
+  "joinFailed": {
+    "message": "Actualisez cette page, ou ouvrez le service vous-mêmes. Vous êtes déjà dans le salon."
+  }
+}
