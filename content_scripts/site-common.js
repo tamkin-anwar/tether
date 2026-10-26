@@ -116,6 +116,19 @@
 
   let statusBadge = null;
   let currentStatus = null;
+  let partnerNow = null;
+  function onPartner({ partner, first }) {
+    const was = partnerNow;
+    partnerNow = partner;
+    if (first) {
+      if (partner) showNotice(`Watching with ${partner.name || 'them'}`);
+    } else if (partner && !was) {
+      showNotice(`${partner.name || 'They'} joined`);
+    } else if (!partner && was) {
+      showNotice(`${was.name || 'They'} left`);
+    }
+    if (currentStatus === 'connected') showStatus('connected');
+  }
   function showStatus(status) {
     currentStatus = status;
     if (tipEl && tipFor !== status) closeTip();
@@ -124,7 +137,9 @@
     // Not watching together: none of the session's UI, just the offer to
     // start one on a player page (see buildStartButton).
     const off = status === 'off' || status === 'off-browse';
-    if (controlsEl) controlsEl.style.display = off || status === 'no-room' ? 'none' : 'flex';
+    // Chat and reactions only in the tab that's connected (see sync-core's
+    // one-tab rule); a tab standing by isn't receiving either.
+    if (controlsEl) controlsEl.style.display = status === 'connected' || status === 'disconnected' ? 'flex' : 'none';
     if (startButton) startButton.style.display = status === 'off' ? 'flex' : 'none';
     if (off) {
       if (chatOpen) setChatOpen(false);
@@ -143,8 +158,9 @@
       statusBadge.append(statusBadge._dot, statusBadge._label);
       root.appendChild(statusBadge);
     }
+    const who = partnerNow && partnerNow.name;
     const labels = {
-      connected: ['In sync', '#34c759'],
+      connected: partnerNow ? [who ? `In sync with ${who}` : 'In sync', '#34c759'] : ['Waiting for them to join', '#0a84ff'],
       idle: ['Ready. Open a title to sync', '#8e8e93'],
       standby: ['Syncing in your other tab', '#8e8e93'],
       disconnected: ['Reconnecting...', '#ff9f0a'],
@@ -523,6 +539,7 @@
       buildChat();
       buildStartButton();
       window.TetherSync.on('invite', showInvite);
+      window.TetherSync.on('partner', onPartner);
       window.TetherSync.on('chat', onChat);
       window.TetherSync.on('action', (a) => { const t = describe(a); if (t) showNotice(t); });
       window.TetherSync.on('elsewhere', showElsewhere);

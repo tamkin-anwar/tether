@@ -696,15 +696,37 @@
   // format so join.js only applies a freshness check to writers that
   // actually keep it fresh, not to an older version that never did.
   function writeNowWatching() {
-    if (!config || !sessionOn()) return;
+    // Only the tab you're watching in: a stray video in another tab would
+    // otherwise send an invite link to the wrong place.
+    if (!config || !sessionOn() || !isLeader()) return;
     fetch(roomUrl('nowWatching'), {
       method: 'PUT',
       body: JSON.stringify({ url: location.href, ts: { '.sv': 'timestamp' }, live: true }),
     }).catch(() => {});
   }
 
+  // Who you're watching with, right now: checked by the tab in charge each
+  // heartbeat, so the badge can say "In sync with Ridu" rather than "In
+  // sync" with nobody there, and say when they join or leave.
+  let partner;
+  async function checkPartner() {
+    if (!config || !isLeader()) return;
+    try {
+      const data = await (await fetch(roomUrl('presence'))).json();
+      const now = serverNow();
+      const found = Object.entries(data || {}).find(([id, p]) =>
+        id !== CLIENT_ID && p && p.watching !== false && (!p.owner || p.owner !== OWNER_ID) && now - p.ts < 15000);
+      const next = found ? { name: found[1].name || null } : null;
+      if (partner !== undefined && JSON.stringify(next) === JSON.stringify(partner)) return;
+      const first = partner === undefined;
+      partner = next;
+      emit('partner', { partner: next, first });
+    } catch (e) { /* next heartbeat */ }
+  }
+
   function heartbeat() {
     if (!sessionOn()) { endSession(); return; } // 30 minutes without a video
+    checkPartner();
     bumpSession();
     writePresence();
     if (video) writeNowWatching();
@@ -863,6 +885,7 @@
     // while this tab was standing by. Not when it's taking over because of
     // something you just did in it, which is what gets sent instead.
     if (!was && withCatchUp) catchUp();
+    if (!was) { partner = undefined; checkPartner(); }
   }
   function releaseLeader() {
     if (!isLeader()) return;
@@ -1041,6 +1064,7 @@
     // video's own startup events can't be sent ahead of that catch-up.
     lastContentKey = contentKey();
     maybeClaim(true);
+    updateStreams(); // standing by if another tab is in charge, and say so
     beginStartup();
     writeNowWatching();
   }
@@ -1060,6 +1084,7 @@
     video = null;
     updateSyncingFlag();
     if (config && config.roomId && !sessionOn()) onStatus('off-browse');
+    else updateStreams();
     if (driftTimer) clearInterval(driftTimer);
   }
 
