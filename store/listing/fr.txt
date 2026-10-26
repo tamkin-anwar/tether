@@ -1,28 +1,28 @@
-La façon simple et privée de regarder ensemble avec un proche qui vit loin.
+Tether est une extension pour regarder ensemble à deux, quand on n'est pas au même endroit.
 
-Tether synchronise parfaitement les plateformes de streaming que vous utilisez déjà, entre deux personnes, où que vous soyez. Lecture, pause ou avance rapide : tout se passe sur les deux écrans en une fraction de seconde. Pas d'appel vidéo, pas de partage d'écran, et plus besoin de compter « 3, 2, 1, lecture ».
+Elle fonctionne avec les plateformes de streaming que vous avez déjà. Lancez la lecture, mettez en pause ou avancez, et l'autre écran suit en une fraction de seconde. Pas besoin d'appel vidéo ni de partage d'écran, et personne n'a à compter jusqu'à trois avant d'appuyer sur lecture.
 
 Comment ça marche
-• Envoyez votre lien d'invitation une seule fois. En un clic, l'autre personne arrive sur le même programme, au même moment.
-• Ouvrez un programme et cliquez sur Regarder ensemble. L'invitation s'affiche sur son écran, et elle rejoint d'un geste.
+• Envoyez votre lien d'invitation une seule fois. En l'ouvrant, l'autre personne arrive sur le même programme, au même moment.
+• Ouvrez un programme et cliquez sur Regarder ensemble. Une invitation s'affiche sur son écran, et elle vous rejoint d'un geste.
 • Chacun regarde avec son propre compte, dans son propre navigateur.
 
-Pourquoi Tether
-• Toujours synchronisé. Tether corrige discrètement le moindre décalage, même d'un pays ou d'un fuseau horaire à l'autre.
-• Compatible avec les offres avec publicité. Tether attend la fin des coupures publicitaires et vous remet ensemble ensuite, même si vous voyez des publicités différentes.
-• La lecture continue quand vous changez d'onglet ou de fenêtre.
-• Gratuit, sans compte et sans inscription.
+Ce dont Tether s'occupe
+• Si l'un de vous prend un peu de retard, Tether le corrige pendant que vous regardez, même d'un pays ou d'un fuseau horaire à l'autre.
+• Avec une offre avec publicité, Tether attend la fin de la coupure puis vous remet ensemble, même si vous ne voyez pas les mêmes publicités.
+• La lecture continue si vous passez à un autre onglet ou une autre fenêtre.
+• C'est gratuit, et il n'y a aucun compte à créer.
 
-Inclus
-• Un chat directement sur la vidéo, même en plein écran.
-• Des réactions en emoji qui flottent sur la vidéo sans l'interrompre.
-• Voyez qui a fait quoi, par exemple « l'autre personne a mis en pause » ou « est passée plus loin ».
-• Si elle passe à un autre épisode, un clic vous y emmène aussi.
-• La vitesse de lecture reste la même pour vous deux.
-• Des notes partagées pour choisir quoi regarder ensuite.
-• Disponible en English, Español, Português, Français, Deutsch, हिन्दी et 日本語.
+Pendant le visionnage
+• Un chat directement sur la vidéo, y compris en plein écran.
+• Des réactions en emoji qui remontent par-dessus l'image.
+• Un court message vous indique quand l'autre personne met en pause, avance ou change la vitesse.
+• Si elle passe à un autre épisode, vous pouvez la suivre en un clic.
+• La vitesse de lecture est la même des deux côtés.
+• Des notes partagées pour noter quoi regarder ensuite.
+• Tether est disponible en English, Español, Português, Français, Deutsch, हिन्दी et 日本語.
 
-Privé par conception
-Tether ne partage rien en dehors d'une séance à deux, et c'est toujours vous qui choisissez de la lancer ou de la rejoindre. La séance s'arrête quand vous la terminez, ou d'elle-même après 30 minutes sans vidéo. Votre salon ne s'ouvre qu'avec son code ou son lien d'invitation. Tether n'accède jamais à la vidéo, seulement au minutage de la lecture, et vous pouvez effacer le chat et les notes à tout moment.
+Confidentialité
+Tether ne partage rien tant que vous n'avez pas lancé une séance ou accepté une invitation. La séance s'arrête quand vous la terminez, ou après 30 minutes sans vidéo ouverte. Votre salon ne s'ouvre qu'avec son code ou son lien d'invitation. Tether ne lit jamais la vidéo, seulement le minutage de la lecture, et vous pouvez effacer le chat et les notes à tout moment.
 
-Conçu pour les couples à distance, les amis et les familles qui veulent regarder ensemble, où qu'ils soient.
+Tether est conçu par Anwar Creative Studio pour les couples à distance, et pour les amis et les familles qui vivent loin les uns des autres.

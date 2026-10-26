@@ -1,28 +1,28 @@
-The simple, private way to have a watch party with someone far away.
+Tether is a watch party extension for two people in different places.
 
-Tether keeps the streaming services you already use in perfect sync between two people, wherever you both are. Press play, pause, or skip ahead, and it happens on both screens within a fraction of a second. No video call, no screen sharing, and no counting down "3, 2, 1, play."
+It works with the streaming services you already have. Press play, pause, or skip ahead, and the other screen follows within a fraction of a second. You don't need a video call or screen sharing, and nobody has to count down to press play.
 
 How it works
-• Send your invite link once. One click brings the other person to the same show, at the same moment.
+• Send your invite link once. When they open it, they land on the same show at the same moment.
 • Open a show and click Watch together. They get an invite on their screen and join with one tap.
-• Each of you watches with your own account, in your own browser.
+• You each watch with your own account, in your own browser.
 
-Why Tether
-• Stays in sync. Tether quietly corrects any drift, even across countries and time zones.
-• Works with ad-supported plans. Tether waits out ad breaks and brings you back together when they end, even if you each see different ads.
-• Keeps playing when you switch tabs or windows.
-• Free, with no account and no sign-up.
+What it takes care of
+• If one of you drifts a little behind, Tether corrects it while you watch, even across countries and time zones.
+• On plans with ads, Tether waits for the ad break to end and then brings you back together, even if you each get different ads.
+• The show keeps playing if you switch to another tab or window.
+• It's free, and there's no account to create.
 
-Built in
-• Chat on the video itself, even in fullscreen.
-• Emoji reactions that float over the video without interrupting it.
-• See who did what, like "your partner paused" or "skipped ahead."
-• If they move to another episode, one click takes you there too.
-• Playback speed stays the same for both of you.
-• Shared notes for what to watch next.
-• Available in English, Español, Português, Français, Deutsch, हिन्दी, and 日本語.
+While you watch
+• Chat right on the video, including in fullscreen.
+• Send emoji reactions that float up over the picture.
+• A short note tells you when your partner pauses, skips, or changes the speed.
+• If they move to another episode, you can follow with one click.
+• Playback speed stays the same on both sides.
+• Keep shared notes for what to watch next.
+• Tether is available in English, Español, Português, Français, Deutsch, हिन्दी, and 日本語.
 
-Private by design
-Tether only shares anything while you're watching together, and you always choose when to start or join. A session ends when you end it, or on its own after 30 minutes without a video. Your room can only be opened with its code or invite link. Tether never accesses the video itself, only playback timing, and you can delete your chat and notes at any time.
+Privacy
+Tether shares nothing until you start a session or accept an invite. A session ends when you end it, or after 30 minutes with no video open. Your room opens only with its code or invite link. Tether never reads the video itself, only playback timing, and you can delete your chat and notes at any time.
 
-Made for long-distance couples, friends, and family who want to watch together from anywhere.
+Tether is made by Anwar Creative Studio for couples in long-distance relationships, and for friends and family who live far apart.

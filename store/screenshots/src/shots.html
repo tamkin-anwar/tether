@@ -6,10 +6,7 @@
   html, body { width: 1280px; height: 800px; overflow: hidden; }
   body {
     font-family: var(--font); color: #fff; -webkit-font-smoothing: antialiased; position: relative;
-    background:
-      radial-gradient(900px 600px at 85% -10%, rgba(10,132,255,0.28), transparent 60%),
-      radial-gradient(700px 500px at -10% 110%, rgba(191,90,242,0.22), transparent 60%),
-      linear-gradient(180deg, #0c0d14 0%, #07080d 100%);
+    background: radial-gradient(1200px 520px at 50% -12%, rgba(255,255,255,0.07), transparent 70%), #0b0c10;
   }
   .brand { position: absolute; top: 34px; left: 56px; display: flex; align-items: center; gap: 10px; font: 600 17px var(--font); letter-spacing: -0.01em; opacity: 0.92; }
   .brand img { width: 30px; height: 30px; border-radius: 8px; }
@@ -89,24 +86,22 @@ const cursor = (x, y) => `<svg class="cursor" style="left:${x}px;top:${y}px" vie
 
 const shots = {
   1: () => `
-    <div style="position:absolute;top:92px;left:0;right:0;text-align:center">
-      <div class="kicker">Watch party, perfected</div>
-      <h1><span class="grad">Two screens. One moment.</span></h1>
-      <div class="sub">Press play, pause, or skip on either side. It happens on both, within a fraction of a second.</div>
+    <div style="position:absolute;top:86px;left:0;right:0;text-align:center">
+      <h1 style="font-size:50px">Press play in Lisbon. It plays in Toronto.</h1>
+      <div class="sub">Pause, skip, or rewind on either side, and the other screen follows within a fraction of a second.</div>
     </div>
-    ${win({ x: 56, y: 336, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
+    ${win({ x: 56, y: 290, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
       inner: `<div class="pill glass" style="right:16px;bottom:58px"><span class="dot"></span>In sync with Sam</div>` })}
-    ${win({ x: 664, y: 336, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
+    ${win({ x: 664, y: 290, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
       inner: `<div class="pill glass" style="right:16px;bottom:58px"><span class="dot"></span>In sync with Maya</div>` })}
-    <div class="pill glass" style="left:50%;top:478px;transform:translateX(-50%);padding:9px 15px;font-size:13px;z-index:2"><span class="dot"></span>0.03s apart</div>
-    <div class="label" style="left:58px;top:690px"><b>Maya</b> · Lisbon, 9:41 PM</div>
-    <div class="label" style="left:666px;top:690px"><b>Sam</b> · Toronto, 4:41 PM</div>`,
+    <div class="pill glass" style="left:50%;top:432px;transform:translateX(-50%);padding:9px 15px;font-size:13px;z-index:2"><span class="dot"></span>0.03s apart</div>
+    <div class="label" style="left:58px;top:644px"><b>Maya</b> · Lisbon, 9:41 PM</div>
+    <div class="label" style="left:666px;top:644px"><b>Sam</b> · Toronto, 4:41 PM</div>`,
 
   2: () => `
     <div style="position:absolute;left:56px;top:190px;width:410px">
-      <div class="kicker">Chat on the video</div>
-      <h1 style="font-size:46px">Talk without<br>leaving the show.</h1>
-      <div class="sub">Chat and reactions sit right on the video, even in fullscreen. No second screen, no video call.</div>
+      <h1 style="font-size:48px">Chat right on<br>the video.</h1>
+      <div class="sub">It stays there in fullscreen, and it's the same conversation you'll find in the Tether popup.</div>
     </div>
     ${win({ x: 486, y: 110, w: 740, h: 560, scene: 'aurora', title: 'Northline', ep: 'S2 · E1 “First Light”', time: '18:52', total: '47:10', pct: 40,
       inner: `
@@ -135,28 +130,27 @@ const shots = {
       ${cursor(476, 48)}
       <div class="pill glass" style="right:18px;bottom:60px;font-size:12.5px;gap:7px"><span style="font-size:13px">👥</span>Watch together</div>` })}
     <div style="position:absolute;left:846px;top:200px;width:380px">
-      <div class="kicker">One tap to join</div>
-      <h1>They're invited.<br>Never pulled in.</h1>
-      <div class="sub">Start a session and an invite appears on their screen. Nothing syncs until they tap Join, and joining brings them right to your moment.</div>
+      <h1>They choose<br>when to join.</h1>
+      <div class="sub">Starting a session sends an invite to their screen. Nothing changes on their side until they tap Join, and then they land on your exact moment.</div>
     </div>`,
 
   4: () => `
     <div style="position:absolute;top:96px;left:56px;right:56px">
-      <div class="kicker">Built for real life</div><h1>It just keeps up.</h1>
-      <div class="sub" style="margin-top:12px">Ad breaks, switching tabs, and who did what, all handled for you.</div>
+      <h1>The parts that usually go wrong.</h1>
+      <div class="sub" style="margin-top:12px">What Tether does when you hit an ad, switch tabs, or one of you pauses.</div>
     </div>
     <div class="tile" style="left:56px;top:292px">
       <div class="mini">${scene('dusk')}<div class="pill glass" style="left:14px;top:14px;font-size:12px;background:rgba(255,204,0,0.92);color:#1c1c1e;box-shadow:none">Ad · 0:15</div>
         <div class="pill glass" style="right:12px;bottom:12px;font-size:12px"><span class="dot" style="background:#0a84ff"></span>Rejoining Sam when the ad ends</div></div>
-      <h3>Different ads? Still in sync.</h3><p>On ad-supported plans, Tether waits out the break, then brings you back together.</p>
+      <h3>Ad breaks don't split you up</h3><p>On plans with ads, Tether waits for your ad to end, then puts you back where Sam is.</p>
     </div>
     <div class="tile" style="left:456px;top:292px">
       <div class="mini">${scene('aurora')}
         <div style="position:absolute;left:14px;right:14px;top:14px;display:flex;gap:6px">
           <div style="height:26px;flex:1;border-radius:7px;background:rgba(255,255,255,0.12);font:500 11.5px var(--font);display:flex;align-items:center;padding:0 10px;color:rgba(255,255,255,0.6)">Recipes · new tab</div>
           <div style="height:26px;flex:1;border-radius:7px;background:rgba(255,255,255,0.26);font:600 11.5px var(--font);display:flex;align-items:center;padding:0 10px">▶ Northline</div></div>
-        <div class="pill glass" style="right:12px;bottom:12px;font-size:12px"><span class="dot"></span>Still playing, still in sync</div></div>
-      <h3>Switch tabs freely.</h3><p>Check a message or look something up. The show keeps playing for both of you.</p>
+        <div class="pill glass" style="right:12px;bottom:12px;font-size:12px"><span class="dot"></span>Still playing in the other tab</div></div>
+      <h3>Switch tabs, keep watching</h3><p>Reply to a message or look something up. The show keeps playing on both screens.</p>
     </div>
     <div class="tile" style="left:856px;top:292px">
       <div class="mini">${scene('dunes')}
@@ -164,19 +158,18 @@ const shots = {
           <div class="pill glass" style="position:static;font-size:12px">Sam paused</div>
           <div class="pill glass" style="position:static;font-size:12px">Sam skipped to 1:02:14</div>
           <div class="pill glass" style="position:static;font-size:12px;padding:5px 5px 5px 12px">Sam is watching something else <span class="btnblue" style="font-size:11.5px;padding:5px 10px">Join them</span></div></div></div>
-      <h3>Always know who did what.</h3><p>Pauses, skips, and speed changes are named, and one click follows them to a new episode.</p>
+      <h3>You'll know who paused</h3><p>Pauses, skips, and speed changes show who made them. If Sam moves on to another episode, you can follow in one click.</p>
     </div>`,
 
   5: () => `
     <div style="position:absolute;left:96px;top:96px;width:340px;height:704px;border-radius:16px 16px 0 0;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.1);-webkit-mask-image:linear-gradient(#000 76%, transparent 100%);mask-image:linear-gradient(#000 76%, transparent 100%)">
       <iframe id="pop" src="/popup_test.html?id=u_shot&room=K7Q2MX&name=Maya&lang=en" style="width:340px;height:704px;border:0;display:block"></iframe></div>
-    <div style="position:absolute;left:530px;top:118px;width:660px">
-      <div class="kicker">Private by design</div>
-      <h1>Shares nothing until<br>you watch together.</h1>
-      <div class="check"><span class="c">✓</span><div>You start it, or you accept an invite<small>Outside a session, nothing about what you watch leaves your browser.</small></div></div>
-      <div class="check"><span class="c">✓</span><div>Ends when you're done<small>End it anytime, or it ends itself after 30 minutes without a video.</small></div></div>
-      <div class="check"><span class="c">✓</span><div>Never touches the video<small>Only playback timing is shared. Delete your chat and notes anytime.</small></div></div>
-      <div class="check"><span class="c">✓</span><div>Free. No account. 7 languages.<small>English, Español, Português, Français, Deutsch, हिन्दी, 日本語</small></div></div>
+    <div style="position:absolute;left:530px;top:150px;width:660px">
+      <h1>Nothing is shared until<br>you start a session.</h1>
+      <div class="check"><span class="c">✓</span><div>You start it, or you accept an invite<small>Outside a session, what you watch stays in your browser.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>It ends when you're done<small>End it yourself, or it ends after 30 minutes with no video open.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>It never touches the video<small>Only playback timing is shared. You can delete chat and notes anytime.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>It's free, and there's no account<small>Available in English, Español, Português, Français, Deutsch, हिन्दी, and 日本語.</small></div></div>
     </div>`,
 };
 stage.innerHTML = shots[SHOT]();
