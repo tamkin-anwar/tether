@@ -1,0 +1,204 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Tether store screenshots</title>
+<style>
+  :root { --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body {
+    font-family: var(--font); color: #fff; -webkit-font-smoothing: antialiased; position: relative;
+    background:
+      radial-gradient(900px 600px at 85% -10%, rgba(10,132,255,0.28), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(191,90,242,0.22), transparent 60%),
+      linear-gradient(180deg, #0c0d14 0%, #07080d 100%);
+  }
+  .brand { position: absolute; top: 34px; left: 56px; display: flex; align-items: center; gap: 10px; font: 600 17px var(--font); letter-spacing: -0.01em; opacity: 0.92; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .kicker { font: 650 13px var(--font); letter-spacing: 0.14em; text-transform: uppercase; color: #64b5ff; margin-bottom: 14px; }
+  h1 { font: 700 54px/1.04 var(--font); letter-spacing: -0.035em; }
+  .sub { font: 400 19px/1.45 var(--font); color: rgba(255,255,255,0.68); margin-top: 16px; letter-spacing: -0.005em; }
+  .grad { background: linear-gradient(90deg, #fff 0%, #cfe6ff 45%, #9ecbff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* a browser window with a player in it */
+  .win { position: absolute; border-radius: 14px; overflow: hidden; background: #111; box-shadow: 0 40px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08); }
+  .win .bar { height: 30px; background: #1d1e24; display: flex; align-items: center; gap: 7px; padding: 0 12px; }
+  .win .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .win .bar i:nth-child(1) { background: #ff5f57; } .win .bar i:nth-child(2) { background: #febc2e; } .win .bar i:nth-child(3) { background: #28c840; }
+  .win .bar .addr { margin-left: 14px; height: 18px; flex: 1; max-width: 300px; border-radius: 6px; background: rgba(255,255,255,0.07); }
+  .player { position: relative; overflow: hidden; }
+  .player .title { position: absolute; top: 18px; left: 22px; font: 600 15px var(--font); text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
+  .player .title small { display: block; font: 400 12px var(--font); opacity: 0.75; margin-top: 2px; }
+  .chrome { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 22px 16px; background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
+  .chrome .track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.25); position: relative; }
+  .chrome .track b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: #fff; }
+  .chrome .track b::after { content: ''; position: absolute; right: -6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+  .chrome .row { display: flex; align-items: center; gap: 14px; margin-top: 10px; font: 500 12px var(--font); opacity: 0.92; }
+  .chrome .row .ic { width: 14px; height: 14px; }
+  /* Tether's own on-page UI, same styles as content_scripts/site-common.js */
+  .glass { background: rgba(28,28,30,0.82); backdrop-filter: blur(14px) saturate(1.6); -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.08) inset; }
+  .pill { position: absolute; font: 590 12.5px var(--font); padding: 8px 14px; border-radius: 999px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; flex-shrink: 0; }
+  .round { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; position: relative; }
+  .btnblue { background: #007aff; color: #fff; font: 600 12.5px var(--font); padding: 6px 12px; border-radius: 999px; }
+  .chat { position: absolute; width: 280px; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .chat .head { display: flex; justify-content: space-between; align-items: center; padding: 11px 13px 6px 14px; font: 600 13px var(--font); }
+  .chat .head span:last-child { font: 500 11.5px var(--font); color: rgba(255,255,255,0.55); }
+  .chat .log { display: flex; flex-direction: column; gap: 6px; padding: 4px 12px 10px; }
+  .chat .name { font: 600 10.5px var(--font); color: rgba(255,255,255,0.55); margin: 4px 2px 0; }
+  .b { font: 400 13px/1.35 var(--font); max-width: 82%; padding: 7px 11px; border-radius: 16px; }
+  .b.me { align-self: flex-end; background: #007aff; border-bottom-right-radius: 4px; }
+  .b.them { align-self: flex-start; background: rgba(255,255,255,0.14); border-bottom-left-radius: 4px; }
+  .chat .in { display: flex; gap: 6px; padding: 8px 10px 10px; border-top: 0.5px solid rgba(255,255,255,0.12); }
+  .chat .in div:first-child { flex: 1; background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 10px; font: 400 13px var(--font); color: rgba(255,255,255,0.45); }
+  .chat .in div:last-child { background: #007aff; border-radius: 10px; padding: 8px 12px; font: 600 12.5px var(--font); }
+  .float { position: absolute; font-size: 30px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)); }
+  .label { position: absolute; font: 500 14px var(--font); color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 8px; }
+  .label b { font-weight: 650; color: #fff; }
+  .cursor { position: absolute; width: 22px; height: 22px; }
+  .check { display: flex; gap: 14px; align-items: flex-start; font: 500 18px/1.35 var(--font); margin-top: 18px; letter-spacing: -0.01em; }
+  .check span.c { width: 26px; height: 26px; border-radius: 50%; background: rgba(48,209,88,0.16); color: #30d158; display: flex; align-items: center; justify-content: center; font: 700 14px var(--font); flex-shrink: 0; margin-top: 1px; }
+  .check small { display: block; font: 400 14.5px var(--font); color: rgba(255,255,255,0.58); margin-top: 3px; }
+  .tile { position: absolute; width: 368px; height: 448px; border-radius: 20px; background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03)); box-shadow: 0 0 0 1px rgba(255,255,255,0.08); overflow: hidden; }
+  .tile .mini { position: absolute; left: 20px; right: 20px; top: 20px; height: 230px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
+  .tile h3 { position: absolute; left: 26px; right: 26px; top: 276px; font: 680 25px/1.15 var(--font); letter-spacing: -0.025em; }
+  .tile p { position: absolute; left: 26px; right: 26px; top: 340px; font: 400 15.5px/1.45 var(--font); color: rgba(255,255,255,0.62); }
+</style>
+<script src="scene.js"></script>
+</head><body>
+<div class="brand"><img src="icon128.png" alt="">Tether</div>
+<div id="stage"></div>
+<script>
+const SHOT = Number(new URLSearchParams(location.search).get('shot') || 1);
+const stage = document.getElementById('stage');
+const playIcon = '<svg class="ic" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg>';
+const pauseIcon = '<svg class="ic" viewBox="0 0 14 14"><rect x="2.5" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="8.3" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/></svg>';
+function win({ x, y, w, h, scene, title, ep, time, total, pct, paused, inner = '' }) {
+  return `<div class="win" style="left:${x}px;top:${y}px;width:${w}px">
+    <div class="bar"><i></i><i></i><i></i><div class="addr"></div></div>
+    <div class="player" style="height:${h}px">${window.scene(scene)}
+      <div class="title">${title}<small>${ep}</small></div>
+      <div class="chrome"><div class="track"><b style="width:${pct}%"></b></div>
+        <div class="row">${paused ? playIcon : pauseIcon}<span>${time} / ${total}</span></div></div>
+      ${inner}
+    </div></div>`;
+}
+const controls = (r, b, open) => `<div style="position:absolute;right:${r}px;bottom:${b}px;display:flex;gap:6px;align-items:center">
+  ${open ? '<div style="display:flex;gap:4px">' + ['❤️','😂','😮','👏','😢'].map(e => `<div class="round glass">${e}</div>`).join('') + '</div>' : ''}
+  <div class="round glass">🙂</div><div class="round glass">💬</div></div>`;
+const cursor = (x, y) => `<svg class="cursor" style="left:${x}px;top:${y}px" viewBox="0 0 22 22"><path d="M4 2 L4 18 L8.5 13.8 L11.6 20.4 L14.3 19.2 L11.2 12.7 L17.2 12.7 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+
+const shots = {
+  1: () => `
+    <div style="position:absolute;top:92px;left:0;right:0;text-align:center">
+      <div class="kicker">Watch party, perfected</div>
+      <h1><span class="grad">Two screens. One moment.</span></h1>
+      <div class="sub">Press play, pause, or skip on either side. It happens on both, within a fraction of a second.</div>
+    </div>
+    ${win({ x: 56, y: 336, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
+      inner: `<div class="pill glass" style="right:16px;bottom:58px"><span class="dot"></span>In sync with Sam</div>` })}
+    ${win({ x: 664, y: 336, w: 560, h: 315, scene: 'dusk', title: 'Halcyon Ridge', ep: 'S1 · E3 “Ember”', time: '42:18', total: '58:03', pct: 73,
+      inner: `<div class="pill glass" style="right:16px;bottom:58px"><span class="dot"></span>In sync with Maya</div>` })}
+    <div class="pill glass" style="left:50%;top:478px;transform:translateX(-50%);padding:9px 15px;font-size:13px;z-index:2"><span class="dot"></span>0.03s apart</div>
+    <div class="label" style="left:58px;top:690px"><b>Maya</b> · Lisbon, 9:41 PM</div>
+    <div class="label" style="left:666px;top:690px"><b>Sam</b> · Toronto, 4:41 PM</div>`,
+
+  2: () => `
+    <div style="position:absolute;left:56px;top:190px;width:410px">
+      <div class="kicker">Chat on the video</div>
+      <h1 style="font-size:46px">Talk without<br>leaving the show.</h1>
+      <div class="sub">Chat and reactions sit right on the video, even in fullscreen. No second screen, no video call.</div>
+    </div>
+    ${win({ x: 486, y: 110, w: 740, h: 560, scene: 'aurora', title: 'Northline', ep: 'S2 · E1 “First Light”', time: '18:52', total: '47:10', pct: 40,
+      inner: `
+      <div class="chat glass" style="right:18px;bottom:104px">
+        <div class="head"><span>Chat</span><span>End session ✕</span></div>
+        <div class="log">
+          <div class="name">Sam</div>
+          <div class="b them">wait, is that the same guy from episode one?? 👀</div>
+          <div class="b me">YES. keep watching 😂</div>
+          <div class="name">Sam</div>
+          <div class="b them">ok I'm completely hooked</div>
+          <div class="b me">told you ❤️</div>
+        </div>
+        <div class="in"><div>Message</div><div>Send</div></div>
+      </div>
+      ${controls(18, 60, true)}
+      <div class="float" style="right:336px;bottom:150px;opacity:0.95">❤️</div>
+      <div class="float" style="right:366px;bottom:214px;opacity:0.72;font-size:26px">❤️</div>
+      <div class="float" style="right:322px;bottom:272px;opacity:0.45;font-size:24px">😂</div>
+      <div class="float" style="right:352px;bottom:330px;opacity:0.22;font-size:22px">❤️</div>` })}`,
+
+  3: () => `
+    ${win({ x: 56, y: 110, w: 740, h: 560, scene: 'dunes', title: 'The Salt Road', ep: 'Feature film · 1h 52m', time: '0:04', total: '1:52:40', pct: 1, paused: true,
+      inner: `
+      <div class="pill glass" style="left:50%;top:22px;transform:translateX(-50%);padding:6px 6px 6px 15px;gap:10px;font-size:13px">Maya started watching together <span class="btnblue">Join</span><span style="color:rgba(255,255,255,0.6);padding:0 6px">✕</span></div>
+      ${cursor(476, 48)}
+      <div class="pill glass" style="right:18px;bottom:60px;font-size:12.5px;gap:7px"><span style="font-size:13px">👥</span>Watch together</div>` })}
+    <div style="position:absolute;left:846px;top:200px;width:380px">
+      <div class="kicker">One tap to join</div>
+      <h1>They're invited.<br>Never pulled in.</h1>
+      <div class="sub">Start a session and an invite appears on their screen. Nothing syncs until they tap Join, and joining brings them right to your moment.</div>
+    </div>`,
+
+  4: () => `
+    <div style="position:absolute;top:96px;left:56px;right:56px">
+      <div class="kicker">Built for real life</div><h1>It just keeps up.</h1>
+      <div class="sub" style="margin-top:12px">Ad breaks, switching tabs, and who did what, all handled for you.</div>
+    </div>
+    <div class="tile" style="left:56px;top:292px">
+      <div class="mini">${scene('dusk')}<div class="pill glass" style="left:14px;top:14px;font-size:12px;background:rgba(255,204,0,0.92);color:#1c1c1e;box-shadow:none">Ad · 0:15</div>
+        <div class="pill glass" style="right:12px;bottom:12px;font-size:12px"><span class="dot" style="background:#0a84ff"></span>Rejoining Sam when the ad ends</div></div>
+      <h3>Different ads? Still in sync.</h3><p>On ad-supported plans, Tether waits out the break, then brings you back together.</p>
+    </div>
+    <div class="tile" style="left:456px;top:292px">
+      <div class="mini">${scene('aurora')}
+        <div style="position:absolute;left:14px;right:14px;top:14px;display:flex;gap:6px">
+          <div style="height:26px;flex:1;border-radius:7px;background:rgba(255,255,255,0.12);font:500 11.5px var(--font);display:flex;align-items:center;padding:0 10px;color:rgba(255,255,255,0.6)">Recipes · new tab</div>
+          <div style="height:26px;flex:1;border-radius:7px;background:rgba(255,255,255,0.26);font:600 11.5px var(--font);display:flex;align-items:center;padding:0 10px">▶ Northline</div></div>
+        <div class="pill glass" style="right:12px;bottom:12px;font-size:12px"><span class="dot"></span>Still playing, still in sync</div></div>
+      <h3>Switch tabs freely.</h3><p>Check a message or look something up. The show keeps playing for both of you.</p>
+    </div>
+    <div class="tile" style="left:856px;top:292px">
+      <div class="mini">${scene('dunes')}
+        <div style="position:absolute;left:0;right:0;top:16px;display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div class="pill glass" style="position:static;font-size:12px">Sam paused</div>
+          <div class="pill glass" style="position:static;font-size:12px">Sam skipped to 1:02:14</div>
+          <div class="pill glass" style="position:static;font-size:12px;padding:5px 5px 5px 12px">Sam is watching something else <span class="btnblue" style="font-size:11.5px;padding:5px 10px">Join them</span></div></div></div>
+      <h3>Always know who did what.</h3><p>Pauses, skips, and speed changes are named, and one click follows them to a new episode.</p>
+    </div>`,
+
+  5: () => `
+    <div style="position:absolute;left:96px;top:96px;width:340px;height:704px;border-radius:16px 16px 0 0;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.1);-webkit-mask-image:linear-gradient(#000 76%, transparent 100%);mask-image:linear-gradient(#000 76%, transparent 100%)">
+      <iframe id="pop" src="/popup_test.html?id=u_shot&room=K7Q2MX&name=Maya&lang=en" style="width:340px;height:704px;border:0;display:block"></iframe></div>
+    <div style="position:absolute;left:530px;top:118px;width:660px">
+      <div class="kicker">Private by design</div>
+      <h1>Shares nothing until<br>you watch together.</h1>
+      <div class="check"><span class="c">✓</span><div>You start it, or you accept an invite<small>Outside a session, nothing about what you watch leaves your browser.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>Ends when you're done<small>End it anytime, or it ends itself after 30 minutes without a video.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>Never touches the video<small>Only playback timing is shared. Delete your chat and notes anytime.</small></div></div>
+      <div class="check"><span class="c">✓</span><div>Free. No account. 7 languages.<small>English, Español, Português, Français, Deutsch, हिन्दी, 日本語</small></div></div>
+    </div>`,
+};
+stage.innerHTML = shots[SHOT]();
+const pop = document.getElementById('pop');
+if (pop) pop.addEventListener('load', () => setTimeout(() => {
+  const d = pop.contentDocument;
+  d.documentElement.style.colorScheme = 'dark';
+  d.getElementById('welcomeCard').style.display = 'none';
+  d.getElementById('roomHint').style.display = 'none';
+  d.getElementById('sessionDot').className = 'dot connected';
+  d.getElementById('sessionText').textContent = 'Watching together';
+  d.getElementById('sessionBtn').textContent = 'End session';
+  d.getElementById('sessionBtn').classList.add('secondary');
+  d.getElementById('sessionHint').textContent = 'Playback is synced in your streaming tabs. Ends on its own after 30 minutes without a video.';
+  d.getElementById('nicknameInput').value = 'Maya';
+  d.getElementById('roomCode').textContent = 'K7Q2MX';
+  d.getElementById('peerDot').className = 'dot connected';
+  d.getElementById('peerText').textContent = 'Sam is in this room';
+  d.getElementById('statusText').textContent = 'Connected';
+  d.getElementById('statusDot').className = 'dot connected';
+  document.body.dataset.ready = '1';
+}, 1800));
+else document.body.dataset.ready = '1';
+</script>
+</body></html>
