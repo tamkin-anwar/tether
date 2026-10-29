@@ -1,6 +1,6 @@
 HI = {
   "extName": "Tether: साथ मिलकर देखें",
-  "extDescription": "दूर बैठे किसी अपने के साथ Netflix, Prime Video, Hulu, Disney+, Max, YouTube और बहुत कुछ एक साथ देखें, चैट, नोट्स और रिएक्शन के साथ।",
+  "extDescription": "दूर बैठे किसी अपने के साथ शो और फ़िल्में एक साथ देखें। वीडियो पर ही चैट करें और रिएक्शन भेजें।",
   "tabRoom": "रूम", "tabNotes": "नोट्स", "tabChat": "चैट",
   "roomHint": "चैट और नोट्स हमेशा तैयार हैं। Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll या YouTube पर प्लेबैक सिंक करने के लिए साथ देखना शुरू करें।",
   "welcomeTitle": "Tether में आपका स्वागत है",
@@ -103,7 +103,7 @@ HI = {
 
 JA = {
   "extName": "Tether：一緒に見よう",
-  "extDescription": "Netflix、Prime Video、Hulu、Disney+、Max、YouTube などを遠くの相手と同時再生。チャット、メモ、リアクションも使えます。",
+  "extDescription": "遠くにいる相手と、ドラマや映画を同時に再生。動画の上でチャットやリアクションもできます。",
   "tabRoom": "ルーム", "tabNotes": "メモ", "tabChat": "チャット",
   "roomHint": "チャットとメモはいつでも使えます。Netflix、Prime Video、Hulu、Disney+、Max、Crunchyroll、YouTube の再生を同期するには「一緒に見る」を始めてください。",
   "welcomeTitle": "Tether へようこそ",

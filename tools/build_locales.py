@@ -25,6 +25,14 @@ for lang, table in LOCALES.items():
             print(lang, k, "substitutions differ"); ok = False
     if len(table["extDescription"]) > 132 or len(table["extName"]) > 75:
         print(lang, "name/summary too long"); ok = False
+    # The name and summary are Store metadata. A list of streaming brands in
+    # them is rejected as keyword spam (it happened twice, with 6 names and
+    # with more); the listing names no services at all, and neither do these.
+    brands = ("Netflix", "Prime Video", "Hulu", "Disney+", "Max", "YouTube", "Crunchyroll", "HBO")
+    for key in ("extName", "extDescription"):
+        named = [b for b in brands if b in table[key]]
+        if len(named) > 2:
+            print(lang, key, "lists streaming brands (keyword spam):", ", ".join(named)); ok = False
 if not ok:
     sys.exit(1)
 for lang, table in LOCALES.items():

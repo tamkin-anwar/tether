@@ -3,7 +3,7 @@
 # $1, $2 are substitutions filled in by the code (a name, a time, a speed).
 EN = {
   "extName": "Tether: Watch Together",
-  "extDescription": "Watch Netflix, Prime Video, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions.",
+  "extDescription": "Watch shows and movies in sync with someone far away. Chat and react right on the video.",
   # popup
   "tabRoom": "Room", "tabNotes": "Notes", "tabChat": "Chat",
   "roomHint": "Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.",

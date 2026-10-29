@@ -1,6 +1,6 @@
 ES = {
   "extName": "Tether: Ver juntos",
-  "extDescription": "Mira Netflix, Prime Video, Hulu, Disney+, Max, YouTube y más en sincronía con alguien que está lejos, con chat, notas y reacciones.",
+  "extDescription": "Mira series y películas en sincronía con alguien que está lejos. Chatea y reacciona sobre el mismo vídeo.",
   "tabRoom": "Sala", "tabNotes": "Notas", "tabChat": "Chat",
   "roomHint": "El chat y las notas están siempre disponibles. Empieza a ver juntos para sincronizar Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll o YouTube.",
   "welcomeTitle": "Te damos la bienvenida a Tether",
@@ -103,7 +103,7 @@ ES = {
 
 PT_BR = {
   "extName": "Tether: Assistir juntos",
-  "extDescription": "Assista Netflix, Prime Video, Hulu, Disney+, Max, YouTube e mais em sincronia com alguém longe, com chat, notas e reações.",
+  "extDescription": "Assista a séries e filmes em sincronia com alguém que está longe. Converse e reaja direto no vídeo.",
   "tabRoom": "Sala", "tabNotes": "Notas", "tabChat": "Chat",
   "roomHint": "Chat e notas ficam sempre disponíveis. Comece a assistir juntos para sincronizar Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll ou YouTube.",
   "welcomeTitle": "Boas-vindas ao Tether",
