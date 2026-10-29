@@ -49,6 +49,14 @@
   document.addEventListener('webkitfullscreenchange', placeRoot);
   placeRoot();
 
+  // Where Tether sits: the middle of the right edge. Every streaming player
+  // puts its own buttons along the bottom (play, volume, subtitles, speed,
+  // fullscreen, "Skip intro", "Next episode", "Skip ad") and in the top
+  // corners (back, report, and on Prime Video, volume and fullscreen too).
+  // Halfway down the right edge is the one place none of them use.
+  const EDGE = 16;
+  const DOCK_HALF = 35; // half the height of the chat and reaction buttons stacked
+
   function el(tag, css, text) {
     const e = document.createElement(tag);
     if (css) e.style.cssText = css;
@@ -92,11 +100,11 @@
     node.style.opacity = '0';
     setTimeout(() => node.remove(), 300);
   }
-  function showTip(id, text, bottom) {
-    if (!tipsSeen || tipsSeen[id] || tipEl) return;
+  function showTip(id, text, top) {
+    if (!tipsSeen || tipsSeen[id] || tipEl || chatOpen) return;
     tipsSeen = { ...tipsSeen, [id]: true };
     try { chrome.storage.local.set({ [TIPS_KEY]: tipsSeen }); } catch (e) { /* extension reloaded */ }
-    tipEl = el('div', `position: fixed; bottom: ${bottom}px; right: 24px; max-width: 250px; pointer-events: auto;
+    tipEl = el('div', `position: fixed; top: ${top}; right: ${EDGE}px; max-width: 250px; pointer-events: auto;
       font: 400 12.5px/1.4 ${FONT}; color: #fff; padding: 10px 30px 10px 12px; border-radius: 12px; ${GLASS}
       transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; transform: translateY(6px);`, text);
     const x = el('button', `all: initial; position: absolute; top: 6px; right: 8px; cursor: pointer;
@@ -113,8 +121,8 @@
   }
   function maybeTip(status) {
     tipFor = status;
-    if (status === 'off') showTip('start', tr('tipStart'), 66);
-    if (status === 'connected') showTip('session', tr('tipSession'), 110);
+    if (status === 'off') showTip('start', tr('tipStart'), 'calc(50% + 26px)');
+    if (status === 'connected') showTip('session', tr('tipSession'), `calc(50% + ${DOCK_HALF + 10}px)`);
   }
 
   let statusBadge = null;
@@ -151,7 +159,7 @@
     }
     if (!statusBadge) {
       statusBadge = el('div', `
-        position: fixed; bottom: 24px; right: 24px;
+        position: fixed; bottom: calc(50% + ${DOCK_HALF + 10}px); right: ${EDGE}px;
         font: 590 12.5px ${FONT}; padding: 8px 14px 8px 10px; border-radius: 999px; color: #fff;
         display: flex; align-items: center; gap: 7px; pointer-events: none; ${GLASS}
         transition: opacity 0.35s ease, transform 0.35s ease; opacity: 0; transform: translateY(6px);
@@ -172,9 +180,10 @@
     const [text, color] = labels[status] || ['', '#8e8e93'];
     statusBadge._label.textContent = text;
     statusBadge._dot.style.background = color;
+    clearTimeout(showStatus._t);
+    if (chatOpen) return; // the open chat has that space; the label is updated for later
     statusBadge.style.opacity = '1';
     statusBadge.style.transform = 'translateY(0)';
-    clearTimeout(showStatus._t);
     // Every other state is a passing ping ("yep, synced") that's fine to fade
     // after a few seconds. 'no-room' means nothing is set up at all, still
     // true indefinitely until someone joins a room, so it stays on screen.
@@ -191,7 +200,7 @@
   // join them when they're on another title.
   // ---------------------------------------------------------------------
   const noticeStack = el('div', `
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    position: fixed; top: max(88px, 11vh); left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;
   `);
   root.appendChild(noticeStack);
@@ -272,7 +281,7 @@
   // invite on their own screen.
   let startButton = null;
   function buildStartButton() {
-    startButton = el('button', `all: initial; position: fixed; bottom: 24px; right: 24px; cursor: pointer;
+    startButton = el('button', `all: initial; position: fixed; top: 50%; right: ${EDGE}px; transform: translateY(-50%); cursor: pointer;
       display: none; align-items: center; gap: 7px; font: 600 12.5px ${FONT}; color: #fff;
       padding: 8px 14px; border-radius: 999px; pointer-events: auto; transition: opacity 0.4s ease; ${GLASS}`);
     startButton.append(el('span', 'font-size: 13px;', '👥'), el('span', '', tr('startButton')));
@@ -336,7 +345,7 @@
   // rather than after a network round trip.
   function showReaction(emoji) {
     const jitter = (Math.random() - 0.5) * 40; // simultaneous reactions don't perfectly overlap
-    const r = el('div', `position: fixed; bottom: 106px; right: ${40 - jitter}px; font-size: 34px;
+    const r = el('div', `position: fixed; top: calc(50% - 40px); right: ${EDGE + 52 - jitter}px; font-size: 34px;
       pointer-events: none; animation: tether-float-up 1.8s ease-out forwards;`, emoji);
     root.appendChild(r);
     setTimeout(() => r.remove(), 1800);
@@ -370,7 +379,7 @@
   let messages = {};
   const seen = new Set();
   let unread = 0;
-  const toastStack = el('div', `position: fixed; bottom: 112px; right: 24px; display: flex;
+  const toastStack = el('div', `position: fixed; top: calc(50% + ${DOCK_HALF + 10}px); right: ${EDGE}px; display: flex;
     flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; max-width: 300px;`);
   root.appendChild(toastStack);
 
@@ -437,6 +446,9 @@
     chatPanel.style.display = open ? 'flex' : 'none';
     toastStack.style.display = open ? 'none' : 'flex';
     if (open) {
+      // The panel takes the space beside the buttons; nothing else stays there.
+      closeTip();
+      if (statusBadge) { statusBadge.style.opacity = '0'; statusBadge.style.transform = 'translateY(6px)'; }
       setUnread(0);
       chatLog._scrolled = false;
       renderChat();
@@ -448,7 +460,8 @@
   }
 
   function buildChat() {
-    chatPanel = el('div', `position: fixed; bottom: 112px; right: 24px; width: 300px; max-height: min(420px, 55vh);
+    chatPanel = el('div', `position: fixed; top: 50%; transform: translateY(-50%); right: ${EDGE + 44}px; width: 300px;
+      max-height: min(420px, 70vh);
       display: none; flex-direction: column; border-radius: 16px; overflow: hidden; pointer-events: auto; ${GLASS}`);
     const head = el('div', `display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px 14px;
       font: 600 13px ${FONT}; color: #fff;`);
@@ -497,9 +510,10 @@
   }
 
   function buildControls() {
-    controlsEl = el('div', `position: fixed; bottom: 68px; right: 24px; display: flex; align-items: center; gap: 6px;
-      pointer-events: auto; transition: opacity 0.4s ease;`);
-    const row = el('div', 'display:flex; gap:4px; opacity:0; transform:translateX(6px); pointer-events:none; transition:opacity 0.2s, transform 0.2s;');
+    controlsEl = el('div', `position: fixed; top: 50%; right: ${EDGE}px; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: auto; transition: opacity 0.4s ease;`);
+    const row = el('div', `position: absolute; top: 0; right: 38px; display:flex; gap:4px; opacity:0; transform:translateX(6px);
+      pointer-events:none; transition:opacity 0.2s, transform 0.2s;`);
     function setPickerOpen(open) {
       pickerOpen = open;
       row.style.opacity = open ? '1' : '0';
@@ -517,14 +531,14 @@
       row.appendChild(b);
     }
     const reactToggle = roundButton(tr('sendReaction'), '🙂');
-    reactToggle.addEventListener('click', () => setPickerOpen(!pickerOpen));
+    reactToggle.addEventListener('click', () => { if (chatOpen) setChatOpen(false); setPickerOpen(!pickerOpen); });
 
     chatButton = roundButton(tr('chatTitle'), '💬');
     unreadBadge = el('span', `position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px;
       box-sizing: border-box; border-radius: 999px; background: #ff3b30; color: #fff; font: 700 10px ${FONT};
       display: none; align-items: center; justify-content: center;`);
     chatButton.appendChild(unreadBadge);
-    chatButton.addEventListener('click', () => setChatOpen(!chatOpen));
+    chatButton.addEventListener('click', () => { setPickerOpen(false); setChatOpen(!chatOpen); });
 
     controlsEl.append(row, reactToggle, chatButton);
     root.appendChild(controlsEl);

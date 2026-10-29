@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tether — by Anwar Creative Studio</title>
-<meta name="description" content="Keeps Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube in sync between two people, anywhere, plus a shared notes pad, chat, and reactions.">
-<meta property="og:title" content="Tether — by Anwar Creative Studio">
-<meta property="og:description" content="Keeps Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube in sync between two people, anywhere, plus a shared notes pad, chat, and reactions.">
+<title>Tether: Watch Together</title>
+<meta name="description" content="Watch Netflix, Prime Video, Disney+, and more at the same moment as someone far away, with chat and reactions right on the video. Free for Chrome.">
+<meta property="og:title" content="Tether: Watch Together">
+<meta property="og:description" content="Watch Netflix, Prime Video, Disney+, and more at the same moment as someone far away, with chat and reactions right on the video. Free for Chrome.">
 <meta property="og:image" content="icons/icon128.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Tether — by Anwar Creative Studio">
-<meta name="twitter:description" content="Keeps Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube in sync between two people, anywhere, plus a shared notes pad, chat, and reactions.">
+<meta name="twitter:title" content="Tether: Watch Together">
+<meta name="twitter:description" content="Watch Netflix, Prime Video, Disney+, and more at the same moment as someone far away, with chat and reactions right on the video. Free for Chrome.">
 <link rel="icon" href="icons/icon48.png">
 <style>
   :root {
@@ -53,26 +53,38 @@
     background: var(--hairline); padding: 2px 7px; border-radius: 6px; font-size: 13.5px;
     font-family: ui-monospace, "SF Mono", monospace;
   }
+  ul.facts { list-style: none; padding: 0; margin: 0; }
+  ul.facts li { padding: 14px 0; counter-increment: none; }
+  ul.facts li::before { content: none; }
   .footer { margin-top: 64px; color: var(--ink-soft); font-size: 12.5px; text-align: center; }
 </style>
 </head>
 <body>
   <img class="logo" src="icons/icon128.png" alt="">
   <h1>Tether</h1>
-  <p class="tagline">Keeps Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube in sync between two people, anywhere, plus a shared notes pad, chat, and reactions.</p>
+  <p class="tagline">Watch the same show at the same time, apart. Press play and it plays for both of you, on Netflix, Prime Video, Disney+, Hulu, Max, Crunchyroll, and YouTube.</p>
 
   <a class="btn" href="https://chromewebstore.google.com/detail/tether-watch-together/hbdlgagknjnijflkgjdelehjibapehpi">Add to Chrome</a>
-  <p class="note">Free, on the Chrome Web Store, installs in one click.</p>
+  <p class="note">Free. No sign-up.</p>
 
   <section>
-    <h2>Setup (about a minute)</h2>
+    <h2>How it works</h2>
     <ol>
-      <li>Click the button above, then <strong>Add to Chrome</strong>.</li>
-      <li>If you were sent an invite link, click it: once they've pressed play, you'll land right in the room, on the exact show, picked up right where they are. Sent a code instead? Click the Tether icon, paste it under "Join someone else's room", and click Join.</li>
-      <li>Open Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube and click <strong>Watch together</strong>. The other person gets an invite on their screen, and playback stays in sync from there.</li>
+      <li>You both add Tether to Chrome.</li>
+      <li>Open a show and click <strong>Watch together</strong> on the right side of the video. Your invite link is copied.</li>
+      <li>Send them the link. They land on the same show at the same moment, and from then on, play, pause, and skip happen on both screens.</li>
     </ol>
   </section>
 
-  <div class="footer">Built by <a href="https://anwarcreativestudio.com/" style="color: inherit;">Anwar Creative Studio</a> · <a href="https://github.com/tamkin-anwar/tether/blob/main/PRIVACY.md" style="color: inherit;">Privacy</a></div>
+  <section>
+    <h2>Good to know</h2>
+    <ul class="facts">
+      <li>You each watch with your own streaming account.</li>
+      <li>Chat and reactions stay on the video, even in fullscreen, and out of the way of the player's controls.</li>
+      <li>Nothing is shared until you start a session. It ends when you say so, or after 30 minutes without a video.</li>
+    </ul>
+  </section>
+
+  <div class="footer">Made by <a href="https://anwarcreativestudio.com/" style="color: inherit;">Anwar Creative Studio</a> · <a href="https://github.com/tamkin-anwar/tether/blob/main/PRIVACY.md" style="color: inherit;">Privacy</a></div>
 </body>
 </html>
