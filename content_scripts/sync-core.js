@@ -107,9 +107,9 @@
     // short next, a trailer, a music video, would carry the old baseline
     // over and mistake that new, genuinely-short video for an ad
     // interrupting the last one, and never sync it at all.
-    if (location.href !== baselineUrl) {
+    if (pageUrl() !== baselineUrl) {
       baselineDuration = null;
-      baselineUrl = location.href;
+      baselineUrl = pageUrl();
     }
     const ytPlayer = document.getElementById('movie_player');
     if (ytPlayer && (ytPlayer.classList.contains('ad-showing') || ytPlayer.classList.contains('ad-interrupting'))) return true;
@@ -258,7 +258,7 @@
   // details, not the title (YouTube's own ?v= is the exception, and kept).
   function shareUrl() {
     try {
-      const u = new URL(location.href);
+      const u = new URL(pageUrl());
       const v = /(^|\.)youtube\.com$/.test(u.hostname) ? u.searchParams.get('v') : null;
       u.search = v ? '?v=' + encodeURIComponent(v) : '';
       u.hash = '';
@@ -290,10 +290,17 @@
     // Prime Video can't be keyed from the URL at all (see prime.js), so a
     // site can supply its own.
     if (siteControls?.contentKey) return siteControls.contentKey();
-    const v = new URLSearchParams(location.search).get('v');
-    if (location.pathname === '/watch' && v) return 'yt:' + v;
-    const m = location.pathname.match(/\/watch\/([^/]+)/) || location.pathname.match(/\/(?:play|video)\/([^/]+)/);
-    return m ? m[1] : location.pathname;
+    const loc = new URL(pageUrl());
+    const v = loc.searchParams.get('v');
+    if (loc.pathname === '/watch' && v) return 'yt:' + v;
+    const m = loc.pathname.match(/\/watch\/([^/]+)/) || loc.pathname.match(/\/(?:play|video)\/([^/]+)/);
+    return m ? m[1] : loc.pathname;
+  }
+  // The address of the title being watched. Usually this page's own; a
+  // player that runs in a frame of its own (Crunchyroll's) gets it from the
+  // page around it instead (see crunchyroll.js).
+  function pageUrl() {
+    return (siteControls?.pageUrl && siteControls.pageUrl()) || location.href;
   }
   // Payloads from an older version carry no content key: nothing to compare,
   // so they're trusted, the same as before this check existed.
@@ -619,7 +626,7 @@
       // See siteControls above: on a site where setting video.currentTime
       // directly isn't safe, route the same change through the site's own
       // player instead.
-      if (siteControls) {
+      if (siteControls?.seek) {
         if (needsSeek) siteControls.seek(target);
         if (data.playing) siteControls.play();
         if (!data.playing) siteControls.pause();
@@ -706,7 +713,7 @@
       stopNudge();
       probeLead = true;
       withRemoteGuard(() => {
-        if (siteControls) siteControls.seek(expected + seekLead);
+        if (siteControls?.seek) siteControls.seek(expected + seekLead);
         else video.currentTime = expected + seekLead;
       }, true);
     } else if (Math.abs(gap) > precision() && canNudge()) {

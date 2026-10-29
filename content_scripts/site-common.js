@@ -311,7 +311,8 @@
     b.append(el('span', '', tr('elsewhere', info.name || tr('partnerFallback'))));
     const go = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
       background: #007aff; padding: 6px 12px; border-radius: 999px;`, tr('joinThem'));
-    go.addEventListener('click', () => { const u = window.TetherSync.safeUrl(info.url); if (u) location.href = u; });
+    // The whole tab, even from a player in a frame of its own (Crunchyroll's).
+    go.addEventListener('click', () => { const u = window.TetherSync.safeUrl(info.url); if (u) window.top.location.href = u; });
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7);
       padding: 4px 8px;`, '✕');
     close.setAttribute('aria-label', tr('dismiss'));

@@ -23,7 +23,9 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://netflix.com/*",
     "https://*.netflix.com/*",
@@ -57,89 +59,228 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://tamkin-anwar.github.io/tether/join.html*"],
-      "js": ["content_scripts/join.js"],
+      "matches": [
+        "https://tamkin-anwar.github.io/tether/join.html*"
+      ],
+      "js": [
+        "content_scripts/join.js"
+      ],
       "run_at": "document_start"
     },
     {
       "matches": [
-        "https://netflix.com/*", "https://*.netflix.com/*",
-        "https://hulu.com/*", "https://*.hulu.com/*",
-        "https://disneyplus.com/*", "https://*.disneyplus.com/*",
-        "https://crunchyroll.com/*", "https://*.crunchyroll.com/*",
-        "https://max.com/*", "https://*.max.com/*", "https://hbomax.com/*", "https://*.hbomax.com/*",
-        "https://youtube.com/*", "https://*.youtube.com/*",
-        "https://primevideo.com/*", "https://*.primevideo.com/*",
-        "https://www.amazon.com/gp/video/*", "https://www.amazon.co.uk/gp/video/*", "https://www.amazon.de/gp/video/*",
-        "https://www.amazon.ca/gp/video/*", "https://www.amazon.co.jp/gp/video/*", "https://www.amazon.in/gp/video/*",
-        "https://www.amazon.com.au/gp/video/*", "https://www.amazon.fr/gp/video/*", "https://www.amazon.it/gp/video/*",
+        "https://netflix.com/*",
+        "https://*.netflix.com/*",
+        "https://hulu.com/*",
+        "https://*.hulu.com/*",
+        "https://disneyplus.com/*",
+        "https://*.disneyplus.com/*",
+        "https://crunchyroll.com/*",
+        "https://*.crunchyroll.com/*",
+        "https://max.com/*",
+        "https://*.max.com/*",
+        "https://hbomax.com/*",
+        "https://*.hbomax.com/*",
+        "https://youtube.com/*",
+        "https://*.youtube.com/*",
+        "https://primevideo.com/*",
+        "https://*.primevideo.com/*",
+        "https://www.amazon.com/gp/video/*",
+        "https://www.amazon.co.uk/gp/video/*",
+        "https://www.amazon.de/gp/video/*",
+        "https://www.amazon.ca/gp/video/*",
+        "https://www.amazon.co.jp/gp/video/*",
+        "https://www.amazon.in/gp/video/*",
+        "https://www.amazon.com.au/gp/video/*",
+        "https://www.amazon.fr/gp/video/*",
+        "https://www.amazon.it/gp/video/*",
         "https://www.amazon.es/gp/video/*",
-        "https://www.amazon.com/dp/*", "https://www.amazon.com/*/dp/*", "https://www.amazon.co.uk/dp/*", "https://www.amazon.co.uk/*/dp/*",
-        "https://www.amazon.de/dp/*", "https://www.amazon.de/*/dp/*", "https://www.amazon.ca/dp/*", "https://www.amazon.ca/*/dp/*",
-        "https://www.amazon.co.jp/dp/*", "https://www.amazon.co.jp/*/dp/*", "https://www.amazon.in/dp/*", "https://www.amazon.in/*/dp/*",
-        "https://www.amazon.com.au/dp/*", "https://www.amazon.com.au/*/dp/*", "https://www.amazon.fr/dp/*", "https://www.amazon.fr/*/dp/*",
-        "https://www.amazon.it/dp/*", "https://www.amazon.it/*/dp/*", "https://www.amazon.es/dp/*", "https://www.amazon.es/*/dp/*"
+        "https://www.amazon.com/dp/*",
+        "https://www.amazon.com/*/dp/*",
+        "https://www.amazon.co.uk/dp/*",
+        "https://www.amazon.co.uk/*/dp/*",
+        "https://www.amazon.de/dp/*",
+        "https://www.amazon.de/*/dp/*",
+        "https://www.amazon.ca/dp/*",
+        "https://www.amazon.ca/*/dp/*",
+        "https://www.amazon.co.jp/dp/*",
+        "https://www.amazon.co.jp/*/dp/*",
+        "https://www.amazon.in/dp/*",
+        "https://www.amazon.in/*/dp/*",
+        "https://www.amazon.com.au/dp/*",
+        "https://www.amazon.com.au/*/dp/*",
+        "https://www.amazon.fr/dp/*",
+        "https://www.amazon.fr/*/dp/*",
+        "https://www.amazon.it/dp/*",
+        "https://www.amazon.it/*/dp/*",
+        "https://www.amazon.es/dp/*",
+        "https://www.amazon.es/*/dp/*"
       ],
-      "js": ["content_scripts/keep-playing.js"],
+      "js": [
+        "content_scripts/keep-playing.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://netflix.com/*", "https://*.netflix.com/*"],
-      "js": ["content_scripts/netflix-page.js"],
+      "matches": [
+        "https://static.crunchyroll.com/vilos-v2/*"
+      ],
+      "js": [
+        "content_scripts/keep-playing.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://netflix.com/*",
+        "https://*.netflix.com/*"
+      ],
+      "js": [
+        "content_scripts/netflix-page.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://netflix.com/*", "https://*.netflix.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/netflix.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://hulu.com/*", "https://*.hulu.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hulu.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://disneyplus.com/*", "https://*.disneyplus.com/*"],
-      "js": ["content_scripts/disneyplus-page.js"],
-      "run_at": "document_start",
-      "world": "MAIN"
-    },
-    {
-      "matches": ["https://disneyplus.com/*", "https://*.disneyplus.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/disneyplus.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://crunchyroll.com/*", "https://*.crunchyroll.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/crunchyroll.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://max.com/*", "https://*.max.com/*", "https://hbomax.com/*", "https://*.hbomax.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hbomax.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://youtube.com/*", "https://*.youtube.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/youtube.js"],
+      "matches": [
+        "https://netflix.com/*",
+        "https://*.netflix.com/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/netflix.js"
+      ],
       "run_at": "document_idle"
     },
     {
       "matches": [
-        "https://primevideo.com/*", "https://*.primevideo.com/*",
-        "https://www.amazon.com/gp/video/*", "https://www.amazon.co.uk/gp/video/*", "https://www.amazon.de/gp/video/*",
-        "https://www.amazon.ca/gp/video/*", "https://www.amazon.co.jp/gp/video/*", "https://www.amazon.in/gp/video/*",
-        "https://www.amazon.com.au/gp/video/*", "https://www.amazon.fr/gp/video/*", "https://www.amazon.it/gp/video/*",
-        "https://www.amazon.es/gp/video/*",
-        "https://www.amazon.com/dp/*", "https://www.amazon.com/*/dp/*", "https://www.amazon.co.uk/dp/*", "https://www.amazon.co.uk/*/dp/*",
-        "https://www.amazon.de/dp/*", "https://www.amazon.de/*/dp/*", "https://www.amazon.ca/dp/*", "https://www.amazon.ca/*/dp/*",
-        "https://www.amazon.co.jp/dp/*", "https://www.amazon.co.jp/*/dp/*", "https://www.amazon.in/dp/*", "https://www.amazon.in/*/dp/*",
-        "https://www.amazon.com.au/dp/*", "https://www.amazon.com.au/*/dp/*", "https://www.amazon.fr/dp/*", "https://www.amazon.fr/*/dp/*",
-        "https://www.amazon.it/dp/*", "https://www.amazon.it/*/dp/*", "https://www.amazon.es/dp/*", "https://www.amazon.es/*/dp/*"
+        "https://hulu.com/*",
+        "https://*.hulu.com/*"
       ],
-      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/prime.js"],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/hulu.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://disneyplus.com/*",
+        "https://*.disneyplus.com/*"
+      ],
+      "js": [
+        "content_scripts/disneyplus-page.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://disneyplus.com/*",
+        "https://*.disneyplus.com/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/disneyplus.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://crunchyroll.com/*",
+        "https://*.crunchyroll.com/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/crunchyroll.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://static.crunchyroll.com/vilos-v2/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/crunchyroll.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://max.com/*",
+        "https://*.max.com/*",
+        "https://hbomax.com/*",
+        "https://*.hbomax.com/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/hbomax.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://youtube.com/*",
+        "https://*.youtube.com/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/youtube.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://primevideo.com/*",
+        "https://*.primevideo.com/*",
+        "https://www.amazon.com/gp/video/*",
+        "https://www.amazon.co.uk/gp/video/*",
+        "https://www.amazon.de/gp/video/*",
+        "https://www.amazon.ca/gp/video/*",
+        "https://www.amazon.co.jp/gp/video/*",
+        "https://www.amazon.in/gp/video/*",
+        "https://www.amazon.com.au/gp/video/*",
+        "https://www.amazon.fr/gp/video/*",
+        "https://www.amazon.it/gp/video/*",
+        "https://www.amazon.es/gp/video/*",
+        "https://www.amazon.com/dp/*",
+        "https://www.amazon.com/*/dp/*",
+        "https://www.amazon.co.uk/dp/*",
+        "https://www.amazon.co.uk/*/dp/*",
+        "https://www.amazon.de/dp/*",
+        "https://www.amazon.de/*/dp/*",
+        "https://www.amazon.ca/dp/*",
+        "https://www.amazon.ca/*/dp/*",
+        "https://www.amazon.co.jp/dp/*",
+        "https://www.amazon.co.jp/*/dp/*",
+        "https://www.amazon.in/dp/*",
+        "https://www.amazon.in/*/dp/*",
+        "https://www.amazon.com.au/dp/*",
+        "https://www.amazon.com.au/*/dp/*",
+        "https://www.amazon.fr/dp/*",
+        "https://www.amazon.fr/*/dp/*",
+        "https://www.amazon.it/dp/*",
+        "https://www.amazon.it/*/dp/*",
+        "https://www.amazon.es/dp/*",
+        "https://www.amazon.es/*/dp/*"
+      ],
+      "js": [
+        "content_scripts/sync-core.js",
+        "content_scripts/site-common.js",
+        "content_scripts/prime.js"
+      ],
       "run_at": "document_idle"
     }
   ]
