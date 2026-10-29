@@ -163,6 +163,8 @@
   let es = null;            // EventSource
   let reactionsEs = null;   // separate EventSource: reactions are rare enough that folding them into the sync stream's put/patch parsing wasn't worth the added complexity there
   let remoteGuards = 0;     // how many remote changes are still settling (see withRemoteGuard)
+  let guardExpect = null;   // what the latest of those should leave the video doing: { playing, time, rate, at }
+  let lastOwnPushAt = 0;    // server-clock time of this side's latest push (see applyRemote)
   let lastRemote = null;    // { time, ts, playing }, used for drift correction
   let lastEventAt = 0;      // Date.now() of the last thing heard from the server, any kind
   let driftTimer = null;
@@ -438,7 +440,9 @@
   // other follows.
   let announcedAt = 0;
   const ANNOUNCE_CLASH_MS = 2500;
+  let startupBeganAt = 0;
   function beginStartup() {
+    startupBeganAt = Date.now();
     startupUntil = Date.now() + STARTUP_QUIET_MS;
     caughtUp = false;
     clearTimeout(startupTimer);
@@ -491,9 +495,42 @@
     knownRate = r;
     schedulePush('rate');
   }
+  // Whether an event fired while a remote change is settling goes against
+  // what that change should have done: a pause when it was set playing, a
+  // play when it was set paused, or a position well away from where it was
+  // sent. Then it's the person here acting, not an echo. Every event in the
+  // guard used to be dropped, so pausing or skipping right after the other
+  // person did something silently went nowhere: the "it doesn't work, you
+  // do it" moments, mostly for whoever's further from the database.
+  function contradictsRemote(type) {
+    const e = guardExpect;
+    if (!e || !video) return false;
+    if (type === 'pause') return e.playing && video.paused;
+    if (type === 'play') return !e.playing && !video.paused;
+    if (type === 'seek') {
+      const t = currentTimeSeconds();
+      if (t == null) return false;
+      const now = e.playing ? e.time + (Date.now() - e.at) / 1000 * (e.rate || 1) : e.time;
+      return Math.abs(t - now) > 2;
+    }
+    return false;
+  }
+  // A real press or key in the page (not on Tether's own buttons), for
+  // telling the person's own play, pause or skip from the player's.
+  let lastInputAt = 0;
+  for (const t of ['pointerdown', 'keydown']) {
+    window.addEventListener(t, (e) => {
+      if (!e.isTrusted) return;
+      const path = e.composedPath ? e.composedPath() : [];
+      if (path.some((n) => n && n.hasAttribute && n.hasAttribute('data-tether-overlay'))) return;
+      lastInputAt = Date.now();
+    }, true);
+  }
+  let pushRecheck = false;
   function schedulePush(type) {
     if (!sessionOn()) return; // not watching together: nothing is shared
-    if (remoteGuards > 0) return; // an echo of something we just applied, not a local action
+    const inGuard = remoteGuards > 0;
+    if (inGuard && !contradictsRemote(type)) return; // an echo of something we just applied, not a local action
     // Playing, pausing or seeking in the tab you're looking at makes it the
     // one in charge (see claimLeader). A tab in the background that isn't
     // in charge is just a stray video; it doesn't speak for you.
@@ -502,11 +539,27 @@
       claimLeader(false);
     }
     noteContent();
-    if (Date.now() < startupUntil) return; // announced as one at the end of the window
+    if (Date.now() < startupUntil) {
+      // The player's own startup is announced as one at the end of the
+      // window. Something the person did themselves since it began (a
+      // press or key on the page just now) goes out as itself, and the
+      // window closes, so the end of it can't undo what they did.
+      if (!(lastInputAt > startupBeganAt && Date.now() - lastInputAt < 1500)) return;
+      startupUntil = 0;
+      clearTimeout(startupTimer);
+    }
     pushType = type;
+    pushRecheck = inGuard;
+    // From this moment this side's action is the newest, even in the tenth
+    // of a second before it's sent: something from the other side arriving
+    // in that gap is older, and mustn't undo it (see applyRemote).
+    if (clockSamples.length) lastOwnPushAt = Math.max(lastOwnPushAt, Math.round(serverNow()));
     if (pushTimer) return;
     pushTimer = setTimeout(() => {
       pushTimer = null;
+      // A player can pass through a state on its way to the one it was
+      // asked for (a pause inside a seek); only send it if it stuck.
+      if (pushRecheck && remoteGuards > 0 && !contradictsRemote(pushType)) return;
       pushSync(pushType);
     }, PUSH_SETTLE_MS);
   }
@@ -557,6 +610,7 @@
     // against on this same device, not less accurate: it's this device's
     // own clock-corrected "now" either way.
     lastRemote = { time, ts: ts ?? serverNow(), playing, rate, content };
+    if (ts != null) lastOwnPushAt = ts; // before the first clock sample there is no trustworthy server time to compare
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
     return true;
   }
@@ -572,9 +626,10 @@
   // Counted, not a single flag: a play arriving while an earlier seek is
   // still buffering used to lift the guard on its short timer, and the
   // seek's own 'seeked' then went out as if this person had skipped.
-  function withRemoteGuard(fn, mayNeedSeek) {
+  function withRemoteGuard(fn, mayNeedSeek, expect) {
     const el = video; // captured now, in case the player gets swapped out mid-guard (an episode change, say)
     remoteGuards++;
+    guardExpect = expect ? { ...expect, at: Date.now() } : null;
     let done = false;
     const finish = () => {
       if (done) return;
@@ -594,6 +649,12 @@
     // telling this person about, with a way to get there.
     if (!sameContent(data.content)) { noteElsewhere(data); return; }
     noteElsewhere(null);
+    // Older than something this side has since done: what the other person
+    // did before this side's own action reached them. Applying it here
+    // would undo that action on this screen while the other screen follows
+    // it, and leave the two of you in opposite states. The newest action
+    // wins, on both sides.
+    if (typeof data.ts === 'number' && data.ts < lastOwnPushAt) return;
     if (data.type === 'start' && Date.now() - announcedAt < ANNOUNCE_CLASH_MS) {
       announcedAt = 0;
       // Keeps its spot only if it can say so; otherwise it follows.
@@ -647,7 +708,7 @@
         if (data.playing && video.paused) video.play().catch(() => {});
         if (!data.playing && !video.paused) video.pause();
       }
-    }, needsSeek);
+    }, needsSeek, { playing: data.playing, time: needsSeek ? target : (current ?? localTime), rate });
   }
 
   // The other person on a different title: offered as a one-click "join
@@ -727,7 +788,7 @@
       withRemoteGuard(() => {
         if (siteControls?.seek) siteControls.seek(expected + seekLead);
         else video.currentTime = expected + seekLead;
-      }, true);
+      }, true, { playing: true, time: expected + seekLead, rate: lastRemote.rate || 1 });
     } else if (Math.abs(gap) > precision() && canNudge()) {
       nudge(gap);
     } else if (nudging && Math.abs(gap) < precision() * 0.4) {
