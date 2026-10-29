@@ -1,94 +1,94 @@
 # Tether
 
-Watch Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube together while you're apart. Playback stays in sync across both your tabs, plus a shared notes pad and chat, without needing a different app for every service.
+Watch Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube together while you're apart. Playback stays in sync between your two browsers, with chat and reactions right on the video and a shared notes pad in the popup.
+
+[Add to Chrome](https://chromewebstore.google.com/detail/tether-watch-together/hbdlgagknjnijflkgjdelehjibapehpi) · [Website](https://tamkin-anwar.github.io/tether/) · [Privacy](PRIVACY.md)
 
 ## How it works
 
-Same architecture as Teleparty/SyncUp: this never touches the actual video stream (which is DRM-protected and off-limits to any third party). Instead, each of you streams from your own account in your own browser tab, and the extension mirrors play/pause/seek events between your tabs through a small shared database. Because it only ever calls standard playback controls, it works within each service's terms rather than around them.
+Tether never touches the video stream, which is DRM-protected. Each of you streams from your own account in your own browser tab, and the extension mirrors play, pause, seek and speed between the two tabs through a small shared database. It only uses the player's standard controls.
 
-That also means **it only works when you're both watching in a desktop browser tab** (e.g. netflix.com in Chrome). It can't reach into any of these services' iPhone or Smart TV apps, since those don't expose any way for a third-party extension to see or control them.
+That also means it only works in a desktop browser. It can't reach the phone or TV apps.
 
-**On the sync being tight:** the two of you being on opposite sides of the world means real physical latency (routing plus, at the extreme, speed-of-light delay). No tool, including Teleparty, can make a message arrive before it physically can. What Tether does do: it calibrates each tab's clock against the shared database's own clock (rather than trusting either laptop's system clock, which can already be a few hundred ms off), timestamps every play/pause/seek with that corrected time, and continuously nudges playback to compensate for exactly how long a message took in transit. So instead of "wherever the position was when the message was *sent*," you land on "wherever the position *actually is right now*, accounting for transit." That's the same principle behind any properly engineered low-latency sync, and it's the main lever available once the physical distance is fixed.
+**Accuracy.** Each tab calibrates its clock against the database's clock (best of several round trips), stamps every change with that corrected time, and projects forward by however long the message took to arrive. Small drift is closed with a speed change of a few percent, which you can't hear or see; larger gaps are a seek that aims ahead by the seek time it has measured. In testing across two separate browsers, the two players stay within about a tenth of a second.
 
-**On the VPN:** since Tether only ever calls the standard play/pause/seek controls on whichever tab is open, never touching the video stream itself, a VPN on her end (for Disney+/HBO Max) doesn't affect Tether at all. It only matters for whether Netflix/Disney+ let the stream through in the first place, which is entirely between her and them.
+**Sessions.** Nothing about what you watch is shared until you start a session (Watch together, on the video or in the popup) or accept the other person's invite. A session ends when you end it, or after 30 minutes without a video.
 
-## One-time setup (you'll need to do this part)
+## Features
 
-Firebase Realtime Database is the shared "phone line" between your two tabs. I can't create this account for you, but it takes about two minutes:
+- Sync on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube, with drift correction and catch-up when one of you joins late
+- Ad breaks handled: an ad's position is never shared, and whoever's ad ends catches back up. On Prime Video, positions are exchanged in the episode's own time, so different ads never put you out of step
+- Playback speed syncs; live streams sync play and pause only
+- An invite link that takes the other person to the same show at the same moment
+- Chat and reactions on the video, including in fullscreen, placed halfway down the right edge, clear of every player's own controls
+- Notices of what the other person did ("Sam paused"), and "Join them" when they're on a different title
+- Shared notes and chat in the popup, nicknames, no accounts
+- One tab per browser holds the live connections, so several streaming tabs never stall sync
+- Available in English, Spanish, Portuguese, French, German, Hindi, and Japanese
 
-1. Go to [firebase.google.com](https://firebase.google.com), click **Get started**, and sign in with any Google account.
-2. Click **Add project**, name it anything (e.g. "tether"), skip Google Analytics, then **Create project**.
-3. In the left sidebar, click **Build**, then **Realtime Database**, then **Create Database**. For the location, pick **Singapore (asia-southeast1)**. With one of you in Bangladesh, a database on the other side of the world (the US default) adds real, physical round-trip delay to every sync message; Singapore is the closest available region and meaningfully cuts that lag for both of you. Start in **test mode** for now (we'll paste in real rules below).
-4. Once it's created, copy the URL shown at the top of the database page. It looks like `https://tether-xxxxx-default-rtdb.firebaseio.com`.
-5. Click the **Rules** tab (next to Data) and replace the contents with:
-   ```json
-   {
-     "rules": {
-       "rooms": {
-         "$roomId": {
-           ".read": true,
-           ".write": true,
-           "sync": {
-             ".validate": "newData.hasChildren(['type','time','playing','ts','from']) && newData.child('type').isString() && newData.child('time').isNumber() && newData.child('playing').isBoolean() && newData.child('ts').isNumber() && newData.child('from').isString() && newData.child('from').val().length <= 40"
-           },
-           "_clock": {
-             ".validate": "newData.isNumber()"
-           },
-           "presence": {
-             "$clientId": {
-               ".validate": "newData.hasChild('ts') && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
-             }
-           },
-           "nowWatching": {
-             ".validate": "newData.hasChildren(['url','ts']) && newData.child('url').isString() && newData.child('url').val().length <= 2000 && newData.child('ts').isNumber()"
-           },
-           "reactions": {
-             ".validate": "newData.hasChildren(['emoji','from','ts']) && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('from').isString() && newData.child('ts').isNumber()"
-           },
-           "notes": {
-             ".validate": "newData.hasChildren(['text','updatedAt']) && newData.child('text').isString() && newData.child('text').val().length <= 5000 && newData.child('updatedAt').isNumber()"
-           },
-           "chat": {
-             "$messageId": {
-               ".validate": "newData.hasChildren(['text','from','ts']) && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('from').isString() && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
-             }
-           },
-           "$other": {
-             ".validate": false
-           }
-         }
-       }
-     }
-   }
-   ```
-   Anyone who knows your room code can still read/write it, same trust model as a Google Doc link, that part hasn't changed. What's new: each field is now shape- and size-checked (a chat message can't be gigabytes long, `playing` has to actually be a boolean, and so on), and anything that isn't one of the known fields (`sync`, `presence`, `nowWatching`, `reactions`, `notes`, `chat`, `_clock`) gets rejected outright via `$other`. That mostly guards against cost/storage abuse and outright garbage, not a determined attacker: Realtime Database rules alone can't rate-limit requests or block someone from scanning many room codes quickly, that needs real backend infra (Cloud Functions, App Check) that doesn't exist here. Worth knowing, not solved by this change: on the audience Tether has today, the room code's 32^8 keyspace and every session's low informational value (playback timing, not anything sensitive) make that an acceptable, disclosed tradeoff, the same one a shareable Google Doc link makes.
-6. Click **Publish**. Test that sync, chat, notes, presence, and reactions still all work right after, since a validate rule that's stricter than it should be would silently reject a legitimate write rather than error loudly, better to catch that immediately than have it show up as "it just doesn't work" days later. The console keeps rule history if anything needs rolling back.
+## Installing from source
 
-## Installing the extension
+1. In Chrome, open `chrome://extensions` and turn on **Developer mode**.
+2. Click **Load unpacked** and select this folder.
 
-1. In Chrome, go to `chrome://extensions`, turn on **Developer mode** (top right).
-2. Click **Load unpacked**, and select this `Tether` folder.
-3. Click the Tether icon in your toolbar, paste the Database URL from step 4 above into **Firebase Database URL**, and click **Connect**.
-4. Send your girlfriend this same folder (or once we're happy with it, publish it to the Chrome Web Store so she can just install it) and have her do steps 1 to 3 with the *same* Database URL.
-5. One of you opens the popup and clicks **Copy invite link**, then sends that over. Clicking it drops the other person straight into the room, and once you've pressed play, straight to the exact title (see `content_scripts/join.js`). Pasting just the room code into **Their code** under "Join someone else's room" still works too, for anyone who'd rather send that instead.
-6. Both open Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube, both hit play on the same title. Playback will mirror from here.
+Tether uses a shared database out of the box, so there's nothing to set up.
 
-## What's here now, and what's next
+## Using your own database (optional)
 
-- Done: play/pause/seek sync on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, and YouTube, with periodic drift correction so long viewing sessions don't slowly slip out of sync, and an automatic catch-up to wherever the other person already is the moment your own video loads
-- Done: ad-tier support: ad breaks are never sent as the shared position, and whoever's ad ends catches back up to the other person instead of pulling them back. On Prime Video, where ads are stitched into the stream itself, positions are exchanged in the episode's own time, so different ads on each side never put you out of step
-- Done: playback speed syncs, and live streams sync play and pause only (they have no shared timeline)
-- Done: sub-tenth-of-a-second sync. Positions are timestamped the moment they're read on a server-calibrated clock (best of several round trips), small drift is closed by an imperceptible speed nudge instead of a visible seek, and seeks aim ahead by a learned seek latency
-- Done: a real invite link, not just a room code, that drops the other person straight into the exact title once they've pressed play (`content_scripts/join.js`)
-- Done: presence ("someone else is in this room," not just "connected"), with an optional nickname attached to it and to chat
-- Done: a shared notes pad, a basic chat, and emoji reactions, the last two both in the popup and, for reactions, as a floating overlay on the video itself
-- Done: chat on the video page itself (same conversation as the popup), with unread counts and new messages popping up briefly while it's closed; everything on the page follows the player into fullscreen
-- Done: notices of what the other person did ("Ridu paused", "Ridu skipped to 12:04"), and a one-click "Join them" when they're on a different title
-- Done: watching together is a session you start, not always on. Nothing about what you watch is shared outside one. The other person gets an invite to join (never pulled in), and a session ends with End or after 30 minutes without a video
-- Done: onboarding: a three-step welcome in the popup on first run, and one-time tips on the video page the first time you see "Watch together" and the first time you're in a session
-- Done: one tab per browser holds the live connections (the database is HTTP/1.1, capped at six connections per site), so any number of streaming tabs can be open without sync stalling
-- Not yet: a shared file drop (needs Firebase Storage, a bit more setup than Realtime Database)
+To run on a Firebase Realtime Database of your own:
+
+1. Create a project at [firebase.google.com](https://firebase.google.com), then **Build → Realtime Database → Create Database**. Pick the region closest to both of you.
+2. Copy the database URL (`https://<project>-default-rtdb.<region>.firebasedatabase.app`).
+3. Under **Rules**, paste:
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": true,
+        ".write": true,
+        "sync": {
+          ".validate": "newData.hasChildren(['type','time','playing','ts','from']) && newData.child('type').isString() && newData.child('time').isNumber() && newData.child('playing').isBoolean() && newData.child('ts').isNumber() && newData.child('from').isString() && newData.child('from').val().length <= 40"
+        },
+        "_clock": {
+          ".validate": "newData.isNumber()"
+        },
+        "presence": {
+          "$clientId": {
+            ".validate": "newData.hasChild('ts') && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
+          }
+        },
+        "nowWatching": {
+          ".validate": "newData.hasChildren(['url','ts']) && newData.child('url').isString() && newData.child('url').val().length <= 2000 && newData.child('ts').isNumber()"
+        },
+        "reactions": {
+          ".validate": "newData.hasChildren(['emoji','from','ts']) && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('from').isString() && newData.child('ts').isNumber()"
+        },
+        "notes": {
+          ".validate": "newData.hasChildren(['text','updatedAt']) && newData.child('text').isString() && newData.child('text').val().length <= 5000 && newData.child('updatedAt').isNumber()"
+        },
+        "chat": {
+          "$messageId": {
+            ".validate": "newData.hasChildren(['text','from','ts']) && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('from').isString() && newData.child('ts').isNumber() && (!newData.hasChild('name') || newData.child('name').val() == null || (newData.child('name').isString() && newData.child('name').val().length <= 24))"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
+```
+
+   Each field is checked for shape and size, and anything outside the known fields is rejected. Rules can't rate-limit or stop someone from guessing room codes; the 8-character codes (32^8 combinations) make that impractical, the same trade-off a shareable document link makes.
+4. In the Tether popup, open **Use a different database (advanced)**, paste the URL, and click **Connect**. Whoever you watch with needs the same URL.
+
+## Translations
+
+UI strings live in `tools/messages_*.py`. Run `python3 tools/build_locales.py` to regenerate `_locales/`.
 
 ## Credits
 
-Built by **Anwar Creative Studio**.
+Made by [Anwar Creative Studio](https://anwarcreativestudio.com/).

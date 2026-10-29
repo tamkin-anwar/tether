@@ -27,7 +27,7 @@
     "message": "<strong>Envoyez votre lien d'invitation</strong>, une seule fois. Vous partagerez ce salon ensuite."
   },
   "welcomeStep3": {
-    "message": "<strong>Ouvrez un programme et cliquez sur 👥 Regarder ensemble.</strong> L'autre personne reçoit une invitation à l'écran, touche Rejoindre, et vous êtes synchronisés."
+    "message": "<strong>Ouvrez un programme et cliquez sur 👥 Regarder ensemble.</strong> L'autre personne reçoit une invitation à l'écran, clique sur Rejoindre, et vous êtes synchronisés."
   },
   "welcomeAside": {
     "message": "Pendant le visionnage, le 💬 chat et les 🙂 réactions sont sur le côté droit de la vidéo, à mi-hauteur. On vous a envoyé un lien d'invitation ? Cliquez dessus à nouveau maintenant que Tether est installé."
@@ -54,10 +54,16 @@
     "message": "La lecture est synchronisée dans vos onglets. La séance s'arrête seule après 30 minutes sans vidéo."
   },
   "sessionPartner": {
-    "message": "$1 regarde en séance partagée"
+    "message": "$1 a lancé une séance"
   },
   "sessionHintJoin": {
     "message": "Rejoignez pour synchroniser votre lecture avec la sienne."
+  },
+  "openTheirs": {
+    "message": "Ouvrir ce que l'autre regarde"
+  },
+  "codeInvalid": {
+    "message": "Ce code ne semble pas correct. Un code compte 6 à 8 lettres et chiffres."
   },
   "join": {
     "message": "Rejoindre"
@@ -87,7 +93,7 @@
     "message": "Copier le lien d'invitation"
   },
   "inviteHint": {
-    "message": "Un clic les amène au même programme, au même moment, une fois que vous avez lancé la lecture."
+    "message": "Un clic les amène au même programme, au même moment, pendant que vous regardez ensemble."
   },
   "copyCode": {
     "message": "Copier le code seul"
@@ -168,7 +174,7 @@
     "message": "$1 a rejoint"
   },
   "noticeLeft": {
-    "message": "$1 est parti(e)"
+    "message": "$1 a quitté la séance"
   },
   "noticeWatchingWith": {
     "message": "Vous regardez avec $1"
@@ -207,7 +213,7 @@
     "message": "$1 a réglé la vitesse sur $2×"
   },
   "actionSpeedNormal": {
-    "message": "$1 est revenu(e) à la vitesse normale"
+    "message": "$1 a remis la vitesse normale"
   },
   "inviteStarted": {
     "message": "$1 a lancé une séance à deux"
@@ -297,7 +303,7 @@
     "message": "Toujours rien"
   },
   "joinGaveUp": {
-    "message": "Actualisez cette page une fois la lecture lancée, ou ouvrez le service vous-mêmes. Vous êtes déjà dans le salon."
+    "message": "Actualisez cette page une fois la séance lancée, ou ouvrez le service vous-mêmes. Vous êtes déjà dans le salon."
   },
   "joinTroubleTitle": {
     "message": "Problème de connexion"

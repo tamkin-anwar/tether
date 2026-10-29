@@ -27,7 +27,7 @@
     "message": "<strong>Send your invite link</strong>, just once. You'll share this room from then on."
   },
   "welcomeStep3": {
-    "message": "<strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, tap Join, and you're in sync."
+    "message": "<strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, click Join, and you're in sync."
   },
   "welcomeAside": {
     "message": "While you watch, 💬 chat and 🙂 reactions sit on the right side of the video, halfway down. Got an invite link from someone? Click it again now that Tether's installed."
@@ -54,10 +54,16 @@
     "message": "Playback is synced in your streaming tabs. Ends on its own after 30 minutes without a video."
   },
   "sessionPartner": {
-    "message": "$1 is watching together"
+    "message": "$1 started watching together"
   },
   "sessionHintJoin": {
     "message": "Join to sync your playback with theirs."
+  },
+  "openTheirs": {
+    "message": "Open what they're watching"
+  },
+  "codeInvalid": {
+    "message": "That code doesn't look right. Room codes have 6 to 8 letters and numbers."
   },
   "join": {
     "message": "Join"
@@ -87,7 +93,7 @@
     "message": "Copy invite link"
   },
   "inviteHint": {
-    "message": "One click brings them to the exact show and the exact moment, once you've pressed play."
+    "message": "One click brings them to the exact show and moment while you're watching together."
   },
   "copyCode": {
     "message": "Copy code only"
@@ -297,7 +303,7 @@
     "message": "Still nothing yet"
   },
   "joinGaveUp": {
-    "message": "Refresh this page once they've pressed play, or just open the service yourselves. You're already in the room."
+    "message": "Refresh this page once they've started watching together, or just open the service yourselves. You're already in the room."
   },
   "joinTroubleTitle": {
     "message": "Having trouble connecting"

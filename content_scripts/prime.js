@@ -362,7 +362,7 @@
     try { v.currentTime = Math.max(0, episodeSeconds + waited + offsetNow()); } catch (e) { /* not seekable yet */ }
   }
 
-  window.TetherSite.start(findVideo, {
+  const controls = {
     seek(seconds) {
       const now = Date.now();
       const wait = SEEK_SPACING_MS - (now - lastSeekAt);
@@ -401,5 +401,18 @@
     // so it's held a little looser and leans on speed nudging more.
     precisionS: 0.2,
     seekLimitS: 2.5,
-  });
+  };
+
+  // On an Amazon product page (where a title can play in an overlay), wait
+  // for the player to actually open before starting at all: every other
+  // product page stays untouched, with no invites shown over shopping.
+  if (/\/dp\//.test(location.pathname) && !document.querySelector(PLAYER_SELECTOR)) {
+    const wait = setInterval(() => {
+      if (!document.querySelector(PLAYER_SELECTOR)) return;
+      clearInterval(wait);
+      window.TetherSite.start(findVideo, controls);
+    }, 1000);
+  } else {
+    window.TetherSite.start(findVideo, controls);
+  }
 })();

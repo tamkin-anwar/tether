@@ -14,6 +14,7 @@ document.documentElement.lang = chrome.i18n.getUILanguage();
 document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
 document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
 document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
 
 const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
 
@@ -139,9 +140,10 @@ function setConnectionStatus(state) {
 // ---------------------------------------------------------------------
 document.querySelectorAll('.tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
   });
 });
@@ -198,6 +200,12 @@ saveDbUrlBtn.addEventListener('click', async () => {
 // room
 // ---------------------------------------------------------------------
 function enterRoom(newRoomId) {
+  if (roomId && roomId !== newRoomId && myClientId && dbUrl) {
+    // No longer here: say so in the old room right away, instead of
+    // leaving an invite to a session there until it goes stale.
+    fetch(roomUrl('presence/' + myClientId), { method: 'DELETE' }).catch(() => {});
+    clearNowWatching(roomId);
+  }
   roomId = newRoomId;
   roomCodeEl.textContent = roomId;
   chrome.storage.sync.set({ roomId });
@@ -233,7 +241,11 @@ function writePresence() {
   // distance pair, this app's entire premise.
   fetch(roomUrl('presence/' + myClientId), {
     method: 'PUT',
-    body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: myOwnerId || null, watching: sessionActive() }),
+    // since: when this session began, on the server's clock. Same as
+    // sync-core.js writes for this same entry; leaving it out here would
+    // erase it every few seconds while the popup is open.
+    body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: myOwnerId || null, watching: sessionActive(),
+      since: sessionActive() ? Math.round(session.startedAt + serverOffsetMs) : null }),
   }).catch(() => {});
 }
 
@@ -251,6 +263,7 @@ function pollPresence() {
     const peer = others.find(([, entry]) => !entry.owner || entry.owner !== myOwnerId);
     partnerWatching = peer && peer[1].watching === true ? { name: peer[1].name || null } : null;
     renderSession();
+    checkTheirShow();
     const myOtherDevice = !peer && others.find(([, entry]) => entry.owner === myOwnerId);
     peerDot.className = 'dot' + (peer ? ' connected' : '');
     if (peer) {
@@ -270,7 +283,8 @@ function pollPresence() {
 const JOIN_URL_BASE = 'https://tamkin-anwar.github.io/tether/join.html';
 
 copyLinkBtn.addEventListener('click', () => {
-  navigator.clipboard.writeText(`${JOIN_URL_BASE}?code=${roomId || ''}`);
+  if (!roomId) return; // still connecting; a link without a code leads nowhere
+  navigator.clipboard.writeText(`${JOIN_URL_BASE}?code=${roomId}`);
   // Sending the link is starting to watch together: the link only takes
   // them to the show once this side is in a session (see join.js).
   if (!sessionActive()) startSession();
@@ -298,12 +312,21 @@ function normalizeCode(input) {
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-joinRoomBtn.addEventListener('click', () => {
+// Codes are 8 characters (6 for rooms made by older versions). Anything
+// else is a typo, and would quietly open an empty room of its own.
+const joinError = document.getElementById('joinError');
+function joinRoom() {
   const code = normalizeCode(joinCodeInput.value);
   if (!code) return;
+  const ok = code.length >= 6 && code.length <= 8;
+  joinError.style.display = ok ? 'none' : 'block';
+  if (!ok) return;
   joinCodeInput.value = '';
   enterRoom(code);
-});
+}
+joinRoomBtn.addEventListener('click', joinRoom);
+joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) joinRoom(); });
+joinCodeInput.addEventListener('input', () => { joinError.style.display = 'none'; });
 
 // The room code persists on purpose (see enterRoom/boot), so you and whoever
 // you're watching with don't have to re-share a code every session. This is
@@ -385,7 +408,6 @@ function sessionActive() {
 }
 function startSession() {
   if (!roomId) return;
-  markWelcomed();
   const now = Date.now();
   session = { roomId, startedAt: now, lastVideoAt: now };
   chrome.storage.local.set({ [SESSION_KEY]: session });
@@ -396,7 +418,17 @@ function endSession() {
   session = null;
   chrome.storage.local.remove(SESSION_KEY);
   writePresence();
+  clearNowWatching(roomId);
   renderSession();
+}
+// What you were watching doesn't stay in the room once you end (see
+// sync-core.js): removed if this browser is the one that wrote it.
+function clearNowWatching(room) {
+  if (!dbUrl || !room) return;
+  const url = `${dbUrl.replace(/\/$/, '')}/rooms/${room}/nowWatching.json`;
+  fetch(url).then((r) => r.json()).then((data) => {
+    if (data && data.from === myClientId) return fetch(url, { method: 'DELETE' });
+  }).catch(() => {});
 }
 function renderSession() {
   const on = sessionActive();
@@ -416,7 +448,35 @@ function renderSession() {
     sessionHint.textContent = t('sessionHintOff');
   }
 }
-sessionBtn.addEventListener('click', () => { if (sessionActive()) endSession(); else startSession(); });
+sessionBtn.addEventListener('click', () => {
+  if (sessionActive()) { endSession(); return; }
+  markWelcomed();
+  startSession();
+});
+
+// Joined from here, with nothing open yet: a way to get to their show.
+const openTheirs = document.getElementById('openTheirs');
+let theirUrl = null;
+openTheirs.addEventListener('click', () => { if (theirUrl) chrome.tabs.create({ url: theirUrl }); });
+function checkTheirShow() {
+  if (!sessionActive() || !roomId) { theirUrl = null; openTheirs.style.display = 'none'; return; }
+  fetch(roomUrl('nowWatching')).then((r) => r.json()).then((data) => {
+    const url = data && data.from !== myClientId && safeUrl(data.url);
+    theirUrl = url || null;
+    openTheirs.style.display = theirUrl ? 'block' : 'none';
+  }).catch(() => {});
+}
+// Only ever one of the streaming sites Tether works on (the same check as
+// sync-core.js): the room can be written by anyone with its code.
+function safeUrl(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') return null;
+    if (/(^|\.)(netflix\.com|hulu\.com|disneyplus\.com|crunchyroll\.com|max\.com|hbomax\.com|youtube\.com|primevideo\.com)$/.test(u.hostname)) return u.href;
+    if (/^www\.amazon\.(com|co\.uk|de|ca|co\.jp|in|com\.au|fr|it|es)$/.test(u.hostname) && /\/(gp\/video|dp)\//.test(u.pathname)) return u.href;
+  } catch (e) { /* not a URL */ }
+  return null;
+}
 
 // ---------------------------------------------------------------------
 // first run: a short how-it-works at the top until it's dismissed, or the

@@ -4,7 +4,7 @@ Funciona con los servicios de streaming que ya tienes. Dale a reproducir, pausa 
 
 Cómo funciona
 • Envía tu enlace de invitación una sola vez. Al abrirlo, la otra persona llega a la misma serie, en el mismo momento.
-• Abre una serie o película y haz clic en Ver juntos. Le llegará una invitación a su pantalla y se unirá con un toque.
+• Abre una serie o película y haz clic en Ver juntos. Le llegará una invitación a su pantalla y se unirá con un clic.
 • Cada uno ve con su propia cuenta, en su propio navegador.
 
 De qué se encarga
@@ -23,6 +23,6 @@ Mientras veis algo
 • Tether está disponible en English, Español, Português, Français, Deutsch, हिन्दी y 日本語.
 
 Privacidad
-Tether no comparte nada hasta que empiezas una sesión o aceptas una invitación. La sesión termina cuando tú la terminas, o tras 30 minutos sin ningún vídeo abierto. Tu sala solo se abre con su código o su enlace de invitación. Tether nunca lee el vídeo, solo los tiempos de reproducción, y puedes borrar el chat y las notas cuando quieras.
+Nada de lo que ves se comparte hasta que empiezas una sesión o aceptas una invitación. La sesión termina cuando tú la terminas, o tras 30 minutos sin ningún vídeo abierto. Tu sala solo se abre con su código o su enlace de invitación. Tether nunca toca la imagen ni el sonido, y puedes borrar el chat y las notas cuando quieras.
 
-Tether lo hace Anwar Creative Studio para parejas a distancia, y para amigos y familias que viven lejos.
+Tether es de Anwar Creative Studio, para parejas a distancia, y para amigos y familias que viven lejos.

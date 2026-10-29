@@ -28,6 +28,11 @@
     // occasionally keep more than one <video> element around (a background
     // trailer, for instance), so if sync ever seems to grab the wrong one
     // here, prefer the largest on-screen video instead of just the first.
+    // Not until Disney+'s own player answers with a position: without it,
+    // the <video>'s own clock (wrong after any seek, see above) would be
+    // what gets shared, and pull the other person to near 0:00.
+    const state = queryState();
+    if (!state || typeof state.currentTimeMs !== 'number') return null;
     const videos = document.querySelectorAll('video');
     if (videos.length <= 1) return videos[0] || null;
     return [...videos].sort((a, b) => (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0];

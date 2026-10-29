@@ -30,7 +30,9 @@
   root.setAttribute('data-tether-overlay', '');
   root.style.cssText = `all: initial; position: fixed; inset: 0; pointer-events: none;
     z-index: 2147483647; font-family: ${FONT}; color: #fff;`;
+  let gone = false; // Tether was updated or reloaded under this tab (see start)
   function placeRoot() {
+    if (gone) return;
     const fs = document.fullscreenElement || document.webkitFullscreenElement;
     // A bare <video> can't hold anything; the sites here fullscreen a
     // container around it, but just in case, stay put rather than vanish.
@@ -614,6 +616,7 @@
       // Tether was updated or reloaded under this tab (see sync-core's
       // orphaned): stop watching the page and take everything down.
       window.TetherSync.on('gone', () => {
+        gone = true;
         observer.disconnect();
         clearInterval(checkTimer);
         root.remove();

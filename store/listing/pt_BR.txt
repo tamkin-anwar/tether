@@ -4,7 +4,7 @@ Ele funciona com os serviços de streaming que você já tem. Dê play, pause ou
 
 Como funciona
 • Envie seu link de convite uma única vez. Quando a pessoa abrir, ela chega ao mesmo título, no mesmo momento.
-• Abra um título e clique em Assistir juntos. A pessoa recebe um convite na tela e entra com um toque.
+• Abra um título e clique em Assistir juntos. A pessoa recebe um convite na tela e entra com um clique.
 • Cada um assiste com a própria conta, no próprio navegador.
 
 Do que ele cuida
@@ -23,6 +23,6 @@ Enquanto vocês assistem
 • O Tether está disponível em English, Español, Português, Français, Deutsch, हिन्दी e 日本語.
 
 Privacidade
-O Tether não compartilha nada até você começar uma sessão ou aceitar um convite. A sessão termina quando você encerra, ou depois de 30 minutos sem nenhum vídeo aberto. Sua sala só abre com o código ou o link de convite. O Tether nunca lê o vídeo, só o tempo de reprodução, e você pode apagar o chat e as notas quando quiser.
+Nada do que você assiste é compartilhado até você começar uma sessão ou aceitar um convite. A sessão termina quando você encerra, ou depois de 30 minutos sem nenhum vídeo aberto. Sua sala só abre com o código ou o link de convite. O Tether nunca mexe na imagem nem no som, e você pode apagar o chat e as notas quando quiser.
 
 O Tether é feito pela Anwar Creative Studio para casais à distância, e para amigos e famílias que moram longe.

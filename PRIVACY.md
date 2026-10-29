@@ -12,17 +12,17 @@ Nothing about what you watch is shared unless you're watching together. A sessio
 
 Using Tether sends the following to a Firebase Realtime Database (a cloud database), so it can be shared between the people in your room:
 
-- Playback state, while watching together: whether the video is playing or paused, its current timestamp, and its playback speed
+- Playback state, while watching together: whether the video is playing or paused, its current timestamp, its playback speed, which title or episode it is, and your nickname, so the other side can say who paused
 - Chat messages you type into the extension's Chat tab
 - Emoji reactions you send
 - Notes you type into the extension's Notes tab
 - The nickname you optionally set under "Your name," shown to whoever you're in a room with, never required to use Tether
-- The address of the title you're currently watching, while watching together, so an invite link (or a "Join them" button) can take the other person straight to it. Only the page address itself is sent, without the extra tracking or playlist details some sites add to it, and the record of what you're watching is removed when you end the session. Nothing about the rest of your browsing is sent
+- The address of the title you're currently watching, while watching together, so an invite link (or a "Join them" button) can take the other person straight to it. Only the page address itself is sent, without the extra tracking or playlist details some sites add to it, and the invite link's record of what you're watching is removed when you end the session (the last playback state stays in the room until the next session replaces it). Nothing about the rest of your browsing is sent
 - Whether you're currently in a session, when it started, and when Tether was last active (while the popup is open or while watching together), so the other person can see you're there and join you
 - A randomly generated room code, used to keep separate groups of users from seeing each other's data
 - Two randomly generated identifiers, one per browser install and one shared across your own signed-in browsers, used only so Tether can tell "the other person is here" apart from "your own other device is here." They aren't linked to your name, email, or Google account
 
-This data lives under a room code that only you and whoever you share that code with know. It's sent over an encrypted (HTTPS) connection and stored in Firebase, which encrypts it at rest. Tether does not collect your legal name, email address, IP address, or any information about which websites you visit beyond the specific title you're currently watching together.
+This data lives under a room code that only you and whoever you share that code with know. It's sent over an encrypted (HTTPS) connection and stored in Firebase, which encrypts it at rest. Tether does not collect your legal name or email address, does not store your IP address (Firebase, like any web service, sees it to answer each request), or any information about which websites you visit beyond the specific title you're currently watching together.
 
 Because anyone with your room code or invite link can open that room, treat the link like a private link and only share it with the people you're watching with.
 

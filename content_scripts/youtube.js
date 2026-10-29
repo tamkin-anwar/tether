@@ -21,7 +21,9 @@ window.TetherSite.start(function findVideo() {
   // Only an actual watch page. The home page and search results play inline
   // previews on hover in real <video> elements (see netflix.js for why
   // attaching to one of those is actively harmful), and Shorts loop.
-  if (location.pathname !== '/watch') return null;
+  // youtube.com/live/<id> links stay on that address rather than becoming
+  // /watch, and are watch pages too.
+  if (location.pathname !== '/watch' && !/^\/live\/[^/]+/.test(location.pathname)) return null;
   // The main player's own element, by the class YouTube has given it for
   // years. Everything else on a watch page that's a <video> (hover previews
   // in the sidebar, a Shorts shelf) lives outside #movie_player.

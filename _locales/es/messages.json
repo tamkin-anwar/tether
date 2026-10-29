@@ -24,25 +24,25 @@
     "message": "<strong>Añade tu nombre</strong> abajo, para que sepan que eres tú."
   },
   "welcomeStep2": {
-    "message": "<strong>Envía tu enlace de invitación</strong>, solo una vez. Desde entonces compartiréis esta sala."
+    "message": "<strong>Envía tu enlace de invitación</strong>, solo una vez. A partir de ahí, la sala es de los dos."
   },
   "welcomeStep3": {
-    "message": "<strong>Abre una serie o película y haz clic en 👥 Ver juntos.</strong> Recibirán una invitación en su pantalla, tocarán Unirse y estaréis sincronizados."
+    "message": "<strong>Abre una serie o película y haz clic en 👥 Ver juntos.</strong> Le llegará una invitación a su pantalla, hará clic en Unirse y quedarán sincronizados."
   },
   "welcomeAside": {
-    "message": "Mientras veis algo, el 💬 chat y las 🙂 reacciones están en el lado derecho del vídeo, a media altura. ¿Te enviaron un enlace de invitación? Haz clic en él otra vez ahora que Tether está instalado."
+    "message": "Mientras ven algo, el 💬 chat y las 🙂 reacciones están en el lado derecho del vídeo, a media altura. ¿Te enviaron un enlace de invitación? Haz clic en él otra vez ahora que Tether está instalado."
   },
   "welcomeDone": {
     "message": "Entendido"
   },
   "sessionOff": {
-    "message": "No estáis viendo juntos"
+    "message": "No están viendo juntos"
   },
   "sessionStart": {
     "message": "Empezar a ver juntos"
   },
   "sessionHintOff": {
-    "message": "Tu pareja recibirá una invitación en su pantalla. Termina sola tras 30 minutos sin vídeo."
+    "message": "Tu pareja recibirá una invitación en su pantalla. La sesión termina sola tras 30 minutos sin vídeo."
   },
   "sessionOn": {
     "message": "Viendo juntos"
@@ -51,13 +51,19 @@
     "message": "Terminar sesión"
   },
   "sessionHintOn": {
-    "message": "La reproducción está sincronizada en tus pestañas. Termina sola tras 30 minutos sin vídeo."
+    "message": "La reproducción está sincronizada en tus pestañas. La sesión termina sola tras 30 minutos sin vídeo."
   },
   "sessionPartner": {
-    "message": "$1 está viendo juntos"
+    "message": "$1 empezó a ver juntos"
   },
   "sessionHintJoin": {
     "message": "Únete para sincronizar tu reproducción con la suya."
+  },
+  "openTheirs": {
+    "message": "Abrir lo que está viendo"
+  },
+  "codeInvalid": {
+    "message": "Ese código no parece correcto. Los códigos tienen de 6 a 8 letras y números."
   },
   "join": {
     "message": "Unirse"
@@ -87,7 +93,7 @@
     "message": "Copiar enlace de invitación"
   },
   "inviteHint": {
-    "message": "Con un clic llegan a la misma serie y al mismo momento, cuando le hayas dado a reproducir."
+    "message": "Con un clic llegan a la misma serie y al mismo momento mientras ven juntos."
   },
   "copyCode": {
     "message": "Copiar solo el código"
@@ -129,7 +135,7 @@
     "message": "Notas compartidas"
   },
   "notesPlaceholder": {
-    "message": "Qué ver después, planes o cualquier cosa que queráis recordar."
+    "message": "Qué ver después, planes o cualquier cosa que quieran recordar."
   },
   "saved": {
     "message": "Guardado"
@@ -270,13 +276,13 @@
     "message": "Mensaje"
   },
   "stoppedTogether": {
-    "message": "Habéis dejado de ver juntos"
+    "message": "Se terminó la sesión"
   },
   "joinConnectingTitle": {
     "message": "Conectando con Tether..."
   },
   "joinConnecting": {
-    "message": "Llevándote al sitio correcto."
+    "message": "Te llevamos al sitio correcto."
   },
   "joinInvalidTitle": {
     "message": "Este enlace no es válido"
@@ -297,7 +303,7 @@
     "message": "Todavía nada"
   },
   "joinGaveUp": {
-    "message": "Recarga esta página cuando le hayan dado a reproducir, o abrid el servicio vosotros mismos. Ya estás en la sala."
+    "message": "Recarga esta página cuando haya empezado a ver juntos, o abre el servicio tú mismo. Ya estás en la sala."
   },
   "joinTroubleTitle": {
     "message": "Problemas de conexión"
@@ -309,6 +315,6 @@
     "message": "Algo no conecta"
   },
   "joinFailed": {
-    "message": "Recarga esta página, o abrid el servicio vosotros mismos. Ya estás en la sala."
+    "message": "Recarga esta página, o abre el servicio tú mismo. Ya estás en la sala."
   }
 }

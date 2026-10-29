@@ -4,7 +4,7 @@ Sie funktioniert mit den Streamingdiensten, die du schon hast. Drück auf Play, 
 
 So funktioniert's
 • Schick deinen Einladungslink einmal. Wer ihn öffnet, landet beim selben Titel an derselben Stelle.
-• Öffne einen Titel und klicke auf Gemeinsam schauen. Auf dem anderen Bildschirm erscheint eine Einladung, und ein Tippen genügt zum Beitreten.
+• Öffne einen Titel und klicke auf Gemeinsam schauen. Auf dem anderen Bildschirm erscheint eine Einladung, und ein Klick genügt zum Beitreten.
 • Jede Person schaut mit ihrem eigenen Konto, im eigenen Browser.
 
 Worum sich Tether kümmert
@@ -16,13 +16,13 @@ Worum sich Tether kümmert
 Beim Schauen
 • Chat direkt im Video, auch im Vollbild.
 • Emoji-Reaktionen, die über das Bild nach oben schweben.
-• Ein kurzer Hinweis zeigt, wenn die andere Person pausiert, springt oder die Geschwindigkeit ändert.
+• Ein kurzer Hinweis zeigt, wenn die andere Person pausiert, spult oder die Geschwindigkeit ändert.
 • Wechselt sie zu einer anderen Folge, kannst du mit einem Klick folgen.
 • Die Wiedergabegeschwindigkeit ist auf beiden Seiten gleich.
 • Gemeinsame Notizen für das, was ihr als Nächstes schauen wollt.
 • Tether gibt es auf English, Español, Português, Français, Deutsch, हिन्दी und 日本語.
 
 Datenschutz
-Tether teilt nichts, bis du eine Sitzung startest oder eine Einladung annimmst. Eine Sitzung endet, wenn du sie beendest, oder nach 30 Minuten ohne geöffnetes Video. Dein Raum öffnet sich nur mit seinem Code oder Einladungslink. Tether liest nie das Video selbst, nur die Wiedergabezeit, und du kannst Chat und Notizen jederzeit löschen.
+Was du schaust, wird erst geteilt, wenn du eine Sitzung startest oder eine Einladung annimmst. Eine Sitzung endet, wenn du sie beendest, oder nach 30 Minuten ohne geöffnetes Video. Dein Raum öffnet sich nur mit seinem Code oder Einladungslink. Tether greift nie auf Bild oder Ton zu, und du kannst Chat und Notizen jederzeit löschen.
 
 Tether wird von Anwar Creative Studio gemacht, für Paare in Fernbeziehungen und für Freunde und Familien, die weit voneinander entfernt leben.

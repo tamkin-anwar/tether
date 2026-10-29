@@ -4,7 +4,7 @@ It works with the streaming services you already have. Press play, pause, or ski
 
 How it works
 • Send your invite link once. When they open it, they land on the same show at the same moment.
-• Open a show and click Watch together. They get an invite on their screen and join with one tap.
+• Open a show and click Watch together. They get an invite on their screen and join with one click.
 • You each watch with your own account, in your own browser.
 
 What it takes care of
@@ -23,6 +23,6 @@ While you watch
 • Tether is available in English, Español, Português, Français, Deutsch, हिन्दी, and 日本語.
 
 Privacy
-Tether shares nothing until you start a session or accept an invite. A session ends when you end it, or after 30 minutes with no video open. Your room opens only with its code or invite link. Tether never reads the video itself, only playback timing, and you can delete your chat and notes at any time.
+Nothing about what you watch is shared until you start a session or accept an invite. A session ends when you end it, or after 30 minutes with no video open. Your room opens only with its code or invite link. Tether never touches the picture or sound, and you can delete your chat and notes at any time.
 
 Tether is made by Anwar Creative Studio for couples in long-distance relationships, and for friends and family who live far apart.

@@ -4,12 +4,12 @@ Elle fonctionne avec les plateformes de streaming que vous avez déjà. Lancez l
 
 Comment ça marche
 • Envoyez votre lien d'invitation une seule fois. En l'ouvrant, l'autre personne arrive sur le même programme, au même moment.
-• Ouvrez un programme et cliquez sur Regarder ensemble. Une invitation s'affiche sur son écran, et elle vous rejoint d'un geste.
+• Ouvrez un programme et cliquez sur Regarder ensemble. Une invitation s'affiche sur son écran, et elle vous rejoint d'un clic.
 • Chacun regarde avec son propre compte, dans son propre navigateur.
 
 Ce dont Tether s'occupe
 • Si l'un de vous prend un peu de retard, Tether le corrige pendant que vous regardez, même d'un pays ou d'un fuseau horaire à l'autre.
-• Avec une offre avec publicité, Tether attend la fin de la coupure puis vous remet ensemble, même si vous ne voyez pas les mêmes publicités.
+• Sur les offres avec publicité, Tether attend la fin de la coupure puis vous remet ensemble, même si vous ne voyez pas les mêmes publicités.
 • La lecture continue si vous passez à un autre onglet ou une autre fenêtre.
 • C'est gratuit, et il n'y a aucun compte à créer.
 
@@ -23,6 +23,6 @@ Pendant le visionnage
 • Tether est disponible en English, Español, Português, Français, Deutsch, हिन्दी et 日本語.
 
 Confidentialité
-Tether ne partage rien tant que vous n'avez pas lancé une séance ou accepté une invitation. La séance s'arrête quand vous la terminez, ou après 30 minutes sans vidéo ouverte. Votre salon ne s'ouvre qu'avec son code ou son lien d'invitation. Tether ne lit jamais la vidéo, seulement le minutage de la lecture, et vous pouvez effacer le chat et les notes à tout moment.
+Rien de ce que vous regardez n'est partagé tant que vous n'avez pas lancé une séance ou accepté une invitation. La séance s'arrête quand vous la terminez, ou après 30 minutes sans vidéo ouverte. Votre salon ne s'ouvre qu'avec son code ou son lien d'invitation. Tether ne touche jamais à l'image ni au son, et vous pouvez effacer le chat et les notes à tout moment.
 
 Tether est conçu par Anwar Creative Studio pour les couples à distance, et pour les amis et les familles qui vivent loin les uns des autres.

@@ -245,12 +245,18 @@
       clockSamples.push({ rtt, offset: serverTime + rtt / 2 - t1 });
       if (clockSamples.length > CLOCK_SAMPLES_KEPT) clockSamples.shift();
       serverOffsetMs = clockSamples.reduce((best, c) => (c.rtt < best.rtt ? c : best)).offset;
-      try { chrome.storage.local.set({ [CLOCK_KEY]: serverOffsetMs }); } catch (e) { /* extension reloaded */ }
+      // Saved against Date.now(), the clock every tab shares; localNow() is
+      // this tab's own and can drift from it (sleep, a clock correction).
+      try { chrome.storage.local.set({ [CLOCK_KEY]: serverNow() - Date.now() }); } catch (e) { /* extension reloaded */ }
     } catch (e) { /* keep the previous offset if this attempt fails */ }
   }
   async function calibrateClock(burst) {
     for (let i = 0; i < (burst ? 5 : 1); i++) await clockSample();
   }
+  // Resolves once this connection's first clock sample is back. Catching up
+  // waits on it: deciding whether the other person is here right now, and
+  // where they'd be by now, both read the server's clock.
+  let clockReady = Promise.resolve();
   function serverNow() { return localNow() + serverOffsetMs; }
 
   // Where this is, for the other person to follow: the address without its
@@ -293,6 +299,8 @@
     const loc = new URL(pageUrl());
     const v = loc.searchParams.get('v');
     if (loc.pathname === '/watch' && v) return 'yt:' + v;
+    const live = /(^|\.)youtube\.com$/.test(loc.hostname) && loc.pathname.match(/^\/live\/([^/]+)/);
+    if (live) return 'yt:' + live[1];
     const m = loc.pathname.match(/\/watch\/([^/]+)/) || loc.pathname.match(/\/(?:play|video)\/([^/]+)/);
     return m ? m[1] : loc.pathname;
   }
@@ -435,7 +443,7 @@
     caughtUp = false;
     clearTimeout(startupTimer);
     startupTimer = setTimeout(endStartup, STARTUP_QUIET_MS);
-    catchUp();
+    clockReady.then(catchUp);
   }
   function endStartup() {
     startupUntil = 0;
@@ -451,8 +459,9 @@
       // still hear where this side is.
       // Always as 'start', whatever happened during the window: that's how
       // the other side recognizes an announcement (see announcedAt).
-      pushSync('start');
-      announcedAt = Date.now();
+      // Only counts as an announcement if one went out (not during an ad,
+      // or before the player knows its position).
+      if (pushSync('start')) announcedAt = Date.now();
     }
   }
   // A new title showing up in the same <video> element (every YouTube video,
@@ -504,17 +513,18 @@
 
   // Only ever called through schedulePush, which already dropped echoes of
   // our own remote-applied changes at the moment their events fired.
+  // True if something was actually sent.
   function pushSync(type) {
-    if (!config || !video) return;
-    if (looksLikeAd()) return; // an ad's own position isn't the shared watch position
-    if (justLeftAd()) return;
+    if (!config || !video) return false;
+    if (looksLikeAd()) return false; // an ad's own position isn't the shared watch position
+    if (justLeftAd()) return false;
     // See currentTimeSeconds/isPlayingNow above: on a site where the
     // <video> element itself can't be trusted for position, read through
     // the site's own player instead. Either can come back null if that
     // player hasn't finished loading yet; nothing to broadcast in that case.
     const time = currentTimeSeconds();
     const playing = isPlayingNow();
-    if (time == null || playing == null) return;
+    if (time == null || playing == null) return false;
     const content = contentKey();
     // The speed someone chose, not a nudge in progress.
     const rate = nudging ? knownRate : playbackRate();
@@ -548,6 +558,7 @@
     // own clock-corrected "now" either way.
     lastRemote = { time, ts: ts ?? serverNow(), playing, rate, content };
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
+    return true;
   }
 
   // Runs `fn`, which may set video.currentTime, while suppressing the
@@ -585,7 +596,8 @@
     noteElsewhere(null);
     if (data.type === 'start' && Date.now() - announcedAt < ANNOUNCE_CLASH_MS) {
       announcedAt = 0;
-      if (String(CLIENT_ID) > String(data.from)) { pushSync('start'); return; }
+      // Keeps its spot only if it can say so; otherwise it follows.
+      if (String(CLIENT_ID) > String(data.from) && pushSync('start')) return;
     }
     noteAction(data);
     const rate = clampRate(data.rate);
@@ -904,7 +916,7 @@
       Date.now() - (session.lastVideoAt || session.startedAt) < SESSION_IDLE_MS);
   }
   function startSession() {
-    if (!config || !config.roomId) return;
+    if (dead || !config || !config.roomId) return;
     const now = Date.now();
     session = { roomId: config.roomId, startedAt: now, lastVideoAt: now };
     try { chrome.storage.local.set({ [SESSION_KEY]: session }); } catch (e) { /* extension reloaded */ }
@@ -1101,6 +1113,7 @@
   }
 
   function connect() {
+    if (dead) return;
     updateSyncingFlag();
     closeStreams();
     if (clockTimer) clearInterval(clockTimer);
@@ -1120,7 +1133,8 @@
     }
     setInvite(null);
     clockSamples = [];
-    calibrateClock(true);
+    clockReady = clockSample();
+    clockReady.then(() => calibrateClock(true));
     clockTimer = setInterval(() => calibrateClock(false), CLOCK_RECALIBRATE_MS);
     writePresence();
     presenceTimer = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
@@ -1213,7 +1227,7 @@
       resolveClientId(() => {
         resolveOwnerId(() => {
           chrome.storage.local.get([LEADER_KEY, SESSION_KEY, CLOCK_KEY], (local) => {
-            if (typeof local[CLOCK_KEY] === 'number') serverOffsetMs = local[CLOCK_KEY];
+            if (typeof local[CLOCK_KEY] === 'number') serverOffsetMs = local[CLOCK_KEY] + Date.now() - localNow();
             leader = local[LEADER_KEY] || null;
             session = local[SESSION_KEY] || null;
             chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {

@@ -28,8 +28,10 @@
       if (!sessionIds.length) return null;
       // Prefer the actual watch session over just "whichever id is last":
       // a leftover preview/trailer session id can outlive its own player
-      // and sit at the end of this list.
-      const watchId = sessionIds.find((id) => id.startsWith('watch-')) || sessionIds[sessionIds.length - 1];
+      // and sit at the end of this list. The newest watch session, though:
+      // an earlier episode's can still be listed after the next one starts.
+      const watchIds = sessionIds.filter((id) => id.startsWith('watch-'));
+      const watchId = watchIds[watchIds.length - 1] || sessionIds[sessionIds.length - 1];
       return videoPlayer.getVideoPlayerBySessionId?.(watchId) || null;
     } catch (e) { return null; }
   }
@@ -37,11 +39,19 @@
   document.addEventListener('tether-netflix-seek', (e) => {
     try { getNetflixPlayer()?.seek(e.detail); } catch (err) { /* best effort */ }
   });
+  // Play and pause on the <video> itself if Netflix's player can't be
+  // reached: only writing its position trips the M7375 error, not these.
   document.addEventListener('tether-netflix-play', () => {
-    try { getNetflixPlayer()?.play(); } catch (err) { /* best effort */ }
+    try {
+      const p = getNetflixPlayer();
+      if (p) p.play(); else document.querySelector('video')?.play()?.catch(() => {});
+    } catch (err) { /* best effort */ }
   });
   document.addEventListener('tether-netflix-pause', () => {
-    try { getNetflixPlayer()?.pause(); } catch (err) { /* best effort */ }
+    try {
+      const p = getNetflixPlayer();
+      if (p) p.pause(); else document.querySelector('video')?.pause();
+    } catch (err) { /* best effort */ }
   });
 
   // Netflix's own client-capability check for "precise seeking" support:

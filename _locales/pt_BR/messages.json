@@ -27,10 +27,10 @@
     "message": "<strong>Envie seu link de convite</strong>, só uma vez. A partir daí vocês compartilham esta sala."
   },
   "welcomeStep3": {
-    "message": "<strong>Abra um título e clique em 👥 Assistir juntos.</strong> A outra pessoa recebe um convite na tela, toca em Entrar e vocês ficam em sincronia."
+    "message": "<strong>Abra um título e clique em 👥 Assistir juntos.</strong> A outra pessoa recebe um convite na tela, clica em Entrar e vocês ficam em sincronia."
   },
   "welcomeAside": {
-    "message": "Enquanto assistem, o 💬 chat e as 🙂 reações ficam no lado direito do vídeo, na metade da altura. Recebeu um link de convite? Clique nele de novo agora que o Tether está instalado."
+    "message": "Enquanto assistem, o 💬 chat e as 🙂 reações ficam no lado direito do vídeo, no meio. Recebeu um link de convite? Clique nele de novo agora que o Tether está instalado."
   },
   "welcomeDone": {
     "message": "Entendi"
@@ -54,10 +54,16 @@
     "message": "A reprodução está sincronizada nas suas abas. Termina sozinha após 30 minutos sem vídeo."
   },
   "sessionPartner": {
-    "message": "$1 está assistindo juntos"
+    "message": "$1 começou a assistir junto"
   },
   "sessionHintJoin": {
-    "message": "Entre para sincronizar sua reprodução com a dela."
+    "message": "Entre para sincronizar sua reprodução com a da outra pessoa."
+  },
+  "openTheirs": {
+    "message": "Abrir o que a pessoa está assistindo"
+  },
+  "codeInvalid": {
+    "message": "Esse código não parece certo. Os códigos têm de 6 a 8 letras e números."
   },
   "join": {
     "message": "Entrar"
@@ -87,7 +93,7 @@
     "message": "Copiar link de convite"
   },
   "inviteHint": {
-    "message": "Um clique leva a pessoa ao mesmo título e ao mesmo momento, depois que você der play."
+    "message": "Um clique leva a pessoa ao mesmo título e ao mesmo momento enquanto vocês assistem juntos."
   },
   "copyCode": {
     "message": "Copiar só o código"
@@ -129,7 +135,7 @@
     "message": "Notas compartilhadas"
   },
   "notesPlaceholder": {
-    "message": "O que assistir depois, planos ou qualquer coisa que valha lembrar."
+    "message": "O que assistir depois, planos ou qualquer coisa que valha a pena lembrar."
   },
   "saved": {
     "message": "Salvo"
@@ -297,7 +303,7 @@
     "message": "Nada ainda"
   },
   "joinGaveUp": {
-    "message": "Recarregue esta página quando a pessoa der play, ou abram o serviço vocês mesmos. Você já está na sala."
+    "message": "Recarregue esta página quando a pessoa começar a assistir junto, ou abram o serviço vocês mesmos. Você já está na sala."
   },
   "joinTroubleTitle": {
     "message": "Problemas para conectar"
