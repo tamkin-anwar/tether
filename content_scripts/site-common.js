@@ -296,7 +296,8 @@
       window.TetherSync.startSession();
       let copied = false;
       try {
-        await navigator.clipboard.writeText(`https://tamkin-anwar.github.io/tether/join.html?code=${code}`);
+        // Same address as the popup's invite link (see popup.js JOIN_URL_BASE).
+        await navigator.clipboard.writeText(`https://anwarcreativestudio.com/tether/join?code=${code}`);
         copied = true;
       } catch (e) { /* the popup has the link too */ }
       showNotice(tr(copied ? 'startedCopied' : 'startedShare'));

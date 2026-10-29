@@ -280,7 +280,10 @@ function pollPresence() {
 // See content_scripts/join.js for what actually happens when this link is
 // opened: it sets the room code and redirects straight to whatever the host
 // is currently watching, once they've pressed play.
-const JOIN_URL_BASE = 'https://tamkin-anwar.github.io/tether/join.html';
+// The studio's own address, which forwards to the join page on GitHub Pages
+// (where join.js runs) with the code intact. What people see when the link
+// is sent is the studio's name, not a personal GitHub one.
+const JOIN_URL_BASE = 'https://anwarcreativestudio.com/tether/join';
 
 copyLinkBtn.addEventListener('click', () => {
   if (!roomId) return; // still connecting; a link without a code leads nowhere
