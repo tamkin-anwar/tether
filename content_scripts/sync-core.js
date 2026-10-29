@@ -162,7 +162,7 @@
   let video = null;
   let es = null;            // EventSource
   let reactionsEs = null;   // separate EventSource: reactions are rare enough that folding them into the sync stream's put/patch parsing wasn't worth the added complexity there
-  let applyingRemote = false;
+  let remoteGuards = 0;     // how many remote changes are still settling (see withRemoteGuard)
   let lastRemote = null;    // { time, ts, playing }, used for drift correction
   let lastEventAt = 0;      // Date.now() of the last thing heard from the server, any kind
   let driftTimer = null;
@@ -226,6 +226,10 @@
   // Timed on the monotonic clock rather than Date.now(), which can jump
   // when the system clock gets corrected mid-session.
   const CLOCK_SAMPLES_KEPT = 12;
+  // The last offset measured in a session, kept for outside one: checking
+  // for an invite only reads the room (nothing is written while you're not
+  // watching together), so it has no way to measure the clock itself.
+  const CLOCK_KEY = 'tetherClockOffset';
   let clockSamples = [];
   function localNow() { return performance.timeOrigin + performance.now(); }
   async function clockSample() {
@@ -241,12 +245,39 @@
       clockSamples.push({ rtt, offset: serverTime + rtt / 2 - t1 });
       if (clockSamples.length > CLOCK_SAMPLES_KEPT) clockSamples.shift();
       serverOffsetMs = clockSamples.reduce((best, c) => (c.rtt < best.rtt ? c : best)).offset;
+      try { chrome.storage.local.set({ [CLOCK_KEY]: serverOffsetMs }); } catch (e) { /* extension reloaded */ }
     } catch (e) { /* keep the previous offset if this attempt fails */ }
   }
   async function calibrateClock(burst) {
     for (let i = 0; i < (burst ? 5 : 1); i++) await clockSample();
   }
   function serverNow() { return localNow() + serverOffsetMs; }
+
+  // Where this is, for the other person to follow: the address without its
+  // query or fragment, which on these sites carry tracking and playlist
+  // details, not the title (YouTube's own ?v= is the exception, and kept).
+  function shareUrl() {
+    try {
+      const u = new URL(location.href);
+      const v = /(^|\.)youtube\.com$/.test(u.hostname) ? u.searchParams.get('v') : null;
+      u.search = v ? '?v=' + encodeURIComponent(v) : '';
+      u.hash = '';
+      return u.href;
+    } catch (e) { return location.origin + location.pathname; }
+  }
+  // Only ever sends someone to one of the streaming sites Tether works on.
+  // The address comes from the shared room, which anyone with its code can
+  // write to; without this, a "Join them" could lead anywhere.
+  const SITE_HOST = /(^|\.)(netflix\.com|hulu\.com|disneyplus\.com|crunchyroll\.com|max\.com|hbomax\.com|youtube\.com|primevideo\.com)$/;
+  const AMAZON_HOST = /^www\.amazon\.(com|co\.uk|de|ca|co\.jp|in|com\.au|fr|it|es)$/;
+  function safeUrl(url) {
+    try {
+      const u = new URL(url);
+      if (u.protocol !== 'https:') return null;
+      if (SITE_HOST.test(u.hostname) || (AMAZON_HOST.test(u.hostname) && /\/(gp\/video|dp)\//.test(u.pathname))) return u.href;
+    } catch (e) { /* not a URL */ }
+    return null;
+  }
 
   // Which title/episode a position belongs to. A bare timestamp means
   // nothing without it: at an episode change, one side's 0:00 on the new
@@ -368,9 +399,16 @@
         fetch(roomUrl('sync')).then((res) => res.json()),
       ]);
       const now = serverNow();
-      const someoneWatching = Object.entries(presence || {}).some(([id, p]) =>
+      const watching = Object.entries(presence || {}).filter(([id, p]) =>
         id !== CLIENT_ID && p && p.watching !== false && (!p.owner || p.owner !== OWNER_ID) && now - p.ts < 15000);
-      if (someoneWatching) applyRemote(data);
+      // And only to something they set during this session. The room also
+      // holds whatever they last did before it (last night's episode, left
+      // playing when the tab closed); projected forward by a day, that
+      // threw both of you past the end. Older versions don't report when
+      // their session began, so for them, being there is enough.
+      const fresh = data && watching.some(([id, p]) =>
+        data.from === id && (typeof p.since !== 'number' || (typeof data.ts === 'number' && data.ts >= p.since)));
+      if (fresh) applyRemote(data);
     } catch (e) { /* nothing to catch up to */ }
   }
 
@@ -378,11 +416,16 @@
   let startupUntil = 0;
   let startupTimer = null;
   let caughtUp = false;
-  let startupPush = null;
+  // When this side last announced where it is (see endStartup). Both sides
+  // can announce within the same moment (the next episode autoplaying on
+  // both, say); each then applied the other's and they swapped places.
+  // The one with the higher id keeps its position and says so again; the
+  // other follows.
+  let announcedAt = 0;
+  const ANNOUNCE_CLASH_MS = 2500;
   function beginStartup() {
     startupUntil = Date.now() + STARTUP_QUIET_MS;
     caughtUp = false;
-    startupPush = null;
     clearTimeout(startupTimer);
     startupTimer = setTimeout(endStartup, STARTUP_QUIET_MS);
     catchUp();
@@ -399,9 +442,11 @@
       // Even with no event seen: a player's startup can play and seek
       // before this video was attached at all, and the other person should
       // still hear where this side is.
-      pushSync(startupPush || 'start');
+      // Always as 'start', whatever happened during the window: that's how
+      // the other side recognizes an announcement (see announcedAt).
+      pushSync('start');
+      announcedAt = Date.now();
     }
-    startupPush = null;
   }
   // A new title showing up in the same <video> element (every YouTube video,
   // Prime episodes) is a fresh start too. Checked on every event, not only
@@ -432,7 +477,7 @@
   }
   function schedulePush(type) {
     if (!sessionOn()) return; // not watching together: nothing is shared
-    if (applyingRemote) return; // an echo of something we just applied, not a local action
+    if (remoteGuards > 0) return; // an echo of something we just applied, not a local action
     // Playing, pausing or seeking in the tab you're looking at makes it the
     // one in charge (see claimLeader). A tab in the background that isn't
     // in charge is just a stray video; it doesn't speak for you.
@@ -441,7 +486,7 @@
       claimLeader(false);
     }
     noteContent();
-    if (Date.now() < startupUntil) { startupPush = type; return; }
+    if (Date.now() < startupUntil) return; // announced as one at the end of the window
     pushType = type;
     if (pushTimer) return;
     pushTimer = setTimeout(() => {
@@ -481,7 +526,7 @@
     // something else (see noteElsewhere).
     const payload = {
       type, time, playing, rate, content, ts: ts ?? { '.sv': 'timestamp' }, from: CLIENT_ID,
-      name: nickname || null, url: location.href,
+      name: nickname || null, url: shareUrl(),
     };
     // lastRemote is what checkDrift treats as "where playback should be", but
     // it was only ever updated by data arriving from the other person, never
@@ -506,14 +551,17 @@
   // mistaken for a fresh local action and re-broadcast. Confirm on the
   // real event instead, with a generous timeout only as a fallback for the
   // case where no seek actually happened.
+  // Counted, not a single flag: a play arriving while an earlier seek is
+  // still buffering used to lift the guard on its short timer, and the
+  // seek's own 'seeked' then went out as if this person had skipped.
   function withRemoteGuard(fn, mayNeedSeek) {
     const el = video; // captured now, in case the player gets swapped out mid-guard (an episode change, say)
-    applyingRemote = true;
+    remoteGuards++;
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
-      applyingRemote = false;
+      remoteGuards = Math.max(0, remoteGuards - 1);
       el.removeEventListener('seeked', finish);
     };
     if (mayNeedSeek) el.addEventListener('seeked', finish);
@@ -528,6 +576,10 @@
     // telling this person about, with a way to get there.
     if (!sameContent(data.content)) { noteElsewhere(data); return; }
     noteElsewhere(null);
+    if (data.type === 'start' && Date.now() - announcedAt < ANNOUNCE_CLASH_MS) {
+      announcedAt = 0;
+      if (String(CLIENT_ID) > String(data.from)) { pushSync('start'); return; }
+    }
     noteAction(data);
     const rate = clampRate(data.rate);
     lastRemote = { time: data.time, ts: data.ts, playing: data.playing, rate, content: data.content };
@@ -551,7 +603,9 @@
     const current = currentTimeSeconds();
     const needsSeek = !isLive() && (current == null || Math.abs(current - localTime) > seekThreshold(data.playing));
     // Playing, aim ahead by the time the seek itself takes (see seekLead).
-    const target = data.playing ? localTime + seekLead : localTime;
+    let target = data.playing ? localTime + seekLead : localTime;
+    const length = video.duration;
+    if (Number.isFinite(length) && length > 1) target = Math.min(target, length - 0.5);
     if (needsSeek && data.playing) probeLead = true;
     stopNudge();
     withRemoteGuard(() => {
@@ -585,9 +639,10 @@
   let elsewhereShown = null;
   function noteElsewhere(data) {
     let next = null;
-    if (data && data.url && data.url !== location.href && typeof data.ts === 'number') {
+    const url = data && safeUrl(data.url);
+    if (url && url !== shareUrl() && typeof data.ts === 'number') {
       const age = serverNow() - data.ts;
-      if (age < (data.playing ? 4 * 3600e3 : 15 * 60e3)) next = { name: data.name || null, url: data.url };
+      if (age < (data.playing ? 4 * 3600e3 : 15 * 60e3)) next = { name: data.name || null, url };
     }
     if ((next && next.url) === (elsewhereShown && elsewhereShown.url)) return;
     elsewhereShown = next;
@@ -610,6 +665,7 @@
 
   let wasAdLike = false;
   function checkDrift() {
+    if (orphaned()) return;
     if (!isLeader()) return; // standing by; the tab in charge keeps time
     // A new title or episode in the same <video> element, with no event
     // from it yet: catch up to the other person (see noteContent). Their
@@ -631,7 +687,7 @@
       return;
     }
     if (adLike) { stopNudge(); return; }
-    if (applyingRemote || Date.now() < startupUntil) return;
+    if (remoteGuards > 0 || Date.now() < startupUntil) return;
     // lastRemote can outlive the episode it came from (this tab just moved on
     // to the next one); don't pull the new episode toward the old one's clock.
     if (!video || !lastRemote || !lastRemote.playing || !sameContent(lastRemote.content) ||
@@ -677,7 +733,10 @@
       method: 'PUT',
       // watching: in a session right now, which is what the other person's
       // Tether offers to join (see pollInvite).
-      body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: OWNER_ID || null, watching: !!watching }),
+      // since: when this session began, on the server's clock, so the other
+      // side only catches up to playback from this session (see catchUp).
+      body: JSON.stringify({ ts: { '.sv': 'timestamp' }, name: nickname || null, owner: OWNER_ID || null, watching: !!watching,
+        since: watching && session ? Math.round(session.startedAt + serverNow() - Date.now()) : null }),
     }).catch(() => {});
   }
 
@@ -701,7 +760,7 @@
     if (!config || !sessionOn() || !isLeader()) return;
     fetch(roomUrl('nowWatching'), {
       method: 'PUT',
-      body: JSON.stringify({ url: location.href, ts: { '.sv': 'timestamp' }, live: true }),
+      body: JSON.stringify({ url: shareUrl(), ts: { '.sv': 'timestamp' }, live: true, from: CLIENT_ID }),
     }).catch(() => {});
   }
 
@@ -724,7 +783,36 @@
     } catch (e) { /* next heartbeat */ }
   }
 
+  // After Tether is updated or reloaded, the copy already running in an open
+  // tab carries on without its extension: storage stops working, so it
+  // can't hear End or another tab taking over, but its connections and
+  // timers keep going, and it went on syncing as a second tab in charge.
+  // The moment that's noticed, it stops, and tells the page's buttons to go
+  // too (see site-common.js).
+  let dead = false;
+  function orphaned() {
+    if (dead) return true;
+    let alive = false;
+    try { alive = !!(chrome.runtime && chrome.runtime.id); } catch (e) { /* context invalidated */ }
+    if (alive) return false;
+    dead = true;
+    closeStreams();
+    for (const t of [clockTimer, presenceTimer, inviteTimer, driftTimer]) if (t) clearInterval(t);
+    clockTimer = presenceTimer = inviteTimer = driftTimer = null;
+    if (video && videoListeners) {
+      for (const [type, fn] of Object.entries(videoListeners)) video.removeEventListener(type, fn);
+    }
+    clearTimeout(pushTimer);
+    clearTimeout(startupTimer);
+    videoListeners = null;
+    video = null;
+    document.documentElement.removeAttribute('data-tether-syncing');
+    emit('gone');
+    return true;
+  }
+
   function heartbeat() {
+    if (orphaned()) return;
     if (!sessionOn()) { endSession(); return; } // 30 minutes without a video
     checkPartner();
     bumpSession();
@@ -821,8 +909,17 @@
     try { chrome.storage.local.remove(SESSION_KEY); } catch (e) { /* extension reloaded */ }
     // Tell the other side right away, rather than leaving them an invite to
     // a session that's over until this entry goes stale on its own.
-    if (wasOn) writePresence(false);
+    if (wasOn) { writePresence(false); clearNowWatching(); }
     connect();
+  }
+  // What you were watching doesn't stay in the room after you end: removed
+  // if this browser is the one that last wrote it.
+  async function clearNowWatching() {
+    if (!config || !config.roomId) return;
+    try {
+      const data = await (await fetch(roomUrl('nowWatching'))).json();
+      if (data && data.from === CLIENT_ID) await fetch(roomUrl('nowWatching'), { method: 'DELETE' });
+    } catch (e) { /* left to go stale */ }
   }
   let lastVideoBump = 0;
   function bumpSession() {
@@ -843,9 +940,9 @@
     emit('invite', next);
   }
   async function pollInvite() {
+    if (orphaned()) return;
     if (!config || !config.roomId || sessionOn() || document.hidden) return;
     try {
-      if (!clockSamples.length) await clockSample();
       const data = await (await fetch(roomUrl('presence'))).json();
       const now = serverNow();
       const partner = Object.entries(data || {}).find(([id, p]) =>
@@ -1108,7 +1205,8 @@
       // it resolves could briefly fail to recognize itself as "my own echo".
       resolveClientId(() => {
         resolveOwnerId(() => {
-          chrome.storage.local.get([LEADER_KEY, SESSION_KEY], (local) => {
+          chrome.storage.local.get([LEADER_KEY, SESSION_KEY, CLOCK_KEY], (local) => {
+            if (typeof local[CLOCK_KEY] === 'number') serverOffsetMs = local[CLOCK_KEY];
             leader = local[LEADER_KEY] || null;
             session = local[SESSION_KEY] || null;
             chrome.storage.sync.get(['roomId', 'dbUrl', 'nickname'], (stored) => {
@@ -1144,12 +1242,13 @@
       });
     },
     setVideo(el) {
-      if (video === el) return;
+      if (dead || video === el) return;
       detachVideo();
       if (el) attachVideo(el);
     },
     sendReaction,
     sendChat,
+    safeUrl,
     startSession,
     endSession,
     get sessionActive() { return sessionOn(); },

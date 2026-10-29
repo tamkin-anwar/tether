@@ -106,10 +106,23 @@
       if (!data.live || typeof data.ts !== 'number' || serverOffsetMs === null) return true;
       return (Date.now() + serverOffsetMs) - data.ts < FRESH_MS;
     }
+    // Only to one of the streaming sites Tether works on (the same check as
+    // sync-core.js's safeUrl): the room is writable by anyone with its code,
+    // and an invite link must never lead somewhere else.
+    function safeUrl(url) {
+      try {
+        const u = new URL(url);
+        if (u.protocol !== 'https:') return null;
+        if (/(^|\.)(netflix\.com|hulu\.com|disneyplus\.com|crunchyroll\.com|max\.com|hbomax\.com|youtube\.com|primevideo\.com)$/.test(u.hostname)) return u.href;
+        if (/^www\.amazon\.(com|co\.uk|de|ca|co\.jp|in|com\.au|fr|it|es)$/.test(u.hostname) && /\/(gp\/video|dp)\//.test(u.pathname)) return u.href;
+      } catch (e) { /* not a URL */ }
+      return null;
+    }
     function tryRedirect() {
       fetch(roomUrl('nowWatching')).then((r) => r.json()).then((data) => {
-        if (data && data.url && isCurrent(data)) {
-          location.replace(data.url);
+        const target = data && safeUrl(data.url);
+        if (target && isCurrent(data)) {
+          location.replace(target);
           return;
         }
         attempts++;

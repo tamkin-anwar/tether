@@ -3,7 +3,7 @@
     "message": "Tether: Gemeinsam schauen"
   },
   "extDescription": {
-    "message": "Schau Netflix, Hulu, Disney+, Max, YouTube und mehr synchron mit jemandem in der Ferne, mit Chat, Notizen und Reaktionen."
+    "message": "Schau Netflix, Prime Video, Disney+, Max, YouTube und mehr synchron mit jemandem in der Ferne, mit Chat, Notizen und Reaktionen."
   },
   "tabRoom": {
     "message": "Raum"
@@ -30,7 +30,7 @@
     "message": "<strong>Öffne einen Titel und klicke auf 👥 Gemeinsam schauen.</strong> Die andere Person bekommt eine Einladung auf den Bildschirm, tippt auf Beitreten, und ihr seid synchron."
   },
   "welcomeAside": {
-    "message": "Beim Schauen findest du 💬 Chat und 🙂 Reaktionen unten rechts im Video. Hast du einen Einladungslink bekommen? Klick ihn noch einmal, jetzt wo Tether installiert ist."
+    "message": "Beim Schauen findest du 💬 Chat und 🙂 Reaktionen rechts am Rand des Videos, auf halber Höhe. Hast du einen Einladungslink bekommen? Klick ihn noch einmal, jetzt wo Tether installiert ist."
   },
   "welcomeDone": {
     "message": "Verstanden"

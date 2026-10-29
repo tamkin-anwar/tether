@@ -17,8 +17,8 @@ Using Tether sends the following to a Firebase Realtime Database (a cloud databa
 - Emoji reactions you send
 - Notes you type into the extension's Notes tab
 - The nickname you optionally set under "Your name," shown to whoever you're in a room with, never required to use Tether
-- The URL of the title you're currently watching, while watching together, so an invite link (or a "Join them" button) can take the other person straight to it, not the wider list of everywhere you browse
-- Whether you're currently in a session, and when Tether was last active (while the popup is open or while watching together), so the other person can see you're there and join you
+- The address of the title you're currently watching, while watching together, so an invite link (or a "Join them" button) can take the other person straight to it. Only the page address itself is sent, without the extra tracking or playlist details some sites add to it, and the record of what you're watching is removed when you end the session. Nothing about the rest of your browsing is sent
+- Whether you're currently in a session, when it started, and when Tether was last active (while the popup is open or while watching together), so the other person can see you're there and join you
 - A randomly generated room code, used to keep separate groups of users from seeing each other's data
 - Two randomly generated identifiers, one per browser install and one shared across your own signed-in browsers, used only so Tether can tell "the other person is here" apart from "your own other device is here." They aren't linked to your name, email, or Google account
 

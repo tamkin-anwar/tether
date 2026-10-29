@@ -3,7 +3,7 @@
     "message": "Tether：一緒に見よう"
   },
   "extDescription": {
-    "message": "Netflix、Hulu、Disney+、Max、YouTube などを遠くの相手と同時再生。チャット、メモ、リアクションも使えます。"
+    "message": "Netflix、Prime Video、Hulu、Disney+、Max、YouTube などを遠くの相手と同時再生。チャット、メモ、リアクションも使えます。"
   },
   "tabRoom": {
     "message": "ルーム"
@@ -30,7 +30,7 @@
     "message": "<strong>作品を開いて 👥 一緒に見る をクリック。</strong>相手の画面に招待が届き、「参加」を押すと同期されます。"
   },
   "welcomeAside": {
-    "message": "視聴中は、動画の右下に 💬 チャットと 🙂 リアクションがあります。招待リンクを受け取った方は、Tether をインストールした今、もう一度リンクをクリックしてください。"
+    "message": "視聴中は、動画の右端の中ほどに 💬 チャットと 🙂 リアクションがあります。招待リンクを受け取った方は、Tether をインストールした今、もう一度リンクをクリックしてください。"
   },
   "welcomeDone": {
     "message": "OK"

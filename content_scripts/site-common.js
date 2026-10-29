@@ -150,10 +150,13 @@
     const off = status === 'off' || status === 'off-browse';
     // Chat and reactions only in the tab that's connected (see sync-core's
     // one-tab rule); a tab standing by isn't receiving either.
-    if (controlsEl) controlsEl.style.display = status === 'connected' || status === 'disconnected' ? 'flex' : 'none';
+    const live = status === 'connected' || status === 'disconnected';
+    if (controlsEl) controlsEl.style.display = live ? 'flex' : 'none';
+    // The chat's connection belongs to the tab in charge; standing by or
+    // idle, an open panel would be talking to nothing.
+    if (!live && chatOpen) setChatOpen(false);
     if (startButton) startButton.style.display = status === 'off' ? 'flex' : 'none';
     if (off) {
-      if (chatOpen) setChatOpen(false);
       if (statusBadge) { statusBadge.style.opacity = '0'; statusBadge.style.transform = 'translateY(6px)'; }
       return;
     }
@@ -308,7 +311,7 @@
     b.append(el('span', '', tr('elsewhere', info.name || tr('partnerFallback'))));
     const go = el('button', `all: initial; cursor: pointer; font: 600 12.5px ${FONT}; color: #fff;
       background: #007aff; padding: 6px 12px; border-radius: 999px;`, tr('joinThem'));
-    go.addEventListener('click', () => { location.href = info.url; });
+    go.addEventListener('click', () => { const u = window.TetherSync.safeUrl(info.url); if (u) location.href = u; });
     const close = el('button', `all: initial; cursor: pointer; font: 500 14px ${FONT}; color: rgba(255,255,255,0.7);
       padding: 4px 8px;`, '✕');
     close.setAttribute('aria-label', tr('dismiss'));
@@ -343,9 +346,12 @@
 
   // Shown for a reaction from the other person, and immediately for your own
   // rather than after a network round trip.
+  // Only the five on offer: the room is shared, and anything else sent this
+  // way would be someone's text drawn large over the video.
   function showReaction(emoji) {
+    if (!REACTIONS.some((x) => x.emoji === emoji)) return;
     const jitter = (Math.random() - 0.5) * 40; // simultaneous reactions don't perfectly overlap
-    const r = el('div', `position: fixed; top: calc(50% - 40px); right: ${EDGE + 52 - jitter}px; font-size: 34px;
+    const r = el('div', `position: fixed; top: calc(50% - ${DOCK_HALF + 90}px); right: ${EDGE + 20 - jitter}px; font-size: 34px;
       pointer-events: none; animation: tether-float-up 1.8s ease-out forwards;`, emoji);
     root.appendChild(r);
     setTimeout(() => r.remove(), 1800);
@@ -379,8 +385,11 @@
   let messages = {};
   const seen = new Set();
   let unread = 0;
+  // Newest on top, nearest the buttons. Clipped above the bottom quarter of
+  // the screen, where the players keep "Skip intro" and "Next episode".
   const toastStack = el('div', `position: fixed; top: calc(50% + ${DOCK_HALF + 10}px); right: ${EDGE}px; display: flex;
-    flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; max-width: 300px;`);
+    flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; max-width: 300px;
+    max-height: calc(25% - ${DOCK_HALF + 10}px); overflow: hidden;`);
   root.appendChild(toastStack);
 
   function setUnread(n) {
@@ -421,8 +430,9 @@
       overflow-wrap: anywhere; transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; transform: translateY(6px);`);
     if (m.name) t.appendChild(el('div', `font: 600 11px ${FONT}; color: rgba(255,255,255,0.6); margin-bottom: 2px;`, m.name));
     t.appendChild(el('div', '', m.text.length > 140 ? m.text.slice(0, 140) + '…' : m.text));
-    toastStack.appendChild(t);
-    while (toastStack.children.length > 3) toastStack.firstChild.remove();
+    closeTip(); // it sits in the same spot
+    toastStack.prepend(t);
+    while (toastStack.children.length > 3) toastStack.lastChild.remove();
     requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
     setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 50);
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 6000);
@@ -455,13 +465,15 @@
       setTimeout(() => chatInput.focus(), 0);
     } else {
       chatInput.blur();
+      // Whatever the status became while the panel had its spot.
+      if (currentStatus && currentStatus !== 'off' && currentStatus !== 'off-browse') showStatus(currentStatus);
     }
     wake();
   }
 
   function buildChat() {
     chatPanel = el('div', `position: fixed; top: 50%; transform: translateY(-50%); right: ${EDGE + 44}px; width: 300px;
-      max-height: min(420px, 70vh);
+      max-height: min(420px, calc(100vh - 2 * max(88px, 11vh) - 80px));
       display: none; flex-direction: column; border-radius: 16px; overflow: hidden; pointer-events: auto; ${GLASS}`);
     const head = el('div', `display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px 14px;
       font: 600 13px ${FONT}; color: #fff;`);
@@ -597,7 +609,14 @@
       // removed for: Prime Video shows and hides its player overlay with CSS
       // alone, and a <video> becoming ready to play (which some adapters wait
       // for) changes nothing in the DOM at all.
-      setInterval(check, 1000);
+      const checkTimer = setInterval(check, 1000);
+      // Tether was updated or reloaded under this tab (see sync-core's
+      // orphaned): stop watching the page and take everything down.
+      window.TetherSync.on('gone', () => {
+        observer.disconnect();
+        clearInterval(checkTimer);
+        root.remove();
+      });
 
       // catch the case where a video is already present on script injection
       current = findVideo();

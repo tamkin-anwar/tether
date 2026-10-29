@@ -3,7 +3,7 @@
 # $1, $2 are substitutions filled in by the code (a name, a time, a speed).
 EN = {
   "extName": "Tether: Watch Together",
-  "extDescription": "Watch Netflix, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions.",
+  "extDescription": "Watch Netflix, Prime Video, Hulu, Disney+, Max, YouTube, and more in sync with someone far away, plus chat, notes, and reactions.",
   # popup
   "tabRoom": "Room", "tabNotes": "Notes", "tabChat": "Chat",
   "roomHint": "Chat and notes are ready anytime. Start watching together to sync playback on Netflix, Prime Video, Hulu, Disney+, Max, Crunchyroll, or YouTube.",
@@ -11,7 +11,7 @@ EN = {
   "welcomeStep1": "<strong>Add your name</strong> below, so they know it's you.",
   "welcomeStep2": "<strong>Send your invite link</strong>, just once. You'll share this room from then on.",
   "welcomeStep3": "<strong>Open a show and click 👥 Watch together.</strong> They get an invite on their screen, tap Join, and you're in sync.",
-  "welcomeAside": "While you watch, 💬 chat and 🙂 reactions sit at the bottom right of the video. Got an invite link from someone? Click it again now that Tether's installed.",
+  "welcomeAside": "While you watch, 💬 chat and 🙂 reactions sit on the right side of the video, halfway down. Got an invite link from someone? Click it again now that Tether's installed.",
   "welcomeDone": "Got it",
   "sessionOff": "Not watching together",
   "sessionStart": "Start watching together",
