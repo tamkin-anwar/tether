@@ -46,4 +46,4 @@ Contact: for privacy or data requests, email [contact@anwarcreativestudio.com](m
 
 ---
 
-Tether is built and run by [Anwar Creative Studio](https://anwarcreativestudio.com/). If anything here ever stops matching what the extension actually does, tell us directly.
+Tether is built and run by Anwar Creative Studio LLC, a California limited liability company ([anwarcreativestudio.com](https://anwarcreativestudio.com/)). If anything here ever stops matching what the extension actually does, tell us directly.

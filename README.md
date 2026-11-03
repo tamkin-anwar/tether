@@ -91,4 +91,4 @@ UI strings live in `tools/messages_*.py`. Run `python3 tools/build_locales.py` t
 
 ## Credits
 
-Made by [Anwar Creative Studio](https://anwarcreativestudio.com/).
+Made by [Anwar Creative Studio](https://anwarcreativestudio.com/). © 2026 Anwar Creative Studio LLC.
